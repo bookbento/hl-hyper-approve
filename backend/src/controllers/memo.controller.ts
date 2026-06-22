@@ -7256,15 +7256,14 @@ export const getMemoReferences: RequestHandler = async (req, res) => {
       orderBy: { createdAt: "asc" },
     });
 
-    // Filter references based on user permissions (simplified - user can see their own memos and memos they have access to)
-    const accessibleReferences = references.filter((ref) => {
+    // Filter references based on actual memo access permissions
+    const accessibleReferences: typeof references = [];
+    for (const ref of references) {
       const statusName = ref.referenceMemo.statuses[0]?.status?.name || "";
-      if (statusName === "Deleted") return false;
-
-      // For now, allow access if user is the creator or if it's a basic access check
-      // In a full implementation, you'd check proper memo access permissions here
-      return ref.referenceMemo.userId === currentUserId || true; // TODO: Implement proper access control
-    });
+      if (statusName === "Deleted") continue;
+      const hasAccess = await canViewMemo(currentUserId, ref.referenceMemo.id);
+      if (hasAccess) accessibleReferences.push(ref);
+    }
 
     const result = accessibleReferences.map((ref) => ({
       id: ref.referenceMemo.id,
@@ -7463,8 +7462,8 @@ export const getReferenceMemoContent: RequestHandler = async (req, res) => {
       return;
     }
 
-    // Check if user has access (simplified - in full implementation, check proper permissions)
-    const hasAccess = referenceMemo.userId === currentUserId || true; // TODO: Implement proper access control
+    // Check if user has access using the authoritative canViewMemo permission logic
+    const hasAccess = await canViewMemo(currentUserId, referenceMemo.id);
 
     if (!hasAccess) {
       res.status(403).json({ error: "Access denied" });
