@@ -1,7 +1,0 @@
-{
-  "backend_path": "D:\\xampp\\htdocs\\HL-EMEMO-FIX-EXCEL\\frontend",
-  "frontend_path": "D:\\xampp\\htdocs\\HL-EMEMO-FIX-EXCEL\\backend",
-  "backend_cmd": "npm run dev",
-  "frontend_cmd": "npm run dev",
-  "open_external_terminal": false
-}
