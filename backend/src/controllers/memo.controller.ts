@@ -31,6 +31,7 @@ import { getUserId } from "../lib/filesec";
 import { reserveMemoNumber } from "../lib/memoNumber";
 import { pushNoti } from "../lib/notify";
 import { filterUsersForEmail } from "../lib/notificationPreferences";
+import { canViewMemo } from "../services/memoAccess.service";
 
 /* ───── FRONTEND_URL: ต้องมีใน .env ───── */
 if (!process.env.FRONTEND_URL) {
@@ -619,136 +620,6 @@ export const searchEligibleUsersForExtra: RequestHandler = async (req, res) => {
 
   res.json(users);
 };
-
-// ✅ เปลี่ยนลำดับเช็คใน canViewMemo: เช็ค Draft ก่อน extra/approver/cc
-// visited set ป้องกัน infinite recursion เมื่อ memo A references B และ B references A
-async function canViewMemo(userId: number, memoId: number, visited: Set<number> = new Set()) {
-  if (visited.has(memoId)) return false;
-  visited.add(memoId);
-
-  const memo = await prisma.masterMemo.findUnique({
-    where: { id: memoId },
-    select: { id: true, userId: true },
-  });
-  if (!memo) return false;
-
-  // Owner เห็นเสมอ
-  if (memo.userId === userId) return true;
-
-  // ⛔ ถ้ายังเป็น Draft ให้บล็อกทุกคน (ยกเว้น owner ที่เช็คไปแล้ว)
-  const latestStatus = await prisma.memoStatusPivot.findFirst({
-    where: { memoId },
-    orderBy: { createdAt: "desc" },
-    include: { status: { select: { name: true } } },
-  });
-  if ((latestStatus?.status?.name || "").toLowerCase() === "draft") {
-    return false;
-  }
-
-  // ✅ พ้น Draft แล้ว: เปิดตามสิทธิ์
-  // เคยเป็น Extra-approver ของเมโมนี้ (เห็นได้ตลอด)
-  const extraEver = await prisma.extraApprover.findFirst({
-    where: { userId, extra: { memoId } },
-    select: { id: true },
-  });
-  if (extraEver) return true;
-  // หลังบล็อก Draft แล้ว (owner ผ่านอยู่แล้ว)
-  const mentioned = await prisma.commentTag.findFirst({
-    where: { memoId, userId },
-    select: { id: true },
-  });
-  if (mentioned) return true;
-  // เป็น Approver เวอร์ชันล่าสุดไหม
-  const { _max } = await prisma.memoApproverAction.aggregate({
-    where: { memoId },
-    _max: { version: true },
-  });
-  const latestVer = _max.version ?? 1;
-
-  const approverRow = await prisma.memoApproverAction.findFirst({
-    where: { memoId, version: latestVer, loaUser: { userId } },
-    select: { id: true },
-  });
-  if (approverRow) return true;
-
-  // เป็น CC ไหม
-  const ccRow = await prisma.memoCc.findFirst({
-    where: { memoId, userId },
-    select: { id: true },
-  });
-  if (ccRow) return true;
-
-  // Check if user has access to any memo that references this memo.
-  // Pass the visited set to prevent circular reference infinite recursion.
-  const referencingMemos = await prisma.memoReference.findMany({
-    where: { referenceMemoId: memoId },
-    select: { mainMemoId: true },
-  });
-
-  for (const ref of referencingMemos) {
-    const hasAccessToMainMemo = await canViewMemo(userId, ref.mainMemoId, visited);
-    if (hasAccessToMainMemo) return true;
-  }
-
-  return false;
-}
-
-// Helper function to check memo access without recursive reference checking
-async function canViewMemoSimple(userId: number, memoId: number) {
-  const memo = await prisma.masterMemo.findUnique({
-    where: { id: memoId },
-    select: { id: true, userId: true },
-  });
-  if (!memo) return false;
-
-  // Owner เห็นเสมอ
-  if (memo.userId === userId) return true;
-
-  // ⛔ ถ้ายังเป็น Draft ให้บล็อกทุกคน (ยกเว้น owner ที่เช็คไปแล้ว)
-  const latestStatus = await prisma.memoStatusPivot.findFirst({
-    where: { memoId },
-    orderBy: { createdAt: "desc" },
-    include: { status: { select: { name: true } } },
-  });
-  if ((latestStatus?.status?.name || "").toLowerCase() === "draft") {
-    return false;
-  }
-
-  // ✅ พ้น Draft แล้ว: เปิดตามสิทธิ์
-  // เคยเป็น Extra-approver ของเมโมนี้ (เห็นได้ตลอด)
-  const extraEver = await prisma.extraApprover.findFirst({
-    where: { userId, extra: { memoId } },
-    select: { id: true },
-  });
-  if (extraEver) return true;
-  // หลังบล็อก Draft แล้ว (owner ผ่านอยู่แล้ว)
-  const mentioned = await prisma.commentTag.findFirst({
-    where: { memoId, userId },
-    select: { id: true },
-  });
-  if (mentioned) return true;
-  // เป็น Approver เวอร์ชันล่าสุดไหม
-  const { _max } = await prisma.memoApproverAction.aggregate({
-    where: { memoId },
-    _max: { version: true },
-  });
-  const latestVer = _max.version ?? 1;
-
-  const approverRow = await prisma.memoApproverAction.findFirst({
-    where: { memoId, version: latestVer, loaUser: { userId } },
-    select: { id: true },
-  });
-  if (approverRow) return true;
-
-  // เป็น CC ไหม
-  const ccRow = await prisma.memoCc.findFirst({
-    where: { memoId, userId },
-    select: { id: true },
-  });
-  if (ccRow) return true;
-
-  return false;
-}
 
 export const getWaitingStatusId = async () => {
   const waiting = await prisma.approvalActionStatus.findFirst({
