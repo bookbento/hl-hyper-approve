@@ -30,32 +30,16 @@ vi.mock("../../prisma/client", () => ({
 
 // Also mock heavy side-effect imports that memo.controller drags in
 vi.mock("../lib/mailer", () => ({ sendEmail: vi.fn() }));
-vi.mock("../lib/notify", () => ({ pushNoti: vi.fn() }));
 vi.mock("../lib/token", () => ({ makeEmailToken: vi.fn(), verifyEmailToken: vi.fn() }));
-vi.mock("../lib/filename", () => ({ decodeFilename: vi.fn(), safeFileName: vi.fn() }));
-vi.mock("../lib/filesec", () => ({ getUserId: vi.fn() }));
-vi.mock("../lib/memoNumber", () => ({ reserveMemoNumber: vi.fn() }));
 vi.mock("../lib/notificationPreferences", () => ({ filterUsersForEmail: vi.fn() }));
-vi.mock("../services/memoSearch.service", () => ({
-  getCachedStatCounts: vi.fn(),
-  searchMemos: vi.fn(),
-}));
-vi.mock("../middlewares/upload", () => ({
-  toPublicUploadPath: vi.fn(),
-  UPLOADS_DIR: "/tmp",
-}));
-vi.mock("../approverLine", () => ({ getApproverLineStatus: vi.fn() }));
-vi.mock("./memoStatus.controller", () => ({
+vi.mock("../controllers/memoStatus.controller", () => ({
   evaluateAndUpdateMemoStatus: vi.fn(),
   getUserDisplayName: vi.fn(),
   toDisplayName: vi.fn(),
   notifyStatusUpdate: vi.fn(),
 }));
-vi.mock("sharp", () => ({ default: vi.fn() }));
-vi.mock("fontkit", () => ({ default: {} }));
-vi.mock("content-disposition", () => ({ default: vi.fn() }));
 
-import { recomputeExtraLineStatus } from "../controllers/memo.controller";
+import { recomputeExtraLineStatus } from "../services/extraApproval.service";
 import { prisma } from "../../prisma/client";
 
 const mockPrisma = prisma as unknown as {
