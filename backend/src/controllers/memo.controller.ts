@@ -621,7 +621,11 @@ export const searchEligibleUsersForExtra: RequestHandler = async (req, res) => {
 };
 
 // ✅ เปลี่ยนลำดับเช็คใน canViewMemo: เช็ค Draft ก่อน extra/approver/cc
-async function canViewMemo(userId: number, memoId: number) {
+// visited set ป้องกัน infinite recursion เมื่อ memo A references B และ B references A
+async function canViewMemo(userId: number, memoId: number, visited: Set<number> = new Set()) {
+  if (visited.has(memoId)) return false;
+  visited.add(memoId);
+
   const memo = await prisma.masterMemo.findUnique({
     where: { id: memoId },
     select: { id: true, userId: true },
@@ -674,15 +678,15 @@ async function canViewMemo(userId: number, memoId: number) {
   });
   if (ccRow) return true;
 
-  // ✅ NEW: Check if user has access to any memo that references this memo
-  // If user can access a main memo, they should be able to access its referenced memos
+  // Check if user has access to any memo that references this memo.
+  // Pass the visited set to prevent circular reference infinite recursion.
   const referencingMemos = await prisma.memoReference.findMany({
     where: { referenceMemoId: memoId },
     select: { mainMemoId: true },
   });
 
   for (const ref of referencingMemos) {
-    const hasAccessToMainMemo = await canViewMemoSimple(userId, ref.mainMemoId);
+    const hasAccessToMainMemo = await canViewMemo(userId, ref.mainMemoId, visited);
     if (hasAccessToMainMemo) return true;
   }
 
