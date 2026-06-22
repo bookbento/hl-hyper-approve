@@ -3,6 +3,11 @@ import { prisma } from "../../prisma/client";
 import { recordApproverAction } from "../services/memoApproval.service";
 import { logMemoHistory } from "../lib/memoHistory";
 import { ActionType, ExtraStatus, Prisma } from "@prisma/client";
+import {
+  getLatestVersion,
+  evaluateAndUpdateMemoStatus,
+} from "../services/memoApproveAction.service";
+export { getLatestVersion, evaluateAndUpdateMemoStatus } from "../services/memoApproveAction.service";
 
 /* ───── FRONTEND_URL: ต้องมีใน .env ───── */
 if (!process.env.FRONTEND_URL) {
@@ -1054,15 +1059,6 @@ export const actOnMemo: RequestHandler = async (req, res) => {
   }
 };
 
-export async function getLatestVersion(memoId: number) {
-  const v = await prisma.memoApproverAction.aggregate({
-    where: { memoId },
-    _max: { version: true },
-  });
-  return v._max.version ?? 1;
-}
-
-
 /* ถูกเรียกจาก actOnMemo ถ้า statusCode === 'recalled' */
 export async function handleRecall({
   memoId,
@@ -1133,142 +1129,6 @@ async function upsertStatusWithHistory(
   await updateCurrentMemoStatus(memoId, ownerId, newStatusId);
 }
 
-// --- ที่ส่วนบนสุดของไฟล์ ---
-export async function evaluateAndUpdateMemoStatus(
-  memoId: number,
-  actorPivotId: number
-) {
-  const loaPivot = await prisma.lineOfApprovalUserPivotForUse.findUnique({
-    where: { id: actorPivotId },
-    include: { user: { select: { id: true, name: true, lastname: true, nickname: true } } },
-  });
-  if (!loaPivot) throw new Error("loaUserPivotId ไม่ถูกต้อง");
-
-  const actorId = loaPivot.userId;
-  const actorName = loaPivot.user?.name || "Unknown User";
-  const myLevel = loaPivot.level;
-
-  const memo = await prisma.masterMemo.findUnique({
-    where: { id: memoId },
-    select: { userId: true, subject: true },
-  });
-  if (!memo) throw new Error("memo not found");
-
-  const approverPivots = await getClonePivots(memoId);
-  const approverPivotIds = approverPivots.map((a) => a.id);
-
-  const version = await getLatestVersion(memoId);
-  const actions = await prisma.memoApproverAction.findMany({
-    where: { memoId, version, loaUserId: { in: approverPivotIds } },
-    select: {
-      id: true,
-      loaUserId: true,
-      status: { select: { code: true } },
-      loaUser: { select: { level: true, approvalRequirement: true } }
-    },
-  }) as any[];
-
-  // Group actions by level to handle approval requirements
-  const actionsByLevel = new Map<number, typeof actions>();
-  for (const action of actions) {
-    const level = action.loaUser.level;
-    const levelActions = actionsByLevel.get(level) || [];
-    levelActions.push(action);
-    actionsByLevel.set(level, levelActions);
-  }
-
-  // Group approver pivots by level
-  const pivotsByLevel = new Map<number, typeof approverPivots>();
-  for (const pivot of approverPivots) {
-    const level = pivot.level;
-    const levelPivots = pivotsByLevel.get(level) || [];
-    levelPivots.push(pivot);
-    pivotsByLevel.set(level, levelPivots);
-  }
-
-  // Check if any level has rejected actions
-  let anyRejected = false;
-  for (const levelActions of actionsByLevel.values()) {
-    if (levelActions.some(a => a.status.code === "rejected")) {
-      anyRejected = true;
-      break;
-    }
-  }
-
-  // Check if all levels are approved based on their approval requirements
-  let allLevelsApproved = true;
-
-  for (const [level, levelPivots] of pivotsByLevel) {
-    const levelActions = actionsByLevel.get(level) || [];
-
-    if (levelPivots.length === 0) continue;
-
-    // Get approval requirement for this level (all pivots at same level should have same requirement)
-    const approvalRequirement = levelPivots[0].approvalRequirement || "ALL";
-
-    const approvedActions = levelActions.filter(a => a.status.code === "approved");
-    const rejectedActions = levelActions.filter(a => a.status.code === "rejected");
-
-    if (approvalRequirement === "ANY") {
-      // For ANY: level is complete if at least one approval exists
-      const hasApproval = approvedActions.length > 0;
-      const allRejected = rejectedActions.length === levelPivots.length;
-
-      // Level is incomplete if: all rejected OR no approvals yet
-      if (allRejected || !hasApproval) {
-        allLevelsApproved = false;
-        break;
-      }
-      // If hasApproval is true, this level is complete - continue to next level
-    } else {
-      // For ALL: need all approvers to approve
-      const allApproved = approvedActions.length === levelPivots.length;
-
-      if (!allApproved) {
-        allLevelsApproved = false;
-        break;
-      }
-    }
-  }
-
-  if (anyRejected) {
-    await upsertStatusWithHistory(
-      memoId,
-      memo.userId,
-      4,
-      actorId,
-      actorName,
-      ActionType.REJECT
-    );
-    if (actorId) {
-      await notifyStatusUpdate(memoId, actorId, actorName, 4, myLevel);
-    }
-  } else if (allLevelsApproved) {
-    await upsertStatusWithHistory(
-      memoId,
-      memo.userId,
-      3,
-      actorId,
-      actorName,
-      ActionType.APPROVE
-    );
-    if (actorId) {
-      await notifyStatusUpdate(memoId, actorId, actorName, 3, myLevel);
-    }
-  } else {
-    await upsertStatusWithHistory(
-      memoId,
-      memo.userId,
-      5,
-      actorId,
-      actorName,
-      ActionType.PROCESSING
-    );
-    if (actorId) {
-      await notifyStatusUpdate(memoId, actorId, actorName, 5, myLevel);
-    }
-  }
-}
 
 // POST /api/memos/:id/recall-preserve
 export const recallPreserve: RequestHandler = async (req, res) => {

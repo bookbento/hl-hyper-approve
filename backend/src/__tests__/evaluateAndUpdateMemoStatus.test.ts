@@ -54,7 +54,20 @@ vi.mock("../approverLine", () => ({ getApproverLineStatus: vi.fn() }));
 vi.mock("../services/pdf.core", () => ({ createSignedPdfBuffer: vi.fn() }));
 vi.mock("../lib/memoHistory", () => ({ logMemoHistory: vi.fn() }));
 
-import { evaluateAndUpdateMemoStatus } from "../controllers/memoStatus.controller";
+// Mocks for memoApproveAction.service dependencies
+vi.mock("../services/memoNotification.service", () => ({
+  notifyStatusUpdate: vi.fn(() => Promise.resolve()),
+}));
+vi.mock("../controllers/memoStatus.controller", () => ({
+  updateCurrentMemoStatus: vi.fn(() => Promise.resolve()),
+  getUserDisplayName: vi.fn(() => Promise.resolve("Test User")),
+  toDisplayName: vi.fn(() => "Test User"),
+}));
+vi.mock("../services/extraApproval.service", () => ({
+  hasActiveExtraLine: vi.fn(() => Promise.resolve(false)),
+}));
+
+import { evaluateAndUpdateMemoStatus } from "../services/memoApproveAction.service";
 import { prisma } from "../../prisma/client";
 
 const mp = prisma as any;
@@ -127,14 +140,13 @@ function setupScenario(
   });
 }
 
-/** All statusIds written to memoStatusPivot via create or update */
+/** StatusIds passed to updateCurrentMemoStatus (memoId, ownerId, newStatusId) */
+import { updateCurrentMemoStatus } from "../controllers/memoStatus.controller";
+
 function capturedStatusIds(): number[] {
-  const allCalls = [
-    ...mp.memoStatusPivot.create.mock.calls,
-    ...mp.memoStatusPivot.update.mock.calls,
-  ] as Array<[{ data?: { statusId?: number } }]>;
-  return allCalls.flatMap(([arg]) =>
-    arg?.data?.statusId !== undefined ? [arg.data.statusId] : []
+  const mock = updateCurrentMemoStatus as ReturnType<typeof vi.fn>;
+  return (mock.mock.calls as [number, number, number][]).map(
+    ([_memoId, _ownerId, newStatusId]) => newStatusId
   );
 }
 
