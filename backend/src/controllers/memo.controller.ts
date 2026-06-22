@@ -47,7 +47,7 @@ async function getStatusIdByName(name: string) {
   return rec.id;
 }
 // ─── Helper: คำนวณสถานะ Extra line ตามสถานะของ approvers ───
-async function recomputeExtraLineStatus(lineId: number): Promise<ExtraStatus> {
+export async function recomputeExtraLineStatus(lineId: number): Promise<ExtraStatus> {
   const approvedId = await getStatusIdByName("Approved");
   const rejectedId = await getStatusIdByName("Rejected");
 
