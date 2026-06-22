@@ -1,0 +1,107 @@
+{
+  "title": "การจัดการผู้ใช้งาน",
+  "viewLog": "ดูประวัติ",
+  "searchPlaceholder": "ค้นหาผู้ใช้...",
+  "downloadExcel": "ดาวน์โหลด Excel",
+  "createNew": "สร้างผู้ใช้ใหม่",
+  "tabs": {
+    "active": "ผู้ใช้ที่ใช้งาน",
+    "archived": "ผู้ใช้ที่เก็บถาวร"
+  },
+  "col": {
+    "name": "ชื่อ",
+    "email": "อีเมล",
+    "role": "บทบาท",
+    "department": "แผนก",
+    "team": "ทีม",
+    "businessUnit": "หน่วยธุรกิจ",
+    "actions": "จัดการ",
+    "archivedAt": "วันที่เก็บถาวร"
+  },
+  "noData": "ไม่พบผู้ใช้",
+  "noMatch": "ไม่พบผู้ใช้ตามการค้นหา",
+  "confirmDelete": "คุณแน่ใจว่าต้องการเก็บถาวร {{name}} หรือไม่? ผู้ใช้จะไม่แสดงในระบบอีกต่อไป แต่ข้อมูลในอดีตจะยังคงอยู่",
+  "confirmRestore": "คุณแน่ใจว่าต้องการกู้คืน {{name}} หรือไม่? ผู้ใช้จะถูกเปิดใช้งานอีกครั้งและแสดงในรายการผู้ใช้ที่ใช้งาน",
+  "delete": "เก็บถาวร",
+  "restore": "กู้คืน",
+  "edit": "แก้ไข",
+  "prevPage": "ก่อนหน้า",
+  "nextPage": "ถัดไป",
+  "summary": "กำลังแสดง {{shown}} จากทั้งหมด {{total}} ผู้ใช้",
+  "modal": {
+    "createTitle": "เพิ่มผู้ใช้ใหม่",
+    "editTitle": "แก้ไขข้อมูลผู้ใช้",
+    "saveCreate": "สร้าง",
+    "saveEdit": "บันทึกการแก้ไข",
+    "createUser": "เพิ่มผู้ใช้ใหม่",
+    "editUser": "แก้ไขข้อมูลผู้ใช้"
+  },
+  "form": {
+    "name": "ชื่อ",
+    "email": "อีเมล",
+    "emailPlaceholder": "example@email.com",
+    "password": "รหัสผ่าน",
+    "role": "บทบาท",
+    "rolePlaceholder": "-- กรุณาเลือกบทบาท --",
+    "team": "ทีม",
+    "teamPlaceholder": "-- กรุณาเลือกทีม --",
+    "businessUnit": "หน่วยธุรกิจ",
+    "businessUnitPlaceholder": "-- กรุณาเลือกหน่วยธุรกิจ --",
+    "department": "แผนก",
+    "departmentPlaceholder": "-- กรุณาเลือกแผนก --",
+    "avatar": "รูปโปรไฟล์",
+    "nickname": "ชื่อเล่น",
+    "nicknameplaceholder": "ชื่อเล่น (ไม่บังคับ)",
+    "lastname": "นามสกุล",
+    "namePlaceholder": "กรอกชื่อ",
+    "lastnamePlaceholder": "กรอกนามสกุล",
+    "selectRole": "-- กรุณาเลือกบทบาท --",
+    "additionalBusinessUnits": "สิทธิ์เข้าถึงหน่วยธุรกิจเพิ่มเติม",
+    "additionalBusinessUnitsPlaceholder": "-- เลือกหน่วยธุรกิจเพิ่มเติม --",
+    "additionalBusinessUnitsHelp": "เลือกหน่วยธุรกิจเพิ่มเติมที่ผู้ใช้สามารถเข้าถึงได้ (ไม่บังคับ) หน่วยธุรกิจหลักจะสามารถเข้าถึงได้เสมอ",
+    "dccManagementBusinessUnits": "หน่วยธุรกิจที่ DCC จัดการได้",
+    "dccManagementBusinessUnitsHelp": "เลือกหน่วยธุรกิจเพิ่มเติมที่ผู้ใช้ DCC สามารถจัดการประเภทเอกสารและสายอนุมัติได้ หน่วยธุรกิจหลักจะสามารถจัดการได้เสมอ",
+    "dccManagementBusinessUnitsSelected": "หน่วยธุรกิจที่จัดการได้เพิ่มเติมถูกเลือก",
+    "noBusinessUnitsAvailable": "ไม่มีหน่วยธุรกิจที่พร้อมใช้งาน",
+    "checkAll": "เลือกทั้งหมด",
+    "uncheckAll": "ยกเลิกทั้งหมด"
+  },
+  "roles": {
+    "user": "ผู้ใช้",
+    "manager": "ผู้จัดการ",
+    "admin": "ผู้ดูแลระบบ",
+    "dcc": "ผู้ดูแลระบบเอกสาร"
+  },
+  "errors": {
+    "missing": "กรุณากรอก",
+    "invalidEmail": "อีเมลไม่ถูกต้อง",
+    "invalidEmailAsciiLower": "รูปแบบอีเมลไม่ถูกต้อง (ตัวพิมพ์เล็ก ASCII เท่านั้น)",
+    "emailASCIIOnly": "อีเมลต้องเป็นตัวพิมพ์เล็ก (ASCII) เท่านั้น",
+    "emailTaken": "อีเมลนี้ถูกใช้งานแล้ว",
+    "generic": "เกิดข้อผิดพลาด"
+  },
+  "email": {
+    "patternTitle": "อีเมลต้องเป็นตัวพิมพ์เล็ก ASCII เท่านั้น เช่น user.name+1@domain.co",
+    "hintLowercased": "แปลงเป็นตัวพิมพ์เล็กแล้ว",
+    "hintRemovedNonAscii": "ลบอักขระที่ไม่ใช่อักษรอังกฤษ/ตัวเลขออกแล้ว",
+    "invalidAsciiLower": "รูปแบบอีเมลไม่ถูกต้อง (ตัวพิมพ์เล็ก ASCII เท่านั้น)"
+  },
+  "success": {
+    "userCreated": "สร้างผู้ใช้สำเร็จ",
+    "userUpdated": "บันทึกการแก้ไขสำเร็จ",
+    "userArchived": "เก็บถาวรผู้ใช้สำเร็จ",
+    "userRestored": "กู้คืนผู้ใช้สำเร็จ",
+    "passwordResetForced": "ตั้งค่าล็อกอินครั้งแรกสำเร็จ",
+    "firstLoginCleared": "ยกเลิกการตั้งค่าล็อกอินครั้งแรกสำเร็จ"
+  },
+  "forcePasswordReset": {
+    "button": "ตั้งค่าล็อกอินครั้งแรก",
+    "confirmTitle": "ตั้งค่าล็อกอินครั้งแรก",
+    "confirmMessage": "ตั้งค่าให้ {{name}} เป็นสถานะล็อกอินครั้งแรกหรือไม่? ผู้ใช้จะต้องเปลี่ยนรหัสผ่านเมื่อเข้าสู่ระบบครั้งถัดไป",
+    "confirm": "ใช่ ตั้งค่า",
+    "disableTitle": "ยกเลิกการตั้งค่าล็อกอินครั้งแรก",
+    "disableMessage": "ยกเลิกการตั้งค่าล็อกอินครั้งแรกสำหรับ {{name}} หรือไม่? ผู้ใช้จะสามารถเข้าสู่ระบบได้ปกติโดยไม่ต้องเปลี่ยนรหัสผ่าน",
+    "disable": "ใช่ ยกเลิก",
+    "cancel": "ยกเลิก"
+  }
+}

@@ -1,0 +1,163 @@
+# Patch File for MemoAndApproval.tsx Changes
+
+## Change 1: Add Import (Line ~12)
+After: `import dayjs from "dayjs";`
+Add: `import { ExtraApprovalCard } from "./ExtraApprovalCard";`
+
+## Change 2: Add Type Definition (After line ~1145, inside MemoAndApproval component, after ExtraLine type)
+Add:
+```typescript
+// ✅ Type for extra approval lines with full details including comment
+type ExtraApprovalLineDTO = {
+  id: number;
+  status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "REJECTED";
+  createdAt?: string;
+  approvers: Array<{
+    id: number;
+    actedAt?: string | null;
+    user: {
+      id: number;
+      name: string;
+      lastname?: string | null;
+      nickname?: string | null;
+      profileImagePath?: string | null;
+    };
+    status?: { id: number; name: string } | null;
+  }>;
+  comment?: {
+    id: number;
+    comment: string;
+    createdAt: string;
+    user: {
+      id: number;
+      name: string;
+      lastname?: string | null;
+      nickname?: string | null;
+    };
+  } | null;
+};
+```
+
+## Change 3: Add State (After line ~950, after other useState declarations)
+Add:
+```typescript
+// ✅ State for all extra approval lines (not just active)
+const [extraLines, setExtraLines] = useState<ExtraApprovalLineDTO[]>([]);
+```
+
+## Change 4: Add useEffect (After line ~1145, after the extraActive useEffect)
+Add:
+```typescript
+// ✅ Fetch all extra approval lines
+useEffect(() => {
+  let ok = true;
+  (async () => {
+    try {
+      const res = await api.get<ExtraApprovalLineDTO[]>(
+        `/api/memos/${memoId}/extra-approval-lines`,
+        { withCredentials: true }
+      );
+      if (ok) setExtraLines(res.data ?? []);
+    } catch {
+      if (ok) setExtraLines([]);
+    }
+  })();
+  return () => {
+    ok = false;
+  };
+}, [memoId]);
+```
+
+## Change 5: Add Helper Function (Before line ~1284, before the groups useMemo)
+Add:
+```typescript
+// ✅ Function to determine which approval level an extra line should appear after
+const getExtraLineInsertLevel = (extraLine: ExtraApprovalLineDTO): number => {
+  if (!extraLine.createdAt) return -1;
+  
+  const extraCreatedTime = new Date(extraLine.createdAt).getTime();
+  
+  // Find the highest level that was completed before this extra line was created
+  let insertAfterLevel = -1;
+  
+  for (const grp of approverGroups) {
+    for (const user of grp.users ?? []) {
+      if (user.status === "approved" && user.actedAt) {
+        const userActedTime = new Date(user.actedAt).getTime();
+        if (userActedTime < extraCreatedTime && grp.level > insertAfterLevel) {
+          insertAfterLevel = grp.level;
+        }
+      }
+    }
+  }
+  
+  return insertAfterLevel;
+};
+```
+
+## Change 6: Add Merged Items useMemo (After line ~1296, after the groups useMemo)
+Add:
+```typescript
+// ✅ Merge approval groups with extra approval lines
+const mergedItems = React.useMemo(() => {
+  const items: Array<{
+    type: "group" | "extra";
+    level: number;
+    data: any;
+  }> = [];
+  
+  // Add all approval groups
+  groups.forEach((grp) => {
+    items.push({
+      type: "group",
+      level: grp.level,
+      data: grp,
+    });
+  });
+  
+  // Add extra approval lines at appropriate positions
+  extraLines.forEach((extraLine) => {
+    const insertAfterLevel = getExtraLineInsertLevel(extraLine);
+    items.push({
+      type: "extra",
+      level: insertAfterLevel + 0.5, // Insert between levels
+      data: extraLine,
+    });
+  });
+  
+  // Sort by level
+  items.sort((a, b) => a.level - b.level);
+  
+  return items;
+}, [groups, extraLines, approverGroups]);
+```
+
+## Change 7: Update Rendering Logic (Line ~1482)
+Replace: `{groups.map((grp) => (`
+With: `{mergedItems.map((item, index) => {`
+
+Then wrap the existing group rendering in a conditional:
+```typescript
+if (item.type === "group") {
+  const grp = item.data as ApproverGroup;
+  return (
+    <div key={`group-${grp.level}`} className="mb-8 last:mb-0">
+      {/* ALL EXISTING GROUP RENDERING CODE STAYS HERE */}
+    </div>
+  );
+} else {
+  // Render extra approval card
+  const extraLine = item.data as ExtraApprovalLineDTO;
+  return (
+    <ExtraApprovalCard
+      key={`extra-${extraLine.id}`}
+      extraLine={extraLine}
+      prettyTime={(iso: string) => timeAgo(iso)}
+      formatFullName={formatFullName}
+      Avatar={Avatar}
+    />
+  );
+}
+```
+
+And close with: `})}`

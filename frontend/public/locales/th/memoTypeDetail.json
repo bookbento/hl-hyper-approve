@@ -1,0 +1,51 @@
+{
+  "backToList": "กลับไปยังประเภทเอกสาร",
+  "createMemo": "สร้างบันทึก",
+  "edit": "แก้ไข",
+  "delete": "ลบ",
+  "loading": "กำลังโหลด...",
+  "error": {
+    "title": "ไม่สามารถโหลดประเภทเอกสารได้",
+    "backButton": "กลับไปยังประเภทเอกสาร"
+  },
+  "sections": {
+    "description": "คำอธิบาย",
+    "organizationalInfo": "ข้อมูลองค์กร",
+    "approvalLevels": "ระดับการอนุมัติ",
+    "templateFiles": "ไฟล์แม่แบบ",
+    "metadata": "ข้อมูลเมตา"
+  },
+  "fields": {
+    "businessUnit": "หน่วยธุรกิจ",
+    "team": "ทีม",
+    "department": "แผนก",
+    "createdDate": "วันที่สร้าง",
+    "lastUpdated": "อัปเดตล่าสุด",
+    "defaultFile": "ค่าเริ่มต้น"
+  },
+  "permissions": {
+    "everyone": "ทุกคน",
+    "allDepartmentsAcrossBU": "ทุกแผนกข้ามหน่วยธุรกิจ",
+    "departmentsUnderSelectedBU": "แผนกภายใต้หน่วยธุรกิจที่เลือก",
+    "teamOnly": "เฉพาะทีม"
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน"
+  },
+  "approvalLevel": {
+    "level": "ลำดับ {{level}}",
+    "signatureRequired": "ต้องลายเซ็น",
+    "flexibleSlot": "ช่องยืดหยุ่น",
+    "departmentHead": "หัวหน้าแผนก",
+    "memoRequester": "ผู้ขอบันทึก",
+    "fixedUser": "ผู้ใช้คงที่"
+  },
+  "files": {
+    "download": "ดาวน์โหลด"
+  },
+  "confirmDelete": "คุณแน่ใจหรือไม่ที่จะลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+  "deleteSuccess": "ลบประเภทเอกสารเรียบร้อยแล้ว",
+  "deleteError": "ไม่สามารถลบประเภทเอกสารได้",
+  "cannotDeleteInUse": "ไม่สามารถลบประเภทเอกสารนี้ได้ เนื่องจากมีเอกสาร {{count}} รายการที่ใช้งานอยู่ กรุณาลบหรือย้ายเอกสารเหล่านั้นก่อน"
+}

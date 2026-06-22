@@ -1,0 +1,73 @@
+{
+  "pageTitle": "Please select type of document",
+  "pageDescription": "Select the type of request you want to create from available templates",  "loading": "Loading...",
+  "searchPlaceholder": "Search document types...",
+  "searchAriaLabel": "Search document types",
+  "tableAriaLabel": "Memo types table",
+  "refreshButton": "Refresh",
+  "refreshSuccess": "Data refreshed successfully",
+  "refreshError": "Failed to refresh data",
+  "retryButton": "Try Again",
+  "errorTitle": "Unable to load document types",
+  "businessUnitFilter": {
+    "label": "Business Unit:",
+    "all": "All Business Units",
+    "primary": "Primary"
+  },
+  "dynamicBUFilter": {
+    "label": "Filter by BU:",
+    "all": "All Business Units"
+  },
+  "totalRecords": "Total records: {{count}}",
+  "columns": {
+    "name": "Name",
+    "abbreviation": "Abbreviation",
+    "businessUnit": "Business Unit",
+    "team": "Team",
+    "department": "Department",
+    "createdAt": "Created Date"
+  },
+  "noData": "No memo types found",
+  "noDataDescription": "Try adjusting your search criteria",
+  "rowAriaLabel": "View details for {{name}}",
+  "pagination": {
+    "showing": "Showing",
+    "to": "to",
+    "of": "of",
+    "results": "results",
+    "pageSizeAriaLabel": "Items per page",
+    "pageAriaLabel": "Go to page {{page}}"
+  },
+  "stats": {
+    "totalTypes": "Total Types",
+    "activeTypes": "Active Types",
+    "filteredResults": "Filtered Results"
+  },
+  "modalTitle": "Document Type Details",
+  "closeModal": "Close modal",
+  "fields": {
+    "name": "Name",
+    "abbreviation": "Abbreviation",
+    "description": "Description",
+    "businessUnit": "Business Unit",
+    "team": "Team",
+    "department": "Department",
+    "approvalLines": "Line of Approval",
+    "createdAt": "Created Date",
+    "status": "Status"
+  },
+  "noDescription": "No description provided",
+  "noApprovalLines": "No approval lines configured",
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "actions": {
+    "createMemo": "Create request with this document type",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "deleteConfirmation": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+  "deleteSuccess": "Memo type deleted successfully",
+  "cannotDeleteInUse": "Cannot delete this memo type because it is currently being used by {{count}} memo(s). Please remove or reassign those memos first."
+}

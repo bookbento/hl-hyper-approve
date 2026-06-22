@@ -1,0 +1,65 @@
+{
+  "title": "Approver Management",
+  "viewLog": "View Log",
+  "subtitle": {
+    "simple": "Select the current approver. The system will show every ApproverLine FB they belong to. Then choose which ApproverLine FB you want to update and select the new approver."
+  },
+
+"fromUser": {
+  "label": "Change from approver (current)",
+  "placeholder": "Search name / email",
+  "hint": {
+    "simple": "Once selected, the system will display all ApproverLine FB where this user is set as an approver, including the level (L1, L2, ...), and let you choose which ApproverLine FB to change."
+  },
+  "linesTitle": "ApproverLine FB for this approver",
+
+  "linesSubtitle": "Each row is one ApproverLine FB showing all levels and approvers in that ApproverLine FB — the green badge marks the approver that will be replaced.",
+
+  "loadingLines": "Loading ApproverLine FB…",
+  "noLines": "This user is not assigned as an approver in any ApproverLine FB yet.",
+  "unnamedLine": "ApproverLine FB (not yet named)",
+  "selectAll": "Select all ApproverLine FB",
+  "clearAll": "Clear all",
+  "noLineSelectedWarning": "You haven't selected any ApproverLine FB yet. To change approvers, please select at least one ApproverLine FB.",
+
+  "tableFooter": "Each row represents one ApproverLine FB with all levels / approvers — the green badge marks the approver that will be replaced."
+},
+
+
+  "toUser": {
+    "label": "Replace with (new approver)",
+    "placeholder": "Search name / email",
+    "hint": {
+      "simple": "This user will become the approver instead of the current one for all selected ApproverLine FB."
+    }
+  },
+
+  "toast": {
+    "selectUsersFirst": "Please select both the current approver (from) and the new approver (to).",
+    "sameUser": "You cannot select the same person as both 'from' and 'to'.",
+    "noLinesForFromUser": "The current user is not an approver in any ApproverLine FB.",
+    "noLineSelected": "Please select at least one ApproverLine FB you want to change.",
+    "loadLinesFailed": "Failed to load ApproverLine FB for this approver.",
+    "applyOk": "Approver changed successfully. Please review the result below.",
+    "applyFail": "Failed to change approver."
+  },
+
+  "confirm": {
+    "applySelected": "Are you sure you want to replace the approver with the new user in all selected ApproverLine FB?"
+  },
+
+  "btn": {
+    "applyBusy": "Applying changes…",
+    "applySimple": "Confirm change of approverline"
+  },
+
+  "result": {
+    "titleApply": "Result of applied changes",
+    "summary": "From",
+    "to": "→ To",
+    "templatePivots": "Template / ApproverLine FB pivot entries",
+    "deletedDup": "Removed {{n}} duplicate item(s)",
+    "ccMembers": "CC group members replaced",
+    "noImpact": "There were no records matching the selected conditions."
+  }
+}

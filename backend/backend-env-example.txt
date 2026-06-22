@@ -1,0 +1,32 @@
+PORT=3001
+NODE_ENV=development
+#NODE_ENV=production
+DATABASE_URL="postgresql://postgres:1234@localhost:5432/local_eapp"
+JWT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+JWT_EXPIRES_IN=7d
+
+# --- Token / Email ---------------------------------------
+EMAIL_TOKEN_SECRET=xxxxxxxxxxxxxxxxxxxxxxx
+EMAIL_TOKEN_EXPIRES_IN=3600
+
+# --- URLs -------------------------------------------------
+#APP_BASE_URL=https://app.production-domain.com
+#FRONTEND_URL=https://app.production-domain.com
+
+APP_BASE_URL=http://localhost:3001
+FRONTEND_URL="http://localhost:5173"
+
+# --- SMTP -------------------------------------------------
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=support@production-domain.com
+SMTP_PASS='XXXXXXXX'
+SMTP_FROM="ระบบแจ้งเตือน <support@production-domain.com>"
+
+# --- File Upload ------------------------------------------
+MAX_FILE_SIZE=104857600
+UPLOAD_PATH=./uploads
+ALLOWED_FILE_TYPES=pdf,jpg,jpeg,png,heic
+
+MEMO_SEARCH_TIMING=0

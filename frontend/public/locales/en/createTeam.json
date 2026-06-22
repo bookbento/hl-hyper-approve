@@ -1,0 +1,53 @@
+{
+  "title": "Team Management",
+  "searchPlaceholder": "Search teams...",
+  "button": {
+    "create": "Create New Team",
+    "restore": "Restore"
+  },
+  "table": {
+    "id": "ID",
+    "name": "Team Name",
+    "abbreviation": "Abbreviation",
+    "businessUnit": "Business Unit",
+    "department": "Department",
+    "members": "Members",
+    "actions": "Actions"
+  },
+  "modal": {
+    "create": "Create New Team",
+    "edit": "Edit Team",
+    "cancel": "Cancel",
+    "close": "Close",
+    "submit": "Submit",
+    "restoreTitle": "Restore deleted teams",
+    "restore": "Restore",
+    "restoreSelected": "Restore selected",
+    "noDeleted": "No deleted teams"
+  },
+  "form": {
+    "name": "Team Name",
+    "abbreviation": "Abbreviation",
+    "businessUnit": "Business Unit",
+    "selectBusinessUnit": "-- Select Business Unit --",
+    "department": "Department",
+    "selectDepartment": "-- Select Department --"
+  },
+  "modalform": {
+    "nonebu": "None BusinessUnits",
+    "nonedep": "None Departments",
+    "members": "Members",
+    "nomembers": "No Members"
+  },
+  "toast": {
+    "restored": "Restored successfully"
+  },
+  "errors": {
+    "fetchDeletedFailed": "Failed to load deleted teams",
+    "restoreFailed": "Failed to restore",
+    "selectBeforeRestore": "Please select at least one team to restore",
+    "duplicateName": "This team name already exists. Please use a different name.",
+    "submitFailed": "Failed to save"
+  },
+  "loading": "Loading..."
+}

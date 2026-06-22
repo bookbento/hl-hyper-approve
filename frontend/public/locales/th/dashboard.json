@@ -1,0 +1,155 @@
+{
+  "title": "จัดการเอกสารอนุมัติ",
+  "subtitle": "ดูและจัดการเอกสารอนุมัติภายในองค์กร",
+  "searchPlaceholder": "ค้นหาเอกสารอนุมัติ...",
+  "filters": {
+    "title": "ตัวกรอง",
+    "toggle": "ตัวกรอง",
+    "clearAll": "ล้างทั้งหมด",
+    "apply": "ใช้ตัวกรอง",
+    "status": "สถานะ",
+    "approver": "ผู้อนุมัติ",
+    "bu": "หน่วยธุรกิจ",
+    "dept": "แผนก",
+    "all": "ทั้งหมด",
+    "allBusinessUnits": "ทุกหน่วยธุรกิจ",
+    "allDepartments": "ทุกแผนก",
+    "departmentsInSelectedBU": "แผนกในหน่วยธุรกิจที่เลือก",
+    "searchApprover": "ค้นหาผู้อนุมัติ",
+    "searchBU": "ค้นหาหน่วยธุรกิจ",
+    "searchDept": "ค้นหาแผนก",
+    "noApprover": "ไม่พบผู้อนุมัติ",
+    "noBU": "ไม่พบหน่วยธุรกิจ",
+    "selectBuFirst": "โปรดเลือกหน่วยธุรกิจก่อน",
+    "noDept": "ไม่พบแผนก",
+    "expiry": "ตัวกรองวันหมดอายุ",
+    "expiryShort": "วันหมดอายุ",
+    "sortByLatestAction": "เรียงตาม Action ล่าสุด",
+    "scope": {
+      "all": "ทั้งหมด",
+      "main": "เฉพาะไลน์อนุมัติหลัก",
+      "extra": "เฉพาะไลน์อนุมัติเพิ่มเติม"
+    }
+  },
+  "filterByApprover": {
+    "all": "ผู้อนุมัติปัจจุบันทั้งหมด"
+  },
+  "clearFilters": "ล้างตัวกรอง",
+  "activeFilters": "ตัวกรองที่ใช้งาน",
+  "btnUpload": "อัปโหลด",
+  "btnCreate": "สร้างใหม่",
+  "stats": {
+    "total": "การขอทั้งหมด",
+    "draft": "แบบร่าง",
+    "processing": "กำลังดำเนินการ",
+    "approved": "อนุมัติแล้ว",
+    "rejected": "ต้องแก้ไข",
+    "terminated": "ยกเลิกแล้ว",
+    "published": "ประกาศแล้ว",
+    "recalled": "เรียกคืน",
+    "filtered": "แสดงผลทั้งหมด",
+    "approvalRequest": "การขออนุมัติที่รออยู่",
+    "approvalRequestHint": "คําขออนุมัติใหม่",
+    "myCreatedMemos": "เอกสารที่ฉันสร้าง",
+    "myCCMemos": "เอกสารที่ฉันเป็น CC"
+  },
+  "table": {
+    "number": "หมายเลขเอกสาร",
+    "subject": "หัวข้อ",
+    "name": "ชื่อ Memo",
+    "author": "ผู้สร้าง",
+    "createdAt": "วันที่สร้าง",
+    "status": "สถานะ",
+    "currentApprover": "ผู้อนุมัติปัจจุบัน",
+    "extraApprover": "ผู้อนุมัติพิเศษ",
+    "latestComment": "คอมเมนต์ล่าสุด",
+    "actions": "การกระทำ",
+    "createdat": "วันที่สร้าง",
+    "lastUpdated": "อัปเดตล่าสุด",
+    "expires": "วันหมดอายุ",
+    "ccStatus": "สถานะ CC"
+  },
+  "empty": {
+    "noMatch": "ไม่พบ Memo ตามที่ค้นหา",
+    "none": "ยังไม่มี Memo"
+  },
+  "expiry": {
+    "status": {
+      "expired": "หมดอายุแล้ว",
+      "soon": "ใกล้หมดอายุ",
+      "active": "ยังไม่หมดอายุ",
+      "none": "ไม่ระบุวันหมดอายุ",
+      "closed": "สิ้นสุดแล้ว"
+    }
+  },
+  "timeago": {
+    "nowPast": "เมื่อสักครู่",
+    "nowFuture": "อีกสักครู่",
+    "pastPrefix": "ผ่านมาแล้ว ",
+    "futurePrefix": "อีก ",
+    "units": {
+      "year": "ปี",
+      "month": "เดือน",
+      "week": "สัปดาห์",
+      "day": "วัน",
+      "hour": "ชม.",
+      "minute": "นาที",
+      "second": "วินาที"
+    }
+  },
+  "latestComment": {
+    "autoBoth": "ได้ส่งรูปและไฟล์แนบ",
+    "autoImages": "ได้ส่งรูปภาพ",
+    "autoFiles": "ได้ส่งไฟล์แนบ"
+  },
+  "confirmDelete": "จะลบ Memo #{{id}} ใช่หรือไม่?",
+  "show": "แสดง",
+  "hide": "ซ่อน",
+  "loading": "กำลังโหลด...",
+  "headerFilter": {
+    "buttonTitle": "กรอง/เรียง",
+    "sort": {
+      "title": "การเรียงลำดับ",
+      "asc": "A → Z",
+      "desc": "Z → A",
+      "clear": "ล้าง",
+      "clearTitle": "ล้างการเรียง"
+    },
+    "filter": {
+      "title": "ตัวกรอง"
+    },
+    "text": {
+      "placeholder": "พิมพ์คำที่ต้องการค้นหา..."
+    },
+    "list": {
+      "searchPlaceholder": "ค้นหาในรายการ...",
+      "selectAll": "เลือกทั้งหมด",
+      "clearAll": "ล้างทั้งหมด",
+      "noResults": "ไม่พบผลลัพธ์"
+    },
+    "date": {
+      "from": "จากวันที่",
+      "to": "ถึงวันที่",
+      "clear": "ล้างวันที่"
+    },
+    "actions": {
+      "close": "ปิด",
+      "apply": "นำไปใช้"
+    }
+  },
+  "pager": {
+    "ariaPerPage": "จำนวนรายการต่อหน้า",
+    "all": "ทั้งหมด",
+    "prev": "ก่อนหน้า",
+    "next": "ถัดไป",
+    "pageOf": "หน้า {{page}} / {{totalPages}}",
+    "titlePrev": "ก่อนหน้า",
+    "titleNext": "ถัดไป",
+    "total": "รวม {{total}} รายการ"
+  },
+  "columnVisibility": {
+    "toggle": "แสดง/ซ่อนคอลัมน์",
+    "title": "จัดการคอลัมน์",
+    "close": "ปิด"
+  }
+}

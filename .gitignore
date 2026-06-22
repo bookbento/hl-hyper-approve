@@ -1,0 +1,51 @@
+
+# Dependencies
+**/node_modules/
+
+# Build outputs
+backend/dist/
+frontend/dist/
+
+.kiro/
+.vscode/
+.claude/
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.production
+**/.env.development
+
+backend/.env
+frontend/.env
+
+backend/package-lock.json
+frontend/package-lock.json
+
+# Uploads
+uploads/
+**/uploads/
+
+# Logs
+logs/
+**/logs/
+
+# Backups
+backups/
+**/backups/
+# Backup files
+*.7z
+*.zip
+*.tar.gz
+*.dump
+*.sql
+*.bak
+*.py
+*_backup_*.tar.gz
+*.md
+start-local.bat
+
+
+**/playwright-report
+**/test-results
+**.todo

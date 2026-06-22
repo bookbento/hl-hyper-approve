@@ -1,0 +1,48 @@
+{
+  "title": "การจัดการแผนก",
+  "viewLog": "ดูประวัติ",
+  "searchPlaceholder": "ค้นหาแผนก...",
+  "button": {
+    "create": "สร้างแผนกใหม่"
+  },
+  "table": {
+    "id": "ลำดับ",
+    "name": "ชื่อแผนก",
+    "abbreviation": "ตัวย่อแผนก",
+    "actions": "จัดการ"
+  },
+  "modal": {
+    "create": "สร้างแผนกใหม่",
+    "edit": "แก้ไขแผนก",
+    "cancel": "ยกเลิก",
+    "submit": "บันทึก"
+  },
+  "form": {
+    "name": "ชื่อแผนก",
+    "abbreviation": "ตัวย่อแผนก",
+    "placeholder": {
+      "name": "กรุณากรอกชื่อแผนก",
+      "abbreviation": "กรุณากรอกตัวย่อแผนก"
+    },
+        "businessUnit": "หน่วยธุรกิจ",
+    "none": "ไม่ระบุ",
+    "buHint": "เลือกหน่วยธุรกิจ (ไม่บังคับ)"
+    
+  },
+  "toast": {
+    "created": "สร้างแผนกสำเร็จ",
+    "updated": "อัปเดตแผนกสำเร็จ",
+    "deleted": "ลบแผนกสำเร็จ"
+  },
+  "confirm": {
+    "delete": "ลบแผนกนี้หรือไม่?"
+  },
+  "errors": {
+    "unauthorized": "กรุณาเข้าสู่ระบบใหม่",
+    "fetchDept": "โหลดข้อมูลแผนกไม่สำเร็จ",
+    "submitDept": "บันทึกแผนกไม่สำเร็จ",
+    "deleteDept": "ลบแผนกไม่สำเร็จ",
+    "fetchBU": "โหลด Business Units ไม่สำเร็จ"
+  },
+  "loading": "กำลังโหลด..." 
+}

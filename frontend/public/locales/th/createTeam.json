@@ -1,0 +1,53 @@
+{
+  "title": "การจัดการทีม",
+  "searchPlaceholder": "ค้นหาทีม...",
+  "button": {
+    "create": "สร้างทีมใหม่",
+    "restore": "กู้คืน"
+  },
+  "table": {
+    "id": "ลำดับ",
+    "name": "ชื่อทีม",
+    "abbreviation": "ตัวย่อ",
+    "businessUnit": "หน่วยธุรกิจ",
+    "department": "แผนก",
+    "members": "สมาชิก",
+    "actions": "จัดการ"
+  },
+  "modal": {
+    "create": "สร้างทีมใหม่",
+    "edit": "แก้ไขทีม",
+    "cancel": "ยกเลิก",
+    "close": "ปิด",
+    "submit": "บันทึก",
+    "restoreTitle": "กู้คืนทีมที่ถูกลบ",
+    "restore": "กู้คืน",
+    "restoreSelected": "กู้คืนที่เลือก",
+    "noDeleted": "ไม่มีทีมที่ถูกลบ"
+  },
+  "form": {
+    "name": "ชื่อทีม",
+    "abbreviation": "ตัวย่อ",
+    "businessUnit": "หน่วยธุรกิจ",
+    "selectBusinessUnit": "-- กรุณาเลือกหน่วยธุรกิจ --",
+    "department": "แผนก",
+    "selectDepartment": "-- กรุณาเลือกแผนก --"
+  },
+  "modalform": {
+    "nonebu": "ไม่มีหน่วยธุรกิจ",
+    "nonedep": "ไม่มีแผนก",
+    "members": "สมาชิกในทีม",
+    "nomembers": "ไม่มีสมาชิกในทีม"
+  },
+  "toast": {
+    "restored": "กู้คืนสำเร็จ"
+  },
+  "errors": {
+    "fetchDeletedFailed": "โหลดรายชื่อทีมที่ถูกลบไม่สำเร็จ",
+    "restoreFailed": "กู้คืนไม่สำเร็จ",
+    "selectBeforeRestore": "โปรดเลือกรายการที่จะกู้คืนอย่างน้อยหนึ่งทีม",
+    "duplicateName": "ชื่อทีมนี้มีอยู่แล้ว กรุณาใช้ชื่ออื่น",
+    "submitFailed": "บันทึกไม่สำเร็จ"
+  },
+  "loading": "กำลังโหลด..."
+}

@@ -1,0 +1,187 @@
+{
+  "stepUpload": "ขั้นตอนที่ 1",
+  "stepSign": "ขั้นตอนที่ 2",
+
+  "subject": "หัวข้อ/เรื่อง",
+  "selectType": "-- เลือกประเภทเอกสาร --",
+
+  "bu": "หน่วยธุรกิจ",
+  "dept": "แผนก",
+  "team": "ทีม",
+
+  "buLabel": "หน่วยธุรกิจ (Business Unit)",
+  "deptLabel": "แผนก (Department)",
+  "teamLabel": "ทีม (Team)",
+  "expiryLabel": "วันหมดอายุ (วัน–เวลา)",
+
+  "ccLabel": "สำเนา (CC)",
+  "remove": "ลบ",
+
+  "next": "ถัดไป",
+  "back": "ย้อนกลับ",
+  "save": "บันทึกเอกสาร",
+
+  "uploadFiles": "อัปโหลดไฟล์",
+  "uploadHint": "กรุณาเลือกไฟล์ .pdf ขนาดไม่เกิน",
+
+  "selectApprovalLine": "-- เลือกไลน์การอนุมัติ --",
+  "selectApproval": "ไลน์การอนุมัติ",
+  "chooseLine": "ไลน์การอนุมัติ",
+
+  "btnAddSig": "+ ลายเซ็น",
+  "btnAddDate": "+ วันที่",
+  "btnAddNote": "+ หมายเหตุ",
+  "btnAddBoth": "วางลายเซ็นและวันที่",
+  "applyToAllPages": "วางในทุกหน้า",
+  "pages": "หน้า",
+  "placingSignatures": "กำลังวางลายเซ็นในทุกหน้า...",
+  "signaturesAppliedToAllPages": "วางลายเซ็นในทุกหน้าสำเร็จ",
+  "clearAll": "ล้างทั้งหมด",
+  "clearAllSignatures": "ล้างลายเซ็นทั้งหมด",
+  "signaturesCleared": "ล้างลายเซ็นทั้งหมดแล้ว",
+
+  "newLineTitle": "สร้าง Approval Line ใหม่",
+  "lineName": "ชื่อ Approval Line",
+  "levelName": "ชื่อ Level",
+  "levelShort": "ระดับ",
+  "selectUsers": "เลือกผู้ใช้",
+  "changeUser": "เปลี่ยนผู้ใช้",
+  "removeLevel": "ลบ Level",
+  "addLevel": "เพิ่ม Level",
+  "saveLineBtn": "บันทึก Approval Line",
+
+  "createLineOk": "สร้าง Approval Line สำเร็จ",
+  "createLineFail": "สร้าง Approval Line ล้มเหลว",
+
+  "sessionExpired": "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่",
+
+  "saveOk": "บันทึกสำเร็จ",
+  "saveFail": "บันทึกไม่สำเร็จ",
+  "saveCcFail": "บันทึก CC ไม่สำเร็จ",
+  "fillAll": "กรุณากรอกข้อมูลให้ครบ",
+
+  "of": "จาก",
+  "pdfPlaceholder": "อัปโหลด PDF เพื่อแสดงตัวอย่าง",
+  "filePlaceholder": "อัปโหลดไฟล์แนบ (PDF หรือ รูปภาพ)",
+
+  "waiting": "ไม่ต้องการลายเซ็น",
+  "withSignature": "ต้องการลายเซ็น",
+  "nosign": "ไม่เอาลายเซ็น",
+
+  "placeholder": "พิมพ์ชื่อหรืออีเมลเพื่อค้นหา",
+  "searching": "กำลังค้นหา…",
+  "minChars": "พิมพ์อย่างน้อย 2 ตัวอักษร",
+  "notFound": "ไม่พบผู้ใช้",
+
+  "stepState": {
+    "active": "กำลังทำ",
+    "completed": "เสร็จแล้ว",
+    "upcoming": "ถัดไป"
+  },
+
+  "files": {
+    "loadingTypeFiles": "กำลังโหลดไฟล์เทมเพลต…",
+    "noTypeFilesTitle": "ไม่มีไฟล์เทมเพลต",
+    "noTypeFilesDesc": "ประเภทเอกสารนี้ยังไม่มีไฟล์เทมเพลต",
+    "downloadTemplate": "ดาวน์โหลดไฟล์เทมเพลต",
+    "download": "ดาวน์โหลด",
+    "typeFilesLoadFail": "โหลดไฟล์ของประเภทเอกสารไม่สำเร็จ"
+  },
+
+  "pendingNewFile": "ไฟล์ใหม่",
+  "loadingPdf": "กำลังโหลด PDF...",
+
+  "errors": {
+    "pleaseFillStep1": "กรุณากรอกข้อมูลในขั้นตอนที่ 1 ให้ครบก่อน",
+    "subjectRequired": "กรุณากรอกหัวข้อเรื่อง",
+    "memoTypeRequired": "กรุณาเลือกประเภทเอกสาร",
+    "expiryMustBeFuture": "วันหมดอายุควรเป็นเวลาในอนาคต",
+    "missingSignatures": "กรุณาวางลายเซ็นให้ครบทุกคนที่ต้องการลายเซ็น",
+    "unsupportedFileType": "ไฟล์ประเภทไม่รองรับ: {{files}} รองรับเฉพาะไฟล์รูปภาพ, PDF, Word, Excel และ PowerPoint เท่านั้น"
+  },
+
+  "searchSelect": {
+    "noResults": "ไม่พบผลลัพธ์",
+    "tryAnother": "ลองค้นหาด้วยคำอื่น",
+    "clear": "ล้าง",
+    "buUnspecified": "ใช้สำหรับทุกหน่วยธุรกิจ"
+  },
+
+  "searchPlaceholder": "พิมพ์ชื่อ/อีเมล อย่างน้อย 2 ตัวอักษร",
+  "addUsers": "เพิ่มผู้อนุมัติ",
+  "special approval case": "ผู้อนุมัติพิเศษ",
+  "additionalRole": "เพิ่มเติม",
+  "loadMemoFail": "โหลดข้อมูลไม่สำเร็จ",
+  "useForAll": "ใช้สําหรับทุกหน่วยงาน",
+  "autoSelectedFromDocType": "เลือกอัตโนมัติจากประเภทเอกสาร",
+  "saving": "กำลังบันทึก...",
+  "saved": "บันทึกสำเร็จ",
+  "saveFailed": "บันทึกไม่สำเร็จ",
+
+  "level": "ระดับ",
+
+  "selectUser": "เลือกผู้ใช้",
+  "addSelected": "เพิ่มที่เลือก",
+  "alreadyAdded": "ถูกเพิ่มแล้ว",
+  "selected": "ที่เลือก",
+
+  "mainFilesLabel": "ไฟล์หลัก",
+  "attachedFilesLabel":"ไฟล์แนบ",
+  "attachmentsLabel": "ไฟล์แนบ",
+  "orAddUrlLink": "หรือเพิ่มลิงก์ URL",
+  "removeFile": "ลบไฟล์",
+  "urlLinksLabel": "ลิงก์ URL",
+  "addUrlLink": "+ เพิ่มลิงก์ URL",
+  "saveUrlLink": "บันทึกลิงก์ URL",
+  "cancel": "ยกเลิก",
+  "urlPlaceholder": "ใส่ URL (เช่น https://example.com/document)",
+  "urlTitlePlaceholder": "ใส่ชื่อลิงก์ (ไม่บังคับ)",
+  "urlLabel": "URL",
+  "urlTitleLabel": "ชื่อ",
+  "invalidUrl": "กรุณาใส่ URL ที่ถูกต้อง",
+  "removeLink": "ลบลิงก์",
+
+  "replaceWithFlexibleSlot": "แทนที่ด้วยช่องยืดหยุ่น",
+  "confirmReplaceWithFlexible": "แทนที่ {{name}} ด้วยช่องยืดหยุ่นหรือไม่?",
+
+  "selectingFlexibleTitle": "กำลังเลือกผู้ใช้สำหรับตำแหน่งแบบยืดหยุ่น",
+  "selectingFlexibleHint": "เลือกผู้ใช้ 1 คนเพื่อกำหนดให้ตำแหน่งนี้",
+
+  "Clear": "ล้าง",
+
+  "titleLabel": "ชื่อเรื่อง",
+  "typeLabel": "ประเภทเอกสาร",
+
+  "specialApprovalCase": "ผู้อนุมัติพิเศษ",
+  "selectUserFirst": "กรุณาเลือกผู้อนุมัติก่อน",
+  "titlememonumber": "เพิ่มหมายเลขเอกสาร",
+  "addmemonumber": "+ หมายเลขเอกสาร",
+  "clickaddmemonumber": "คลิกบนเอกสารเพื่อวางหมายเลข",
+
+  "noteText": "ข้อความหมายเหตุ",
+  "enterNoteText": "กรอกข้อความหมายเหตุ",
+  "clickToPlaceNote": "คลิกบนเอกสารเพื่อวางหมายเหตุ",
+  "addNoteTitle": "เพิ่มหมายเหตุ/ความคิดเห็น",
+  "noteHint": "กด Ctrl+Enter เพื่อบันทึก, Esc เพื่อยกเลิก",
+  "add": "เพิ่ม",
+
+  "referenceMemosLabel": "เอกสารอ้างอิง",
+  "searchReferenceMemos": "ค้นหาเอกสารของคุณเพื่ออ้างอิง...",
+  "selectedReferences": "เอกสารอ้างอิงที่เลือก",
+  "noMemosFound": "ไม่พบเอกสาร",
+  "noRecentMemos": "ไม่มีเอกสารล่าสุด",
+  "recentMemos": "เอกสารล่าสุด",
+  "searching": "กำลังค้นหา...",
+  "selected": "เลือกแล้ว",
+  "noSelectedReferences": "ไม่มีเอกสารอ้างอิงที่เลือก",
+  "searching": "กำลังค้นหา...",
+
+  "delegation": {
+    "active": "มีการมอบหมายอำนาจ",
+    "actingOnBehalf": "ดำเนินการแทน"
+  },
+  "adjustingLayout": "กำลังปรับเลย์เอาต์...",
+  "removeApprover": "ลบผู้อนุมัติ",
+  "insertLevel": "แทรกระดับ",
+  "insertLevelHere": "แทรกระดับใหม่ที่นี่"
+}

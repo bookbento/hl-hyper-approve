@@ -1,0 +1,107 @@
+{
+  "title": "User Management",
+  "viewLog": "View Log",
+  "searchPlaceholder": "Search users...",
+  "downloadExcel": "Download Excel",
+  "createNew": "Create New User",
+  "tabs": {
+    "active": "Active Users",
+    "archived": "Archived Users"
+  },
+  "col": {
+    "name": "Name",
+    "email": "Email",
+    "role": "Role",
+    "department": "Department",
+    "team": "Team",
+    "businessUnit": "Business Unit",
+    "actions": "Actions",
+    "archivedAt": "Archived Date"
+  },
+  "noData": "No users found",
+  "noMatch": "No users match your search",
+  "confirmDelete": "Are you sure you want to archive {{name}}? This user will no longer appear in the system but historical data will be preserved.",
+  "confirmRestore": "Are you sure you want to restore {{name}}? This user will be reactivated and appear in the active users list.",
+  "delete": "Archive",
+  "restore": "Restore",
+  "prevPage": "Previous",
+  "nextPage": "Next",
+  "summary": "Showing {{shown}} of {{total}} users",
+  "modal": {
+    "createTitle": "Create New User",
+    "editTitle": "Edit User",
+    "saveCreate": "Create",
+    "saveEdit": "Save Changes",
+    "createUser": "Create New User",
+    "editUser": "Edit User"
+  },
+  "form": {
+    "name": "First Name",
+    "email": "Email",
+    "emailPlaceholder": "example@email.com",
+    "password": "Password",
+    "role": "Role",
+    "rolePlaceholder": "-- Select role --",
+    "team": "Team",
+    "teamPlaceholder": "-- Select team --",
+    "businessUnit": "Business Unit",
+    "businessUnitPlaceholder": "-- Select unit --",
+    "department": "Department",
+    "departmentPlaceholder": "-- Select department --",
+    "avatar": "Profile Image",
+    "nickname": "Nickname",
+    "nicknameplaceholder": "Nickname (optional)",
+    "lastname": "Last Name",
+    "namePlaceholder": "First name",
+    "lastnamePlaceholder": "Last name",
+    "selectRole": "-- Select role --",
+    "additionalBusinessUnits": "Additional Business Unit Access",
+    "additionalBusinessUnitsPlaceholder": "-- Select additional business units --",
+    "additionalBusinessUnitsHelp": "Select additional business units this user can access (optional). The primary business unit is always accessible.",
+    "dccManagementBusinessUnits": "DCC Management Business Units",
+    "dccManagementBusinessUnitsHelp": "Select additional business units this DCC user can manage memo types and approval lines for. The primary business unit is always manageable.",
+    "dccManagementBusinessUnitsSelected": "additional management business unit(s) selected",
+    "noBusinessUnitsAvailable": "No business units available",
+    "checkAll": "Check all",
+    "uncheckAll": "Uncheck all"
+  },
+  "roles": {
+    "user": "User",
+    "manager": "Manager",
+    "admin": "Admin",
+    "dcc": "DCC"
+  },
+  "edit": "Edit",
+  "errors": {
+    "missing": "Please fill in",
+    "invalidEmail": "Invalid email",
+    "invalidEmailAsciiLower": "Invalid email (lowercase only)",
+    "emailASCIIOnly": "Email must be lowercase ASCII only",
+    "emailTaken": "Email already exists",
+    "generic": "Something went wrong"
+  },
+  "email": {
+    "patternTitle": "Email must be lowercase ASCII only, e.g., user.name+1@domain.co",
+    "hintLowercased": "Converted to lowercase.",
+    "hintRemovedNonAscii": "Removed non-English/number characters.",
+    "invalidAsciiLower": "Invalid email (lowercase only)."
+  },
+  "success": {
+    "userCreated": "User created successfully",
+    "userUpdated": "User updated successfully",
+    "userArchived": "User archived successfully",
+    "userRestored": "User restored successfully",
+    "passwordResetForced": "First-time login enabled successfully",
+    "firstLoginCleared": "First-time login disabled successfully"
+  },
+  "forcePasswordReset": {
+    "button": "Set First-Time Login",
+    "confirmTitle": "Set First-Time Login",
+    "confirmMessage": "Set {{name}} to first-time login status? They will need to change their password on next login.",
+    "confirm": "Yes, Enable",
+    "disableTitle": "Disable First-Time Login",
+    "disableMessage": "Disable first-time login for {{name}}? They will be able to login normally without changing password.",
+    "disable": "Yes, Disable",
+    "cancel": "Cancel"
+  }
+}

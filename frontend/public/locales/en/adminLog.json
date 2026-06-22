@@ -1,0 +1,39 @@
+{
+  "title": "Admin Log",
+  "viewLog": "View Log",
+  "totalItems": "({{count}} items)",
+  "filters": {
+    "searchLabel": "Search",
+    "searchPlaceholder": "Name, Action, or Target...",
+    "actionTypeLabel": "Action Type",
+    "allActions": "All Actions",
+    "startDateLabel": "Start Date",
+    "endDateLabel": "End Date",
+    "reset": "Reset"
+  },
+  "export": {
+    "downloadExcel": "Download Excel",
+    "downloading": "Downloading..."
+  },
+  "table": {
+    "time": "Time",
+    "actor": "Actor",
+    "action": "Action",
+    "target": "Target",
+    "details": "Details",
+    "viewMore": "View More",
+    "hide": "Hide",
+    "changesLog": "CHANGES LOG",
+    "null": "null"
+  },
+  "status": {
+    "loading": "Loading...",
+    "noLogs": "No history found"
+  },
+  "pagination": {
+    "page": "Page {{current}} / {{total}}",
+    "prev": "Previous",
+    "next": "Next",
+    "close": "Close"
+  }
+}

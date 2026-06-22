@@ -1,0 +1,9 @@
+{
+  "unauthorized": {
+    "title": "403 - Access Denied",
+    "message": "You do not have permission to access this page. Please contact your administrator.",
+    "hint": "If you believe you should have access to this page, please contact your administrator.",
+    "backToDashboard": "Back to Dashboard",
+    "goBack": "Go Back"
+  }
+}

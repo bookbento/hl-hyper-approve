@@ -1,0 +1,64 @@
+npx prisma migrate reset --force --skip-generate
+npx prisma db push
+npm run db:seed    
+npm run dev
+
+sudo npx prisma migrate reset --force --skip-generate
+sudo npx prisma db push
+sudo npm run db:seed    
+sudo npm run dev
+
+
+____________
+**Task Assignment Summary**
+I want to build user profile management that allows customers to update their personal information and preferences.
+
+**Context:**
+- React frontend with TypeScript
+- Node.js backend with PostgreSQL
+- Already have user authentication working
+- User type: registered customers
+
+**Goals:**
+- Let users edit name, email, phone, preferences
+- Validate changes before saving
+- Show success/error feedback
+
+**Constraints:**
+- Email changes need verification
+- Must work on mobile
+- Keep it simple - no complex workflows
+
+
+
+**Bug:** Settings page crashes when user clicks "Save Preferences"
+
+**Current behavior:** 
+Page shows white screen, console shows "Cannot read property 'map' of undefined"
+
+**Expected behavior:** 
+Should save preferences and show success message
+
+**To reproduce:**
+1. Go to Settings page
+2. Change any preference toggle
+3. Click "Save Preferences" 
+4. Page crashes
+
+**Additional context:**
+- Started happening after yesterday's deployment
+- Only affects users with empty preference arrays
+- Error in Settings.tsx line 45
+
+
+
+
+Let's act as a senior developer who is going to assign the task to junior developer to complete.
+So you have to create the Task Assignment Summary by summarize and break down the full request and define exactly what needs to be done.
+
+__________________
+
+route : /memos/new?typeId={typeId}
+Objective: Rearrange the button to select the user to fill in the flexible slot.
+Current behavior: The button to select the user to fill in the flexible slot is not place in the proper position.
+Expected behavior: The button to select the user to fill in the flexible slot is place in the proper position, place it in the position that it should be. At least, I think the button and the form to type for select the user should be abie the name of the flexible slot.

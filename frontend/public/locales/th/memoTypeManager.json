@@ -1,0 +1,218 @@
+{
+  "title": "จัดการประเภทเอกสาร",
+  "viewLog": "ดูประวัติ",
+  "searchPlaceholder": "ค้นหา…",
+  "pageSize": "จำนวนที่แสดงผล",
+  "btnCreate": "+ สร้างใหม่",
+  "loading": "กำลังโหลด…",
+  "noData": "ไม่พบข้อมูล",
+  "businessUnitSelector": {
+    "label": "หน่วยธุรกิจ:",
+    "all": "ทุกหน่วยธุรกิจ"
+  },
+  "dynamicBUFilter": {
+    "label": "กรองตาม BU:",
+    "all": "ทุกหน่วยธุรกิจ"
+  },
+  "count": {
+    "active": "ใช้งาน",
+    "total": "ทั้งหมด"
+  },
+  "totalRecords": "จำนวนทั้งหมด: {{count}} รายการ",
+  "col": {
+    "id": "รหัส",
+    "name": "ชื่อ",
+    "abbr": "ตัวย่อ",
+    "bu": "หน่วยธุรกิจ",
+    "status": "สถานะ",
+    "approvers": "ผู้อนุมัติ",
+    "team": "ทีม",
+    "dept": "แผนก",
+    "desc": "รายละเอียด",
+    "createdAt": "วันที่สร้าง",
+    "actions": "คำสั่ง"
+  },
+  "modal": {
+    "create": "สร้างประเภท Memo ใหม่",
+    "edit": "แก้ไขประเภท Memo",
+    "duplicate": "คัดลอกประเภท Memo"
+  },
+  "label": {
+    "name": "ชื่อ",
+    "abbr": "ตัวย่อ",
+    "desc": "รายละเอียด",
+    "bu": "หน่วยธุรกิจ",
+    "team": "ทีม",
+    "active": "ใช้งาน",
+    "department": "แผนก",
+    "forEveryone": "สำหรับทุกคน",
+    "forEveryDepartmentAcrossBU": "สำหรับทุกแผนกข้ามหน่วยธุรกิจ",
+    "forAllDepartmentUnderSelectedBu": "สำหรับทุกแผนกภายใต้หน่วยธุรกิจที่เลือก"
+  },
+  "optional": {
+    "selectNone": "-- ไม่ระบุ --"
+  },
+  "btnCancel": "ยกเลิก",
+  "btnSave": "บันทึก",
+  "btnDuplicate": "คัดลอก",
+  "confirm": {
+    "delete": "ต้องการลบประเภทเอกสารนี้ถาวรหรือไม่",
+    "deleteFile": "ยืนยันลบไฟล์นี้?"
+  },
+  "files": {
+    "sectionUploadTitle": "อัปโหลดไฟล์ต้นแบบ",
+    "uploadBtn": "เพิ่มไฟล์",
+    "clearAll": "ล้างรายการไฟล์",
+    "selectedCount": "เลือกแล้ว {{count}} ไฟล์",
+    "selectedCount_plural": "เลือกแล้ว {{count}} ไฟล์",
+    "existingTitle": "ไฟล์ที่มีอยู่ตอนนี้",
+    "toBeDuplicatedTitle": "ไฟล์ที่จะถูกคัดลอก",
+    "duplicateInfo": "ไฟล์เหล่านี้จากประเภทเอกสารต้นฉบับจะถูกคัดลอกไปยังประเภทเอกสารใหม่ คุณสามารถเพิ่มไฟล์เพิ่มเติมได้ด้านล่าง",
+    "willBeDuplicated": "จะถูกคัดลอก",
+    "noDefault": "ไม่ตั้งค่าเริ่มต้น",
+    "markAsDefault": "ตั้งเป็นเทมเพลตเริ่มต้น",
+    "none": "— ไม่มีไฟล์ —",
+    "remove": "ลบ",
+    "preview": "ดูตัวอย่าง",
+    "downloadTitle": "ดาวน์โหลดไฟล์",
+    "sizeKb": "{{size}} KB"
+  },
+  "toast": {
+    "fileDeleteSuccess": "ลบไฟล์แล้ว",
+    "fileDeleteFail": "ลบไฟล์ไม่สำเร็จ"
+  },
+  "error": {
+    "cannotDeleteInUse": "ไม่สามารถลบประเภทเอกสารนี้ได้ เนื่องจากมีเอกสาร {{count}} รายการที่ใช้งานอยู่ กรุณาลบหรือย้ายเอกสารเหล่านั้นก่อน",
+    "deleteFailed": "ลบประเภทเอกสารไม่สำเร็จ กรุณาลองใหม่อีกครั้ง"
+  },
+  "sort": {
+    "byId": "เรียงตามรหัส",
+    "byName": "เรียงตามชื่อ",
+    "byAbbr": "เรียงตามตัวย่อ",
+    "byTeam": "เรียงตามทีม",
+    "byCreated": "เรียงตามวันที่สร้าง",
+    "az": "เรียง ก-ฮ",
+    "za": "เรียง ฮ-ก",
+    "activeFirst": "แสดงสถานะใช้งานก่อน",
+    "inactiveFirst": "แสดงสถานะไม่ใช้งานก่อน",
+    "levelCount": "เรียงตามจำนวนระดับ",
+    "levelCountDesc": "เรียงตามจำนวนระดับ (มากไปน้อย)",
+    "clear": "ล้างการเรียงลำดับ"
+  },
+  "approverDup": "มีผู้อนุมัติซ้ำหลายระดับ:",
+  "approverDupSameLevel": "มีผู้อนุมัติซ้ำในระดับเดียวกัน:",
+  "requireBUForUnderBU": "กรุณาเลือก Business Unit สำหรับโหมด Under selected BU",
+  "requireBUForAcrossBU": "กรุณาเลือก Business Unit สำหรับโหมด Across BU",
+  "requireDeptForAcrossBU": "กรุณาเลือก Department สำหรับโหมด Across BU",
+  "oneModeOnly": "กรุณาเลือก 1 โหมดเท่านั้น",
+  "needAtLeastOneLevel": "กรุณาเพิ่มอย่างน้อย 1 Level สำหรับ Approval Line",
+  "levelRequireApprover": "Level {{index}} ต้องมีผู้อนุมัติอย่างน้อย 1 คน",
+  "levelRequireFlexName": "Level {{index}}: กรุณากรอกชื่อ Flexible slot (เช่น Department Head)",
+  "saveFailed": "บันทึกไม่สำเร็จ",
+  "approval": {
+    "title": "ลำดับการอนุมัติ",
+    "desc": "กำหนดระดับ (Level) และผู้อนุมัติของประเภทเอกสารนี้ (จำเป็น)",
+
+    "flexibleLevel": "Flexible Slot",
+    "removeLevel": "ลบระดับ",
+    "level": "ระดับ",
+    "insertLevel": "แทรกระดับที่นี่",
+    "flexibleNamePh": "ชื่อ Flexible slot (เช่น หัวหน้าแผนก, ผู้จัดการโครงการ)",
+    "roleNamePh": "ชื่อตำแหน่ง/บทบาท (ถ้ามี)",
+    "roleLabel": "บทบาท",
+    "flexConfigTitle": "ตั้งค่า Flexible Slot",
+    "flexConfigDesc": "ผู้อนุมัติจะถูกเลือกในขั้นต้องสร้างการอนุมัติ",
+    "signatureRequired": "ต้องการลายเซ็น",
+    "toggleSigReq": "สลับการบังคับลายเซ็น",
+    "approvers": "ผู้อนุมัติ",
+    "selectApproversPh": "เลือกผู้อนุมัติ…",
+    "addApproverPh": "ค้นหาและเพิ่มผู้อนุมัติ...",
+    "sigRequired": "ต้องการลายเซ็น",
+    "sigNotRequired": "ไม่บังคับลายเซ็น",
+    "addLevel": "เพิ่มระดับ",
+    "removeApprover": "ลบผู้อนุมัติ",
+    "addAnotherHint": "ใช้ช่องค้นหาด้านบนเพื่อเพิ่มผู้อนุมัติอีกคนในระดับนี้",
+    "approvalRequirement": "เงื่อนไขการอนุมัติ",
+    "allMustApprove": "ผู้อนุมัติทุกคนต้องอนุมัติ",
+    "anyCanApprove": "ผู้อนุมัติคนใดคนหนึ่งอนุมัติได้",
+    "badgeAny": "บางคน",
+    "badgeAll": "ทุกคน",
+    "noApprovers": "ไม่มีผู้อนุมัติ",
+    "noLine": "ไม่มีสายอนุมัติ",
+    "lineInfo": "ข้อมูลลำดับการอนุมัติ",
+    "flexConfigDescMulti": "กำหนดช่องผู้อนุมัติแบบยืดหยุ่น ผู้สร้างเอกสารจะเลือกผู้ใช้สำหรับช่องเหล่านี้เมื่อสร้างเอกสาร",
+    "flexibleSlotLabel": "ช่องยืดหยุ่น",
+    "addFlexSlot": "เพิ่มช่องยืดหยุ่นอีก",
+    "removeFlexSlot": "ลบช่องยืดหยุ่น",
+    "slotRolePh": "ชื่อบทบาท (เช่น หัวหน้าแผนก, ผู้จัดการโครงการ)",
+    "fixedUser": "ผู้ใช้คงที่",
+    "addFixedUser": "เพิ่มผู้ใช้คงที่",
+    "addFlexibleSlot": "เพิ่มช่องยืดหยุ่น",
+    "selectUserPh": "เลือกผู้ใช้...",
+    "noApproversYet": "ยังไม่มีผู้อนุมัติ เพิ่มผู้ใช้คงที่หรือช่องยืดหยุ่นด้านล่าง",
+    "selectUserForFixed": "ระดับ {{index}}: กรุณาเลือกผู้ใช้สำหรับผู้อนุมัติคงที่",
+    "roleRequiredForFlexible": "ระดับ {{index}}: กรุณากรอกบทบาทสำหรับผู้อนุมัติยืดหยุ่น"
+  },
+  "hints": {
+    "underBuOnly": "จำเป็นเฉพาะโหมด \"ทุกแผนกภายใต้ BU ที่เลือก\"",
+    "acrossBuDept": "เลือกแผนกเพื่อแชร์ข้ามทุก BU",
+    "requireBuDeptWhenNoMode": "กรุณาเลือก BU และ/หรือ แผนก เมื่อไม่เลือกโหมดใดๆ"
+  },
+  "toggle": {
+    "forAllDeptUnderBu": "สำหรับทุกแผนกภายใต้หน่วยธุรกิจที่เลือก",
+    "forAllDeptUnderBuDesc": "เมื่อเปิดใช้งาน ประเภทเอกสารนี้จะพร้อมใช้งานสำหรับทุกแผนกภายใต้หน่วยธุรกิจที่เลือก",
+    "forAllDeptUnderBuDescOff": "เมื่อปิดใช้งาน ประเภทเอกสารนี้จะพร้อมใช้งานเฉพาะแผนกที่เลือกเท่านั้น"
+  },
+  "filter": {
+    "byBU": "กรองตามหน่วยธุรกิจ:",
+    "allBU": "ทุกหน่วยธุรกิจ",
+    "byText": "กรองด้วยข้อความ:",
+    "typeToFilter": "พิมพ์เพื่อกรอง...",
+    "clearFilter": "ล้างตัวกรอง",
+    "clearAll": "ล้างทั้งหมด",
+    "selected": "ที่เลือก",
+    "selectBUs": "เลือกหน่วยธุรกิจ...",
+    "selectDepts": "เลือกแผนก...",
+    "clearBU": "ล้างตัวกรองหน่วยธุรกิจ",
+    "clearDept": "ล้างตัวกรองแผนก",
+    "filterByBUCol": "กรองตามหน่วยธุรกิจ:",
+    "filterByDeptCol": "กรองตามแผนก:",
+    "filterByDeptWithBU": "กรองตามแผนก (เลือก {{count}} BU):",
+    "filterByDeptWithBUs": "กรองตามแผนก (เลือก {{count}} BU):",
+    "noDeptInBU": "ไม่พบแผนกที่มีประเภทเอกสารใน BU ที่เลือก",
+    "noDeptAny": "ไม่พบแผนกที่มีประเภทเอกสาร",
+    "nSelectedClear": "ล้างตัวกรอง (เลือก {{count}} รายการ)",
+    "status": {
+      "label": "กรองตามสถานะ:",
+      "all": "ทุกสถานะ",
+      "active": "ใช้งานเท่านั้น",
+      "inactive": "ระงับใช้งานเท่านั้น"
+    },
+    "approver": {
+      "label": "กรองตามชื่อผู้อนุมัติ:",
+      "placeholder": "พิมพ์ชื่อผู้อนุมัติ...",
+      "searchPlaceholder": "ค้นหาผู้อนุมัติ...",
+      "searching": "กำลังค้นหา...",
+      "noResults": "ไม่พบผู้ใช้",
+      "initial": "พิมพ์เพื่อค้นหาผู้อนุมัติ",
+      "filteringBy": "กำลังกรองด้วย:",
+      "clear": "ล้าง"
+    }
+  },
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ระงับใช้งาน",
+    "activeDesc": "ประเภทเอกสารนี้พร้อมใช้งาน",
+    "inactiveDesc": "ประเภทเอกสารนี้ถูกปิดใช้งาน"
+  },
+  "tab": {
+    "all": "ทั้งหมด ({{count}})",
+    "deleted": "ที่ถูกลบ ({{count}})"
+  },
+  "pagination": {
+    "prev": "ก่อนหน้า",
+    "next": "ถัดไป",
+    "found": "พบ {{count}} รายการ",
+    "found_plural": "พบ {{count}} รายการ"
+  }
+}

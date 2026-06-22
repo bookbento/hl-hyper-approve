@@ -1,0 +1,54 @@
+{
+  "title": "Approval Matrix",
+  "viewLog": "View Log",
+  "subtitle": "Create and manage approval workflows for your team",
+  "businessUnitFilter": {
+    "label": "Business Unit:",
+    "all": "All Business Units"
+  },
+  "stats": {
+    "count": "{{count}} Approval Line{{count !== 1 ? 's' : ''}}"
+  },
+  "list": {
+    "title": "Existing Approval Lines",
+    "emptyTitle": "No approval lines yet",
+    "emptyDesc": "Create your first approval line to start managing approval workflows for your team.",
+    "showLevels": "Show {{count}} level{{count !== 1 ? 's' : ''}}",
+    "hideLevels": "Hide levels",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Are you sure you want to delete this approval line?"
+  },
+  "form": {
+    "createTitle": "Create New Approval Line",
+    "editTitle": "Edit Approval Line",
+    "createDesc": "Define a new approval workflow for your team",
+    "editDesc": "Update your approval workflow below",
+    "nameLabel": "Approval Line Name",
+    "namePlaceholder": "e.g. Expense Approval, Vacation Request",
+    "levelTitle": "Level {{index}}",
+    "approversLabel": "Approvers",
+    "approversPlaceholder": "Select approvers...",
+    "signatureLabel": "Signature Requirements",
+    "signatureRequired": "Signature required",
+    "noSignature": "No signature",
+    "addLevel": "Add Approval Level",
+    "teamthis": "Team (this approval line belongs to)",
+    "cancel": "Cancel",
+    "createBtn": "Create Approval Line",
+    "saveBtn": "Save Changes"
+  },
+  "error": {
+    "loadFail": "Failed to load approval lines",
+    "noName": "Please enter a name for the approval line",
+    "noLevel": "Please add at least one level",
+    "createFail": "Creation failed",
+    "updateFail": "Update failed",
+    "deleteFail": "Deletion failed"
+  },
+  "msg": {
+    "created": "Approval line created",
+    "updated": "Approval line updated",
+    "deleted": "Approval line deleted"
+  }
+}

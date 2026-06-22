@@ -1,0 +1,218 @@
+{
+  "title": "Memo Type Management",
+  "viewLog": "View Log",
+  "searchPlaceholder": "Search document types…",
+  "pageSize": "Page size",
+  "btnCreate": "+ Create",
+  "loading": "Loading…",
+  "noData": "No document types found",
+  "businessUnitSelector": {
+    "label": "Business Unit:",
+    "all": "All Business Units"
+  },
+  "dynamicBUFilter": {
+    "label": "Filter by BU:",
+    "all": "All Business Units"
+  },
+  "count": {
+    "active": "Active",
+    "total": "Total"
+  },
+  "totalRecords": "Total records: {{count}}",
+  "col": {
+    "id": "ID",
+    "name": "Name",
+    "abbr": "Abbreviation",
+    "team": "Team",
+    "desc": "Description",
+    "createdAt": "Created At",
+    "actions": "Actions",
+    "dept": "Department",
+    "bu": "Business Unit",
+    "status": "Status",
+    "approvers": "Approvers"
+  },
+  "modal": {
+    "create": "Create New Memo Type",
+    "edit": "Edit Memo Type",
+    "duplicate": "Duplicate Document Type"
+  },
+  "label": {
+    "name": "Name",
+    "abbr": "Abbreviation",
+    "desc": "Description",
+    "team": "Team",
+    "active": "Active",
+    "bu": "Business Unit",
+    "department": "Department",
+    "forEveryone": "For Everyone",
+    "forEveryDepartmentAcrossBU": "For Every Department Across BU",
+    "forAllDepartmentUnderSelectedBu": "For All Department Under Selected BU"
+  },
+  "optional": {
+    "selectNone": "-- None --"
+  },
+  "btnCancel": "Cancel",
+  "btnDuplicate": "Duplicate",
+  "btnSave": "Save",
+  "confirm": {
+    "delete": "Delete this document type permanently?",
+    "deleteFile": "Delete this file?"
+  },
+  "files": {
+    "sectionUploadTitle": "Upload template files",
+    "uploadBtn": "Add files",
+    "clearAll": "Clear selected files",
+    "selectedCount": "Selected {{count}} file",
+    "selectedCount_plural": "Selected {{count}} files",
+    "existingTitle": "Existing files",
+    "toBeDuplicatedTitle": "Files to be duplicated",
+    "duplicateInfo": "These files from the original document type will be copied to the new duplicated type. You can also add additional files below.",
+    "willBeDuplicated": "Will be duplicated",
+    "none": "— No files —",
+    "noDefault": "Do not set a default",
+    "markAsDefault": "Set as default template",
+    "remove": "Remove",
+    "preview": "Preview",
+    "downloadTitle": "Download file",
+    "sizeKb": "{{size}} KB"
+  },
+  "toast": {
+    "fileDeleteSuccess": "File deleted",
+    "fileDeleteFail": "Failed to delete file"
+  },
+  "error": {
+    "cannotDeleteInUse": "Cannot delete this memo type because it is currently being used by {{count}} memo(s). Please remove or reassign those memos first.",
+    "deleteFailed": "Failed to delete memo type. Please try again."
+  },
+  "sort": {
+    "byId": "Sort by ID",
+    "byName": "Sort by name",
+    "byAbbr": "Sort by abbreviation",
+    "byTeam": "Sort by team",
+    "byCreated": "Sort by created date",
+    "az": "Sort A to Z",
+    "za": "Sort Z to A",
+    "activeFirst": "Sort Active First",
+    "inactiveFirst": "Sort Inactive First",
+    "levelCount": "Sort by Level Count",
+    "levelCountDesc": "Sort by Level Count (Desc)",
+    "clear": "Clear Sort"
+  },
+  "approverDup": "Approvers duplicated across levels:",
+  "approverDupSameLevel": "Duplicate approver at the same level:",
+  "requireBUForUnderBU": "Please select a Business Unit for 'Under selected BU' mode",
+  "requireBUForAcrossBU": "Please select a Business Unit for 'Across BU' mode",
+  "requireDeptForAcrossBU": "Please select a Department for 'Across BU' mode",
+  "oneModeOnly": "Please select exactly one visibility mode",
+  "needAtLeastOneLevel": "Please add at least one level for the approval line",
+  "levelRequireApprover": "Level {{index}} requires at least one approver",
+  "levelRequireFlexName": "Level {{index}}: Please enter a flexible slot name (e.g., Department Head)",
+  "saveFailed": "Save failed",
+  "approval": {
+    "title": "Approval Line",
+    "desc": "Define levels and approvers for this document type (required).",
+
+    "flexibleLevel": "Flexible Slot Level",
+    "removeLevel": "Remove Level",
+    "level": "Level",
+    "insertLevel": "Insert level here",
+    "flexibleNamePh": "Flexible slot name (e.g., Department Head, Project Manager)",
+    "roleNamePh": "Role name (optional)",
+    "roleLabel": "Role",
+    "flexConfigTitle": "Flexible Slot",
+    "flexConfigDesc": "This level will be filled dynamically when creating documents.",
+    "signatureRequired": "Signature Required",
+    "toggleSigReq": "Toggle signature requirement",
+    "approvers": "Approvers",
+    "selectApproversPh": "Select approvers…",
+    "addApproverPh": "Search and add approver...",
+    "sigRequired": "Signature required",
+    "sigNotRequired": "No signature",
+    "addLevel": "Add Level",
+    "removeApprover": "Remove approver",
+    "addAnotherHint": "Use the search above to add another approver to this level",
+    "approvalRequirement": "Approval Requirement",
+    "allMustApprove": "All Approvers Must Approve",
+    "anyCanApprove": "Any Approver Can Approve",
+    "badgeAny": "Any",
+    "badgeAll": "All",
+    "noApprovers": "No Approvers",
+    "noLine": "No approval line",
+    "lineInfo": "Line of Approval Information",
+    "flexConfigDescMulti": "Configure flexible approver slots. The memo creator will select users for these slots when creating a memo.",
+    "flexibleSlotLabel": "Flexible Slot",
+    "addFlexSlot": "Add Another Flexible Slot",
+    "removeFlexSlot": "Remove flexible slot",
+    "slotRolePh": "Role name (e.g., Department Head, Project Manager)",
+    "fixedUser": "Fixed User",
+    "addFixedUser": "Add Fixed User",
+    "addFlexibleSlot": "Add Flexible Slot",
+    "selectUserPh": "Select user...",
+    "noApproversYet": "No approvers added yet. Add a fixed user or flexible slot below.",
+    "selectUserForFixed": "Level {{index}}: Please select a user for fixed approver",
+    "roleRequiredForFlexible": "Level {{index}}: Please enter a role for flexible approver"
+  },
+  "hints": {
+    "underBuOnly": "Required only for the \"All Departments under selected BU\" mode",
+    "acrossBuDept": "Select a department to share across all BUs",
+    "requireBuDeptWhenNoMode": "Please select BU and/or Department when no mode is selected"
+  },
+  "toggle": {
+    "forAllDeptUnderBu": "For All Departments Under Selected BU",
+    "forAllDeptUnderBuDesc": "When enabled, this memo type will be available to all departments under the selected business unit",
+    "forAllDeptUnderBuDescOff": "When disabled, this memo type will only be available to the specific department selected"
+  },
+  "filter": {
+    "byBU": "Filter by BU:",
+    "allBU": "All Business Units",
+    "byText": "Filter by text:",
+    "typeToFilter": "Type to filter...",
+    "clearFilter": "Clear Filter",
+    "clearAll": "Clear All",
+    "selected": "selected",
+    "selectBUs": "Select business units...",
+    "selectDepts": "Select departments...",
+    "clearBU": "Clear BU filter",
+    "clearDept": "Clear Department filter",
+    "filterByBUCol": "Filter by Business Unit:",
+    "filterByDeptCol": "Filter by Department:",
+    "filterByDeptWithBU": "Filter by Department ({{count}} BU selected):",
+    "filterByDeptWithBUs": "Filter by Department ({{count}} BUs selected):",
+    "noDeptInBU": "No departments with memo types in selected BUs",
+    "noDeptAny": "No departments with memo types",
+    "nSelectedClear": "Clear Filter ({{count}} selected)",
+    "status": {
+      "label": "Filter by status:",
+      "all": "All Status",
+      "active": "Active Only",
+      "inactive": "Inactive Only"
+    },
+    "approver": {
+      "label": "Filter by approver name:",
+      "placeholder": "Type approver name...",
+      "searchPlaceholder": "Search approver...",
+      "searching": "Searching...",
+      "noResults": "No users found",
+      "initial": "Type to search for an approver",
+      "filteringBy": "Filtering:",
+      "clear": "Clear"
+    }
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "activeDesc": "This memo type is available for use",
+    "inactiveDesc": "This memo type is disabled"
+  },
+  "tab": {
+    "all": "All ({{count}})",
+    "deleted": "Deleted ({{count}})"
+  },
+  "pagination": {
+    "prev": "Prev",
+    "next": "Next",
+    "found": "{{count}} type found",
+    "found_plural": "{{count}} types found"
+  }
+}

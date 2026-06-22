@@ -1,0 +1,74 @@
+{
+  "title": "CC Groups",
+  "viewLog": "View Log",
+  "searchPlaceholder": "Search groups...",
+  "searchGroupPlaceholder": "Search groups...",
+  "searchMemberPlaceholder": "Search members...",
+  "searchUserPlaceholder": "Search users...",
+  "createNew": "Create",
+  "idLabel": "ID",
+  "col": {
+    "name": "Group name",
+    "members": "Members",
+    "actions": "Actions"
+  },
+  "members": "member(s)",
+  "noMembers": "No members",
+  "edit": "Edit",
+  "delete": "Delete",
+  "remove": "Remove",
+  "add": "Add",
+  "addMember": "Add Member",
+  "addMemberTitle": "Add Members to Group",
+  "noMatch": "No groups matched your search",
+  "noData": "No groups yet",
+  "noUsersAvailable": "No users available to add",
+  "showing": "Showing",
+  "groups": "groups",
+  "prev": "Prev",
+  "next": "Next",
+  "cancel": "Cancel",
+  "confirmDelete": "Delete this group?",
+  "confirmRemoveMember": "Confirm Remove Member",
+  "confirmRemoveMemberMessage": "Are you sure you want to remove this member from the group?",
+  "confirmAddMembers": "Confirm Add Members",
+  "confirmAddMembersMessage": "Are you sure you want to add these members to the group?",
+  "membersSelected": "member(s) selected",
+  "modal": {
+    "editTitle": "Edit CC Group",
+    "createTitle": "Create CC Group",
+    "saveEdit": "Save changes",
+    "saveCreate": "Create group",
+    "memberPicker": "Select members to add to this CC group"
+  },
+  "form": {
+    "groupName": "Group name",
+    "groupNamePh": "Enter group name"
+  },
+  "member": {
+    "searchPh": "Search users...",
+    "add": "Add",
+    "noUsers": "No users found",
+    "selected": "Selected members",
+    "empty": "No members selected",
+    "remove": "Remove"
+  },
+  "success": {
+    "groupUpdated": "Group updated",
+    "groupCreated": "Group created",
+    "groupDeleted": "Group deleted",
+    "memberRemoved": "Member removed",
+    "membersAdded": "Member(s) added"
+  },
+  "errors": {
+    "loadFailed": "Failed to load data",
+    "loadGroupFailed": "Failed to load group",
+    "nameRequired": "Please enter a group name",
+    "deleteFailed": "Failed to delete group",
+    "removeMemberFailed": "Failed to remove member",
+    "addMemberFailed": "Failed to add members",
+    "noMembersSelected": "Please select at least one member",
+    "allMembersExist": "All selected members are already in the group",
+    "generic": "Something went wrong"
+  }
+}

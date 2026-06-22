@@ -1,0 +1,152 @@
+{
+  "title": "Approvals Management",
+  "subtitle": "View and manage all company approvals",
+  "searchPlaceholder": "Search memos...",
+  "filters": {
+    "title": "Filters",
+    "toggle": "Filters",
+    "clearAll": "Clear all",
+    "apply": "Apply",
+    "status": "Status",
+    "approver": "Approver",
+    "bu": "Business Unit",
+    "dept": "Department",
+    "all": "All",
+    "allBusinessUnits": "All Business Units",
+    "allDepartments": "All Departments",
+    "departmentsInSelectedBU": "Departments in selected BU",
+    "searchApprover": "Search approver",
+    "searchBU": "Search BU",
+    "searchDept": "Search department",
+    "noApprover": "No approver",
+    "noBU": "No BU",
+    "noDept": "No department",
+    "selectBuFirst": "Select a Business Unit first",
+    "expiry": "Expiry filter",
+    "expiryShort": "Expiry",
+    "sortByLatestAction": "Sort by Latest Action"
+  },
+  "filterByApprover": {
+    "all": "All Current Approvers"
+  },
+  "clearFilters": "Clear Filters",
+  "activeFilters": "Active Filters",
+  "btnUpload": "Upload",
+  "btnCreate": "Create",
+  "stats": {
+    "total": "Total Approvals",
+    "draft": "Draft",
+    "processing": "Processing",
+    "approved": "Approved",
+    "rejected": "Needs Revised",
+    "terminated": "Terminated",
+    "published": "Published",
+    "recalled": "Recalled",
+    "filtered": "Filtered All",
+    "approvalRequest": "My Approval Requests",
+    "approvalRequestHint": "total ",
+    "myCreatedMemos": "My Created Memos",
+    "myCCMemos": "My CC Memos"
+  },
+  "table": {
+    "number": "Number",
+    "subject": "Subject",
+    "name": "Memo Name",
+    "author": "Creator",
+    "createdAt": "Created At",
+    "status": "Status",
+    "currentApprover": "Current Approver",
+    "extraApprover": "Extra Approver",
+    "latestComment": "Latest Comment",
+    "actions": "Actions",
+    "createdat": "Created At",
+    "lastUpdated": "Last Updated",
+    "expires": "Expires At",
+    "ccStatus": "CC Status"
+  },
+  "empty": {
+    "noMatch": "No memos match your search",
+    "none": "No memos available"
+  },
+  "expiry": {
+    "status": {
+      "expired": "Expired",
+      "soon": "Expiring soon",
+      "active": "Active",
+      "none": "No expiration",
+      "closed": "Closed"
+    }
+  },
+  "timeago": {
+    "nowPast": "just now",
+    "nowFuture": "in a moment",
+    "pastPrefix": "",
+    "futurePrefix": "in ",
+    "units": {
+      "year": "year",
+      "month": "month",
+      "week": "week",
+      "day": "day",
+      "hour": "hr",
+      "minute": "min",
+      "second": "second"
+    }
+  },
+  "latestComment": {
+    "autoBoth": "sent photos and files",
+    "autoImages": "sent photos",
+    "autoFiles": "sent files"
+  },
+
+  "confirmDelete": "Delete memo #{{id}}?",
+  "show": "Show",
+  "hide": "Hide",
+  "loading": "Loading...",
+  "headerFilter": {
+    "buttonTitle": "Filter/Sort",
+    "sort": {
+      "title": "Sort",
+      "asc": "A → Z",
+      "desc": "Z → A",
+      "clear": "Clear",
+      "clearTitle": "Clear sort"
+    },
+    "filter": {
+      "title": "Filters"
+    },
+    "text": {
+      "placeholder": "Type to search..."
+    },
+    "list": {
+      "searchPlaceholder": "Search in list...",
+      "selectAll": "Select all",
+      "clearAll": "Clear all",
+      "noResults": "No results"
+    },
+    "date": {
+      "from": "From Date",
+      "to": "To Date",
+      "clear": "Clear Dates"
+    },
+    "actions": {
+      "close": "Close",
+      "apply": "Apply"
+    }
+  },
+
+  "pager": {
+    "ariaPerPage": "Items per page",
+    "all": "All",
+    "prev": "Prev",
+    "next": "Next",
+    "pageOf": "Page {{page}} / {{totalPages}}",
+    "titlePrev": "Previous",
+    "titleNext": "Next",
+    "total": "Total {{total}} items"
+  },
+  "columnVisibility": {
+    "toggle": "Show/Hide Columns",
+    "title": "Manage Columns",
+    "close": "Close"
+  }
+}

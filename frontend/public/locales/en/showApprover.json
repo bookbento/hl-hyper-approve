@@ -1,0 +1,37 @@
+{
+  "title": "My approval requests",
+  "refresh": "Refresh",
+  "searchPlaceholder": "Search by document no. / subject / creator",
+  "loading": "Loading...",
+  "emptyTitle": "No requests",
+  "emptySubtitle": "There are no approval requests matching your search.",
+  "createdByLabel": "Created by:",
+  "createdBy": "Created by ",
+  "goApprove": "Review",
+  "footer": {
+    "show": "Show",
+    "page": "Page {{page}} / {{totalPages}}"
+  },
+  "label": {
+    "expiresAt": "Expires At"
+  },
+  "expiry": {
+    "ok": "Active",
+    "soon": "Expiring soon",
+    "expired": "Expired"
+  },
+  "filter": {
+    "type": {
+      "all": "All",
+      "main": "Main",
+      "extra": "Extra"
+    },
+    "expiry": {
+      "all": "All expiry states",
+      "expired": "Expired",
+      "soon": "Expiring soon",
+      "active": "Not expired",
+      "none": "No expiry"
+    }
+  }
+}

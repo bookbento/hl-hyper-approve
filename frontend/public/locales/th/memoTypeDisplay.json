@@ -1,0 +1,74 @@
+{
+  "pageTitle": "กรุณาเลือกประเภทเอกสาร",
+  "pageDescription": "เลือกประเภทเอกสารสำหรับการสร้างรายการอนุมัติ",
+  "loading": "กำลังโหลด...",
+  "searchPlaceholder": "ค้นหาประเภทเอกสาร...",
+  "searchAriaLabel": "ค้นหาประเภทเอกสาร",
+  "tableAriaLabel": "ตารางประเภทเอกสาร",
+  "refreshButton": "รีเฟรช",
+  "refreshSuccess": "รีเฟรชข้อมูลสำเร็จ",
+  "refreshError": "ไม่สามารถรีเฟรชข้อมูลได้",
+  "retryButton": "ลองใหม่",
+  "errorTitle": "ไม่สามารถโหลดประเภทเอกสารได้",
+  "businessUnitFilter": {
+    "label": "หน่วยธุรกิจ:",
+    "all": "ทุกหน่วยธุรกิจ",
+    "primary": "หลัก"
+  },
+  "dynamicBUFilter": {
+    "label": "กรองตาม BU:",
+    "all": "ทุกหน่วยธุรกิจ"
+  },
+  "totalRecords": "จำนวนทั้งหมด: {{count}} รายการ",
+  "columns": {
+    "name": "ชื่อ",
+    "abbreviation": "ตัวย่อ",
+    "businessUnit": "หน่วยธุรกิจ",
+    "team": "ทีม",
+    "department": "แผนก",
+    "createdAt": "วันที่สร้าง"
+  },
+  "noData": "ไม่พบประเภทเอกสาร",
+  "noDataDescription": "ลองปรับเกณฑ์การค้นหาของคุณ",
+  "rowAriaLabel": "ดูรายละเอียดสำหรับ {{name}}",
+  "pagination": {
+    "showing": "แสดง",
+    "to": "ถึง",
+    "of": "จาก",
+    "results": "ผลลัพธ์",
+    "pageSizeAriaLabel": "รายการต่อหน้า",
+    "pageAriaLabel": "ไปที่หน้า {{page}}"
+  },
+  "stats": {
+    "totalTypes": "ประเภทเอกสารทั้งหมด",
+    "activeTypes": "ประเภทเอกสารที่ใช้งานได้",
+    "filteredResults": "ผลลัพธ์ที่กรอง"
+  },
+  "modalTitle": "รายละเอียดประเภทเอกสาร",
+  "closeModal": "ปิดหน้าต่าง",
+  "fields": {
+    "name": "ชื่อ",
+    "abbreviation": "ตัวย่อ",
+    "description": "คำอธิบาย",
+    "businessUnit": "หน่วยธุรกิจ",
+    "team": "ทีม",
+    "department": "แผนก",
+    "approvalLines": "สายการอนุมัติ",
+    "createdAt": "วันที่สร้าง",
+    "status": "สถานะ"
+  },
+  "noDescription": "ไม่มีคำอธิบาย",
+  "noApprovalLines": "ไม่มีการกำหนดสายการอนุมัติ",
+  "status": {
+    "active": "ใช้งาน",
+    "inactive": "ไม่ใช้งาน"
+  },
+  "actions": {
+    "createMemo": "ขออนุมัติด้วยประเภทเอกสารนี้",
+    "edit": "แก้ไข",
+    "delete": "ลบ"
+  },
+  "deleteConfirmation": "คุณแน่ใจหรือไม่ที่จะลบ \"{{name}}\"? การดำเนินการนี้ไม่สามารถยกเลิกได้",
+  "deleteSuccess": "ลบประเภทเอกสารสำเร็จ",
+  "cannotDeleteInUse": "ไม่สามารถลบประเภทเอกสารนี้ได้ เนื่องจากมีเอกสาร {{count}} รายการที่ใช้งานอยู่ กรุณาลบหรือย้ายเอกสารเหล่านั้นก่อน"
+}

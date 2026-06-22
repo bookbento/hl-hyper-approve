@@ -1,0 +1,39 @@
+{
+  "instructions": "Add these keys to the locale files",
+  
+  "english_file": "frontend/public/locales/en/memoViewer.json",
+  "english_changes": {
+    "location": "In the 'extra' section, add after the 'title' key",
+    "keys_to_add": {
+      "requestTitle": "Approval Request",
+      "type": "EXTRA"
+    }
+  },
+  
+  "thai_file": "frontend/public/locales/th/memoViewer.json",
+  "thai_changes": {
+    "location": "In the 'extra' section, add after the 'title' key",
+    "keys_to_add": {
+      "requestTitle": "คำขออนุมัติ",
+      "type": "พิเศษ"
+    }
+  },
+  
+  "example_english": {
+    "extra": {
+      "title": "Extra approval",
+      "requestTitle": "Approval Request",
+      "type": "EXTRA",
+      "create": "Create extra line"
+    }
+  },
+  
+  "example_thai": {
+    "extra": {
+      "title": "การอนุมัติเพิ่มเติม",
+      "requestTitle": "คำขออนุมัติ",
+      "type": "พิเศษ",
+      "create": "สร้างไลน์พิเศษ"
+    }
+  }
+}

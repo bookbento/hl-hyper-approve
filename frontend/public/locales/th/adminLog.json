@@ -1,0 +1,39 @@
+{
+  "title": "ประวัติการใช้งาน (Admin Log)",
+  "viewLog": "ดูประวัติ",
+  "totalItems": "({{count}} รายการ)",
+  "filters": {
+    "searchLabel": "ค้นหา",
+    "searchPlaceholder": "ชื่อ, การกระทำ, หรือเป้าหมาย...",
+    "actionTypeLabel": "ประเภทการกระทำ",
+    "allActions": "ทุกการกระทำ",
+    "startDateLabel": "วันที่เริ่มต้น",
+    "endDateLabel": "วันที่สิ้นสุด",
+    "reset": "ล้างค่า"
+  },
+  "export": {
+    "downloadExcel": "Download Excel",
+    "downloading": "กำลังดาวน์โหลด..."
+  },
+  "table": {
+    "time": "เวลา",
+    "actor": "ผู้ดำเนินการ",
+    "action": "การกระทำ",
+    "target": "เป้าหมาย",
+    "details": "รายละเอียด",
+    "viewMore": "ดูเพิ่มเติม",
+    "hide": "ซ่อน",
+    "changesLog": "รายการที่เปลี่ยนแปลง",
+    "null": "ว่าง"
+  },
+  "status": {
+    "loading": "กำลังโหลด...",
+    "noLogs": "ไม่พบประวัติการใช้งาน"
+  },
+  "pagination": {
+    "page": "หน้า {{current}} / {{total}}",
+    "prev": "ก่อนหน้า",
+    "next": "ถัดไป",
+    "close": "ปิด"
+  }
+}

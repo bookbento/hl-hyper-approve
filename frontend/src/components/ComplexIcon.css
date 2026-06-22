@@ -1,0 +1,72 @@
+   .loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: white;
+}
+
+.text-content {
+  display: flex;
+  align-items: center;
+  color: #183e33;
+}
+
+
+
+.loading-letter {
+  font-size: 3.8rem;
+  font-weight: bold;
+  margin: 0 2px;
+  color: #183e33;
+  line-height: 1;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.moon-loader-wrapper {
+  margin: 0 10px;
+  display: flex;
+  align-items: center;
+  height: 50px;
+}
+
+.video-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 2px;
+  vertical-align: middle;
+}
+
+.video-i {
+  height: 4rem;     /* เพิ่มจาก 2.2rem */
+  width: auto;        /* ให้คงอัตราส่วน */
+  object-fit: contain;
+  border-radius: 6px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  transition: all 0.3s ease;
+}
+
+.dots-group {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+  padding-bottom: 8px;
+  margin-left: 2px;
+}
+
+.jumping-dot {
+  font-size: 4.5rem;
+  color: #183e33;
+  animation: jump 1s infinite ease-in-out;
+  margin-left: 2px;
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+}
+
+.delay-1 { animation-delay: 0.2s; }
+.delay-2 { animation-delay: 0.4s; }
+
+@keyframes jump {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}

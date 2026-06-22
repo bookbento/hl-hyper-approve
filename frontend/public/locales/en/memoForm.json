@@ -1,0 +1,186 @@
+{
+  "stepUpload": "Step 1",
+  "stepSign": "Step 2",
+
+  "subject": "Subject",
+  "selectType": "-- Select Type --",
+
+  "bu": "Business Unit",
+  "dept": "Department",
+  "team": "Team",
+
+  "buLabel": "Business Unit",
+  "deptLabel": "Department",
+  "teamLabel": "Team",
+
+  "ccLabel": "CC",
+  "remove": "Remove",
+
+  "next": "Next",
+  "back": "Back",
+  "save": "Save Memo",
+
+  "uploadFiles": "Upload Files",
+  "uploadHint": "Please select .pdf files under",
+
+  "selectApprovalLine": "-- Select Approval Line --",
+  "selectApproval": "Approval Line",
+  "chooseLine": "Please choose an Approval Line",
+
+  "btnAddSig": "+ Signature",
+  "btnAddDate": "+ Date",
+  "btnAddNote": "+ Note",
+  "btnAddBoth": "Add Signature & Date",
+  "applyToAllPages": "Apply to all pages",
+  "pages": "pages",
+  "placingSignatures": "Placing signatures on all pages...",
+  "signaturesAppliedToAllPages": "Signatures applied to all pages successfully",
+  "clearAll": "Clear All",
+  "clearAllSignatures": "Clear all signatures",
+  "signaturesCleared": "All signatures cleared",
+
+  "newLineTitle": "New Approval Line",
+  "lineName": "Approval Line Name",
+  "levelName": "Level Name",
+  "levelShort": "Level",
+  "selectUsers": "Select users",
+  "changeUser": "Change users",
+  "removeLevel": "Remove Level",
+  "addLevel": "Add Level",
+  "saveLineBtn": "Save Approval Line",
+
+  "createLineOk": "Approval line created successfully",
+  "createLineFail": "Failed to create approval line",
+
+  "sessionExpired": "Session expired, please log in",
+
+  "saveOk": "Saved successfully",
+  "saveFail": "Save failed",
+  "saveCcFail": "Failed to save CC",
+  "fillAll": "Please complete all fields",
+
+  "of": "of",
+  "pdfPlaceholder": "Upload PDF to preview",
+  "filePlaceholder": "Upload attachments (PDF or images)",
+
+  "waiting": "No signature required",
+  "withSignature": "Signature required",
+  "nosign": "No signature",
+
+  "placeholder": "Type a name or email to search",
+  "searching": "Searching…",
+  "minChars": "Type at least 2 characters",
+  "notFound": "No users found",
+
+  "stepState": {
+    "active": "Active",
+    "completed": "Completed",
+    "upcoming": "Upcoming"
+  },
+
+  "files": {
+    "loadingTypeFiles": "Loading template files…",
+    "noTypeFilesTitle": "No template files",
+    "noTypeFilesDesc": "This memo type has no template files.",
+    "downloadTemplate": "Download template",
+    "download": "Download",
+    "typeFilesLoadFail": "Failed to load template files"
+  },
+
+  "pendingNewFile": "New file",
+  "loadingPdf": "Loading PDF...",
+
+  "errors": {
+    "pleaseFillStep1": "Please complete step 1 first",
+    "subjectRequired": "Please enter a subject",
+    "memoTypeRequired": "Please select a memo type",
+    "expiryMustBeFuture": "Expiration must be in the future",
+    "missingSignatures": "Please add signatures for all levels",
+    "unsupportedFileType": "Unsupported file type: {{files}}. Only image, PDF, Word, Excel, and PowerPoint files are allowed."
+  },
+  "searchSelect": {
+    "noResults": "No results",
+    "tryAnother": "Try another keyword",
+    "clear": "Clear",
+    "buUnspecified": "For Everyone"
+  },
+  "searchPlaceholder": "Type a name/email (min 2 characters)",
+  "addUsers": "Add approver",
+  "special approval case": "Special approval case",
+  "additionalRole": "Additional",
+  "loadMemoFail": "Failed to load memo data",
+  "useForAll": "Use for all business units",
+  "expiryLabel": "Expiration (Date–Time)",
+  "autoSelectedFromDocType": "Automatically selected from document type",
+  "saving": "Saving...",
+  "saved": "Saved successfully",
+  "saveFailed": "Save failed",
+
+  "level": "Level",
+
+  "selectUser": "Select User",
+  "addSelected": "Add Selected",
+  "alreadyAdded": "Already added",
+  "selected": "Selected",
+
+  "mainFilesLabel": "Main files",
+  "attachedFilesLabel":"Attached files",
+  "attachmentsLabel": "Attachments",
+  "orAddUrlLink": "Or add a URL link",
+  "removeFile": "Remove file",
+  "urlLinksLabel": "URL Links",
+  "addUrlLink": "+ Add URL Link",
+  "saveUrlLink": "Save URL Link",
+  "cancel": "Cancel",
+  "urlPlaceholder": "Enter URL (e.g., https://example.com/document)",
+  "urlTitlePlaceholder": "Enter link title (optional)",
+  "urlLabel": "URL",
+  "urlTitleLabel": "Title",
+  "invalidUrl": "Please enter a valid URL",
+  "removeLink": "Remove link",
+
+  "replaceWithFlexibleSlot": "Replace with flexible slot",
+  "confirmReplaceWithFlexible": "Replace {{name}} with a flexible slot?",
+
+  "selectingFlexibleTitle": "Selecting user for flexible slot",
+  "selectingFlexibleHint": "Choose one user to assign to this approval position",
+
+  "Clear": "Clear",
+
+  "titleLabel": "Title",
+  "typeLabel": "Document Type",
+
+  "specialApprovalCase": "Special approval case",
+  "selectUserFirst": "Please select an approver for the flexible slot approver first",
+  "titlememonumber": "Add Document Number",
+  "addmemonumber": "+ Document Number",
+  "clickaddmemonumber": "Click on the document to place the number",
+
+  "noteText": "Note Text",
+  "enterNoteText": "Enter note text",
+  "clickToPlaceNote": "Click on document to place note",
+  "addNoteTitle": "Add Note/Comment",
+  "noteHint": "Press Ctrl+Enter to save, Esc to cancel",
+  "add": "Add",
+
+  "referenceMemosLabel": "Reference Memos",
+  "searchReferenceMemos": "Search your memos to reference...",
+  "selectedReferences": "Selected References",
+  "noMemosFound": "No memos found",
+  "noRecentMemos": "No recent memos",
+  "recentMemos": "Recent Memos",
+  "searching": "Searching...",
+  "selected": "selected",
+  "noSelectedReferences": "No references selected",
+  "noMemosFound": "No memos found",
+  "searching": "Searching...",
+
+  "delegation": {
+    "active": "Delegation Active",
+    "actingOnBehalf": "Acting on behalf of"
+  },
+  "adjustingLayout": "Adjusting layout...",
+  "removeApprover": "Remove approver",
+  "insertLevel": "Insert Level",
+  "insertLevelHere": "Insert new level here"
+}

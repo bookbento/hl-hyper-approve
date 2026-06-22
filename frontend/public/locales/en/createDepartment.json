@@ -1,0 +1,47 @@
+{
+  "title": "Department Management",
+  "viewLog": "View Log",
+  "searchPlaceholder": "Search departments...",
+  "button": {
+    "create": "Create New Department"
+  },
+  "table": {
+    "id": "ID",
+    "name": "Name",
+    "abbreviation": "Abbreviation",
+    "actions": "Actions"
+  },
+  "modal": {
+    "create": "Create New Department",
+    "edit": "Edit Department",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "form": {
+    "name": "Department Name",
+    "abbreviation": "Abbreviation",
+    "businessUnit": "Business Unit",
+    "none": "None",
+    "buHint": "Select a business unit (optional)",
+    "placeholder": {
+      "name": "Enter department name",
+      "abbreviation": "Enter abbreviation"
+    }
+  },
+  "toast": {
+    "created": "Department created successfully",
+    "updated": "Department updated successfully",
+    "deleted": "Department deleted successfully"
+  },
+  "confirm": {
+    "delete": "Delete this department?"
+  },
+  "errors": {
+    "unauthorized": "Please sign in again",
+    "fetchDept": "Failed to load departments",
+    "submitDept": "Failed to save department",
+    "deleteDept": "Failed to delete department",
+    "fetchBU": "Failed to load Business Units"
+  },
+  "loading": "Loading..."
+}

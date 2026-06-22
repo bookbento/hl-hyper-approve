@@ -1,0 +1,21 @@
+{
+  "dashboard": "แดชบอร์ด",
+  "profile": "โปรไฟล์",
+  "approvar": "รายการขออนุมัติ",
+  "createMemo": "เริ่มการขออนุมัติ",
+  "typeMgmt": "จัดการประเภทเอกสาร",
+  "adminTools": "เครื่องมือผู้ดูแล",
+  "memoTools": "เครื่องมือการจัดการ",
+  "createUser": "จัดการผู้ใช้งาน",
+  "createTeam": "สร้างทีม",
+  "createDept": "จัดการแผนก",
+  "createBU": "จัดการบริษัท",
+  "logout": "ออกจากระบบ",
+  "notifications": "การแจ้งเตือน",
+  "switchLang": "เปลี่ยนภาษา",
+  "approvalline": "จัดการไลน์อนุมัติ",
+  "settings":"การตั้งค่า",
+  "documentTypes": "ประเภทเอกสาร",
+  "ccgroups":"จัดการกลุ่ม CC",
+   "approversline":"จัดการไลน์อนุมัติ"
+}

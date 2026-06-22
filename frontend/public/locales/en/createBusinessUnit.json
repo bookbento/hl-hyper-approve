@@ -1,0 +1,39 @@
+{
+  "title": "Business Unit Management",
+  "viewLog": "View Log",
+  "searchPlaceholder": "Search units...",
+  "button": {
+    "create": "+ Create"
+  },
+  "table": {
+    "id": "ID",
+    "name": "Unit Name",
+    "abbreviation": "Abbreviation",
+    "actions": "Actions"
+  },
+  "confirm": {
+    "delete": "Delete this business unit?"
+  },
+  "modal": {
+    "create": "Create New Business Unit",
+    "edit": "Edit Business Unit",
+    "cancel": "Cancel",
+    "submit": "Submit"
+  },
+  "form": {
+    "name": "Unit Name",
+    "placeholder": {
+      "name": "Enter unit name",
+      "abbr": "Enter abbreviation"
+    }
+    
+  },
+  "formLabels": {
+   "unitName": "Unit Name",
+   "abbreviationOptional": "Abbreviation"
+   },
+   "errors": {
+    "missing": "Please fill in the following fields"
+  },
+  "loading": "Loading..."
+}

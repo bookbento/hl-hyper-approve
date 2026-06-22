@@ -1,0 +1,776 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model MemoNumber {
+  id             Int      @id @default(autoincrement())
+  memonumber     String   @unique
+  businessUnitId Int
+  departmentId   Int?
+  memotypeId     Int?
+  year           Int // ปี เช่น 2025
+  month          Int // เดือน 1-12
+  sequenceNumber Int // เลขลำดับ 1, 2, 3, ...
+  createdAt      DateTime @default(now())
+
+  // Relations
+  businessUnit BusinessUnit @relation(fields: [businessUnitId], references: [id])
+  department   Department?  @relation(fields: [departmentId], references: [id])
+  memoType     MemoType?    @relation(fields: [memotypeId], references: [id])
+
+  // One-to-one with MasterMemo
+  memo MasterMemo?
+
+  @@unique([businessUnitId, departmentId, memotypeId, year, month, sequenceNumber])
+  @@index([businessUnitId, departmentId, memotypeId, year, month])
+}
+
+model MasterMemo {
+  id             Int       @id @default(autoincrement())
+  subject        String
+  businessUnitId Int?
+  departmentId   Int?
+  userId         Int
+  approvalLineId Int?
+  createdAt      DateTime  @default(now())
+  memonumber     String?   @unique // ✅ เก็บไว้ชั่วคราวสำหรับ backward compatibility
+  memoNumberId   Int?      @unique // ✅ ใหม่: reference to MemoNumber table
+  memotypeId     Int?
+  updatedAt      DateTime  @default(now()) @updatedAt
+  deletedAt      DateTime? // ✅ วันที่ลบ (Soft Delete)
+
+  expiresAt DateTime? // ✅ วันหมดอายุ
+
+  attachedFiles       AttachedFile[]
+  comments            Comment[]
+  datePositions       DatePosition[]
+  memoNumberPositions MemoNumberPosition[]
+  mainFiles           MainFile[]
+  approvalLine        LineOfApproval?                 @relation("ApprovalLineToMemos", fields: [approvalLineId], references: [id])
+  businessUnit        BusinessUnit?                   @relation(fields: [businessUnitId], references: [id])
+  department          Department?                     @relation(fields: [departmentId], references: [id])
+  memoType            MemoType?                       @relation(fields: [memotypeId], references: [id])
+  user                User                            @relation(fields: [userId], references: [id])
+  memoNumberRecord    MemoNumber?                     @relation(fields: [memoNumberId], references: [id])
+  approverSlotsForUse LineOfApprovalUserPivotForUse[]
+
+  approverActions    MemoApproverAction[] @relation("Memo_To_ApproverActions")
+  ccRecipients       MemoCc[]             @relation("MemoToCc")
+  history            MemoHistory[]        @relation("MemoToHistory")
+  statuses           MemoStatusPivot[]
+  notifications      Notification[]
+  signaturePositions SignaturePosition[]
+  notePositions      NotePosition[]
+
+  extraApprovalLines ExtraApprovalLine[] @relation("MemoToExtraApprovalLines")
+  commentTags        CommentTag[]        @relation("MemoToCommentTags")
+
+  // Memo references relationships
+  referencedBy MemoReference[] @relation("MainMemo")
+  references   MemoReference[] @relation("ReferenceMemo")
+
+  @@index([expiresAt]) // ✅ ช่วยให้ค้นตามวันหมดอายุเร็ว
+}
+
+model MemoStatusPivot {
+  id        Int        @id @default(autoincrement())
+  memoId    Int
+  statusId  Int
+  createdAt DateTime   @default(now())
+  userId    Int
+  memo      MasterMemo @relation(fields: [memoId], references: [id])
+  status    Status     @relation(fields: [statusId], references: [id])
+  user      User       @relation(fields: [userId], references: [id])
+
+  @@unique([memoId, userId, statusId], name: "memoId_userId_statusId")
+}
+
+model MemoType {
+  id              Int           @id @default(autoincrement())
+  name            String
+  abbreviation    String
+  description     String
+  businessUnitId  Int?
+  departmentId    Int?
+  createdByUserId Int
+  isActive        Boolean       @default(true)
+  isDelete        Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @default(now())
+  memos           MasterMemo[]
+  createdByUser   User          @relation("UserCreatedMemoTypes", fields: [createdByUserId], references: [id])
+  businessUnit    BusinessUnit? @relation(fields: [businessUnitId], references: [id])
+  department      Department?   @relation(fields: [departmentId], references: [id])
+
+  // 🔹 ของเดิมกับ MainFile (เอากลับมาให้ Prisma หายบ่น)
+  mainFiles         MainFile[]
+  // ✅ Keep column but remove foreign key - stored as plain Int, no relation
+  defaultMainFileId Int?       @map("defaultMainFileId")
+
+  // 🔹 ของใหม่กับ TypeFile
+  typeFiles TypeFile[] @relation("MemoTypeTypeFiles")
+
+  // ✅ Keep column but remove foreign key - stored as plain Int, no relation
+  defaultTypeFileId Int? @map("defaultTypeFileId")
+
+  // ✅ Approval Line
+  approvalLineId Int?
+  approvalLine   LineOfApproval? @relation(fields: [approvalLineId], references: [id])
+
+  // ✅ Permission flags for document type visibility
+  forEveryone                     Boolean @default(false)
+  forEveryDepartmentAcrossBU      Boolean @default(false)
+  forAllDepartmentUnderSelectedBu Boolean @default(false)
+
+  memoNumbers MemoNumber[] // ✅ ใหม่: relation to MemoNumber
+
+  @@unique([approvalLineId]) // ให้ 1 line ถูกผูกกับ type เดียว (null ซ้ำได้)
+}
+
+model MainFile {
+  id Int @id @default(autoincrement())
+
+  memoId Int?
+  memo   MasterMemo? @relation(fields: [memoId], references: [id])
+
+  memoTypeId Int?
+  memoType   MemoType? @relation(fields: [memoTypeId], references: [id])
+
+  filePath  String
+  fileName  String
+  size      Int
+  orderNo   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  dates       DatePosition[]
+  memoNumbers MemoNumberPosition[]
+  signatures  SignaturePosition[]
+  notes       NotePosition[]
+  histories   MemoHistory[]
+
+  // ↔️ ฝั่งคู่กับ MemoType.defaultMainFile
+  // defaultForMemoTypes MemoType[] @relation("DefaultTemplate")
+
+  @@index([memoId])
+  @@index([memoTypeId])
+}
+
+model TypeFile {
+  id         Int @id @default(autoincrement())
+  memoTypeId Int
+
+  // ↔ จับคู่กับ MemoType.typeFiles
+  memoType MemoType @relation("MemoTypeTypeFiles", fields: [memoTypeId], references: [id], onDelete: Cascade)
+
+  filePath  String
+  fileName  String
+  size      Int
+  orderNo   Int      @default(0)
+  createdAt DateTime @default(now())
+
+  // ↔ จับคู่กับ MemoType.defaultTypeFile
+  // defaultForMemoTypes MemoType[] @relation("DefaultTypeTemplate")
+
+  @@index([memoTypeId])
+}
+
+model AttachedFile {
+  id        Int        @id @default(autoincrement())
+  memoId    Int
+  filePath  String?
+  fileName  String
+  fileType  String?
+  size      Int?
+  createdAt DateTime   @default(now())
+  url       String? // URL link for external attachments
+  isUrl     Boolean    @default(false) // Flag to distinguish URL links from file uploads
+  memo      MasterMemo @relation(fields: [memoId], references: [id])
+}
+
+model SignaturePosition {
+  id      Int        @id @default(autoincrement())
+  memoId  Int
+  fileId  Int
+  userId  Int
+  page    Int
+  x       Decimal    @db.Decimal(10, 6)
+  y       Decimal    @db.Decimal(10, 6)
+  sizePct Float      @default(100)
+  level   Int? // Approval level this signature belongs to (for users at multiple levels)
+  file    MainFile   @relation(fields: [fileId], references: [id])
+  memo    MasterMemo @relation(fields: [memoId], references: [id])
+  user    User       @relation(fields: [userId], references: [id])
+}
+
+model DatePosition {
+  id      Int        @id @default(autoincrement())
+  memoId  Int
+  fileId  Int
+  userId  Int
+  page    Int
+  x       Decimal    @db.Decimal(10, 6)
+  y       Decimal    @db.Decimal(10, 6)
+  date    DateTime
+  sizePct Float      @default(100)
+  level   Int? // Approval level this date belongs to (for users at multiple levels)
+  file    MainFile   @relation(fields: [fileId], references: [id])
+  memo    MasterMemo @relation(fields: [memoId], references: [id])
+  user    User       @relation(fields: [userId], references: [id])
+}
+
+model MemoNumberPosition {
+  id      Int        @id @default(autoincrement())
+  memoId  Int
+  fileId  Int
+  page    Int
+  x       Decimal    @db.Decimal(10, 6)
+  y       Decimal    @db.Decimal(10, 6)
+  sizePct Float      @default(100)
+  file    MainFile   @relation(fields: [fileId], references: [id])
+  memo    MasterMemo @relation(fields: [memoId], references: [id])
+}
+
+model NotePosition {
+  id      Int        @id @default(autoincrement())
+  memoId  Int
+  fileId  Int
+  page    Int
+  x       Decimal    @db.Decimal(10, 6)
+  y       Decimal    @db.Decimal(10, 6)
+  text    String
+  sizePct Float      @default(100)
+  file    MainFile   @relation(fields: [fileId], references: [id])
+  memo    MasterMemo @relation(fields: [memoId], references: [id])
+}
+
+model MemoHistory {
+  id         Int         @id @default(autoincrement())
+  memoId     Int
+  userId     Int
+  fileId     Int?
+  statusId   Int?
+  action     String
+  timestamp  DateTime    @default(now())
+  actiontype ActionType?
+  file       MainFile?   @relation(fields: [fileId], references: [id])
+  memo       MasterMemo  @relation("MemoToHistory", fields: [memoId], references: [id])
+  status     Status?     @relation(fields: [statusId], references: [id])
+  user       User        @relation(fields: [userId], references: [id])
+}
+
+model User {
+  id                 Int      @id @default(autoincrement())
+  name               String
+  email              String   @unique
+  password           String
+  role               String
+  businessUnitId     Int?
+  departmentId       Int?
+  defaultSignatureId Int?     @unique
+  profileImagePath   String?
+  lastname           String?
+  nickname           String?
+  isFirstLogin       Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+
+  // Delegation fields
+  delegatedToUserId   Int?
+  delegationStartDate DateTime?
+  delegationEndDate   DateTime?
+
+  // Soft deletion
+  deletedAt DateTime?
+
+  comments                Comment[]
+  dates                   DatePosition[]
+  LineOfApproval          LineOfApproval[]
+  approvalUsers           LineOfApprovalUserPivot[]
+  memos                   MasterMemo[]
+  memoCcs                 MemoCc[]                     @relation("UserToCc")
+  histories               MemoHistory[]
+  memoStatuses            MemoStatusPivot[]
+  createdMemoTypes        MemoType[]                   @relation("UserCreatedMemoTypes")
+  actedNotifications      Notification[]               @relation("NotiActor")
+  notifications           Notification[]               @relation("NotiReceiver")
+  signatures              SignaturePosition[]
+  notificationPreferences UserNotificationPreference[]
+
+  businessUnit         BusinessUnit?   @relation(fields: [businessUnitId], references: [id])
+  defaultSignature     UserSignature?  @relation("DefaultSignature", fields: [defaultSignatureId], references: [id])
+  defaultSignatureText String?
+  department           Department?     @relation(fields: [departmentId], references: [id])
+  userSignatures       UserSignature[] @relation("AllSignatures")
+
+  // Delegation relationships
+  delegatedToUser    User?  @relation("UserDelegation", fields: [delegatedToUserId], references: [id])
+  delegatedFromUsers User[] @relation("UserDelegation")
+
+  // ↔️ ฝั่งตรงข้ามของ ExtraApprovalLine.createdBy / ExtraApprover.user / CommentTag.user / Comment.extraUser
+  createdExtraApprovalLines ExtraApprovalLine[]  @relation("UserToCreatedExtraApprovalLines")
+  extraApproverRecords      ExtraApprover[]      @relation("UserToExtraApprovers")
+  commentTags               CommentTag[]         @relation("UserToCommentTags")
+  extraComment              Comment[]            @relation("CommentExtraUser")
+  assignedApproverActions   MemoApproverAction[] @relation("AssignedApprover")
+  actualActorActions        MemoApproverAction[] @relation("ActualActor")
+
+  // ⬇️ กลุ่ม CC ที่เราเป็น “เจ้าของ”
+  ownedCcGroups         CcGroup[]                       @relation("UserOwnedCcGroups")
+  approvalUsersForUse   LineOfApprovalUserPivotForUse[]
+  // ⬇️ สมาชิกกลุ่มผ่าน pivot
+  ccMemberships         CcGroupMember[]
+  createdMemoReferences MemoReference[]                 @relation("MemoReferenceCreator")
+  adminLogs             AdminLog[]                      @relation("AdminLogActor")
+
+  // ⬇️ Multi-business unit access
+  businessUnitAccess UserBusinessUnitAccess[] @relation("UserBUAccess")
+  grantedBUAccess    UserBusinessUnitAccess[] @relation("BUAccessGranter")
+
+  // ⬇️ DCC Management access (for managing memo types and approval lines across BUs)
+  dccManagementAccess  UserDCCManagementAccess[] @relation("UserDCCMgmtAccess")
+  grantedDCCMgmtAccess UserDCCManagementAccess[] @relation("DCCMgmtAccessGranter")
+  loginSessions        LoginSession[]
+
+  @@index([deletedAt])
+}
+
+model UserSignature {
+  id            Int                  @id @default(autoincrement())
+  userId        Int
+  path          String
+  label         String?
+  createdAt     DateTime             @default(now())
+  signedActions MemoApproverAction[] @relation("SignatureImageRelation")
+  defaultFor    User?                @relation("DefaultSignature")
+  user          User                 @relation("AllSignatures", fields: [userId], references: [id])
+}
+
+model BusinessUnit {
+  id                  Int                       @id @default(autoincrement())
+  name                String                    @unique
+  abbreviation        String?
+  createdAt           DateTime                  @default(now())
+  updatedAt           DateTime                  @default(now()) @updatedAt
+  departments         Department[]
+  lineOfApprovals     LineOfApproval[]
+  memos               MasterMemo[]
+  users               User[]
+  memoTypes           MemoType[]
+  memoNumbers         MemoNumber[] // ✅ ใหม่: relation to MemoNumber
+  userAccess          UserBusinessUnitAccess[]  @relation("BUUserAccess")
+  dccManagementAccess UserDCCManagementAccess[] @relation("BUDCCMgmtAccess")
+}
+
+model Department {
+  id             Int           @id @default(autoincrement())
+  name           String        @unique
+  businessUnitId Int?
+  abbreviation   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @default(now()) @updatedAt
+  deletedAt      DateTime? // ✅ วันที่ลบ (Soft Delete)
+  businessUnit   BusinessUnit? @relation(fields: [businessUnitId], references: [id])
+  memos          MasterMemo[]
+  users          User[]
+  memoTypes      MemoType[]
+  memoNumbers    MemoNumber[] // ✅ ใหม่: relation to MemoNumber
+
+  @@index([deletedAt]) // ✅ สร้าง index เพื่อให้ query ข้อมูลที่ยังไม่ถูกลบได้เร็วขึ้น
+}
+
+model Status {
+  id               Int               @id @default(autoincrement())
+  name             String
+  description      String
+  histories        MemoHistory[]
+  memoStatusPivots MemoStatusPivot[]
+  notifications    Notification[]
+
+  // ใช้ซ้ำกับ ExtraApprover.status (optional)
+  extraApprovers ExtraApprover[]
+}
+
+model LineOfApproval {
+  id             Int                       @id @default(autoincrement())
+  name           String
+  userId         Int
+  businessUnitId Int?
+  createdAt      DateTime                  @default(now())
+  updatedAt      DateTime                  @default(now()) @updatedAt
+  businessUnit   BusinessUnit?             @relation(fields: [businessUnitId], references: [id])
+  user           User                      @relation(fields: [userId], references: [id])
+  approvalUsers  LineOfApprovalUserPivot[]
+  memos          MasterMemo[]              @relation("ApprovalLineToMemos")
+  memoTypes      MemoType[]
+}
+
+model LineOfApprovalUserPivot {
+  id                  Int                 @id @default(autoincrement())
+  lineOfApprovalId    Int?
+  userId              Int?
+  level               Int
+  isSigReq            Boolean             @default(false)
+  roleDescription     String?
+  slotType            ApprovalSlotType? // enum ของคุณ
+  approvalRequirement ApprovalRequirement @default(ALL) // ALL or ANY approval required for this level
+
+  lineOfApproval LineOfApproval?                 @relation(fields: [lineOfApprovalId], references: [id])
+  user           User?                           @relation(fields: [userId], references: [id])
+  forUseClones   LineOfApprovalUserPivotForUse[]
+
+  // ใช้เฉพาะเป็น "template" แล้วจากนั้นค่อย clone ไป ForUse
+}
+
+model LineOfApprovalUserPivotForUse {
+  id                  Int                 @id @default(autoincrement())
+  memoId              Int
+  userId              Int? // บาง slot อาจเป็น FLEXIBLE ไม่มี user ตอนแรก
+  level               Int
+  isSigReq            Boolean             @default(false)
+  roleDescription     String?
+  slotType            ApprovalSlotType?
+  approvalRequirement ApprovalRequirement @default(ALL) // ALL or ANY approval required for this level
+
+  // optional เก็บ reference ว่ามาจาก template ตัวไหน
+  templatePivotId Int?
+  templatePivot   LineOfApprovalUserPivot? @relation(fields: [templatePivotId], references: [id])
+
+  memo MasterMemo @relation(fields: [memoId], references: [id])
+  user User?      @relation(fields: [userId], references: [id])
+
+  actions MemoApproverAction[]
+}
+
+model ApprovalActionStatus {
+  id        Int                  @id @default(autoincrement())
+  code      String               @unique
+  label     String
+  isFinal   Boolean              @default(false)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+  actions   MemoApproverAction[]
+}
+
+model MemoApproverAction {
+  id                   Int       @id @default(autoincrement())
+  memoId               Int
+  loaUserId            Int // ⬅ เปลี่ยนชื่อฟิลด์
+  statusId             Int
+  actedAt              DateTime?
+  version              Int       @default(0)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  emailToken           String?
+  signatureImageId     Int?
+  signatureText        String?
+  assignedUserId       Int? // สำหรับ flexible slots
+  actualActorId        Int? // ผู้ที่กระทำจริง (สำหรับ delegation tracking)
+  approveWithCondition String? // ข้อความเงื่อนไขเมื่ออนุมัติแบบมีเงื่อนไข
+  terminationReason    String? // เหตุผลการยกเลิกเอกสาร
+  rejectReason         String? // เหตุผลการ reject/needs revision
+
+  loaUser        LineOfApprovalUserPivotForUse @relation(fields: [loaUserId], references: [id], onDelete: Cascade)
+  memo           MasterMemo                    @relation("Memo_To_ApproverActions", fields: [memoId], references: [id])
+  signatureImage UserSignature?                @relation("SignatureImageRelation", fields: [signatureImageId], references: [id])
+  status         ApprovalActionStatus          @relation(fields: [statusId], references: [id])
+  assignedUser   User?                         @relation("AssignedApprover", fields: [assignedUserId], references: [id])
+  actualActor    User?                         @relation("ActualActor", fields: [actualActorId], references: [id])
+
+  @@unique([memoId, loaUserId, version])
+  @@index([memoId, statusId])
+}
+
+model Comment {
+  id                  Int                 @id @default(autoincrement())
+  memoId              Int
+  userId              Int
+  comment             String
+  isRecallExtra       Boolean             @default(false)
+  ExtraUserid         Int?
+  ExtraStatus         String?
+  createdAt           DateTime            @default(now())
+  extraApprovalLineId Int?
+  memo                MasterMemo          @relation(fields: [memoId], references: [id], onDelete: Cascade)
+  user                User                @relation(fields: [userId], references: [id])
+  extraUser           User?               @relation("CommentExtraUser", fields: [ExtraUserid], references: [id])
+  attachments         CommentAttachment[]
+  notifications       Notification[]
+  extraApprovalLine   ExtraApprovalLine?  @relation("ExtraApprovalLineToComment", fields: [extraApprovalLineId], references: [id])
+
+  // 🔁 ฝั่งตรงข้ามของ CommentTag.comment
+  tags CommentTag[] @relation("CommentToTags")
+
+  @@index([extraApprovalLineId])
+}
+
+model CommentAttachment {
+  id        Int      @id @default(autoincrement())
+  commentId Int
+  url       String
+  filename  String
+  mimetype  String
+  size      Int
+  createdAt DateTime @default(now())
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+}
+
+model NotificationType {
+  id            Int                          @id @default(autoincrement())
+  name          String                       @unique
+  slug          String?                      @unique
+  description   String?
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+  notifications Notification[]
+  preferences   UserNotificationPreference[]
+}
+
+model UserNotificationPreference {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  notificationTypeId Int
+  emailEnabled       Boolean  @default(true)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  notificationType NotificationType @relation(fields: [notificationTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationTypeId])
+  @@index([userId])
+  @@index([notificationTypeId])
+}
+
+model Notification {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  actorId            Int
+  notificationTypeId Int
+  memoId             Int?
+  commentId          Int?
+  statusId           Int?
+  message            String
+  isRead             Boolean  @default(false)
+  emailSent          Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  actor   User             @relation("NotiActor", fields: [actorId], references: [id])
+  comment Comment?         @relation(fields: [commentId], references: [id])
+  memo    MasterMemo?      @relation(fields: [memoId], references: [id])
+  type    NotificationType @relation(fields: [notificationTypeId], references: [id])
+  status  Status?          @relation(fields: [statusId], references: [id])
+  user    User             @relation("NotiReceiver", fields: [userId], references: [id])
+}
+
+// --- กลุ่ม CC ---
+model CcGroup {
+  id        Int             @id @default(autoincrement())
+  name      String
+  ownerId   Int
+  owner     User            @relation("UserOwnedCcGroups", fields: [ownerId], references: [id])
+  isShared  Boolean         @default(false) // แชร์ให้ทีม/ทั้งองค์กร (ออปชัน)
+  members   CcGroupMember[]
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  // ห้ามตั้งชื่อกลุ่มซ้ำสำหรับเจ้าของคนเดียวกัน
+  @@unique([ownerId, name])
+  @@index([ownerId])
+}
+
+model CcGroupMember {
+  id       Int      @id @default(autoincrement())
+  groupId  Int
+  userId   Int
+  joinedAt DateTime @default(now())
+
+  group CcGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+}
+
+// (ทวนให้ชัวร์) ไม่ซ้ำต่อเมโม-ผู้ใช้
+model MemoCc {
+  id        Int        @id @default(autoincrement())
+  memoId    Int
+  userId    Int
+  memo      MasterMemo @relation("MemoToCc", fields: [memoId], references: [id], onDelete: Cascade)
+  user      User       @relation("UserToCc", fields: [userId], references: [id])
+  createdAt DateTime   @default(now())
+
+  @@unique([memoId, userId])
+  @@index([userId])
+}
+
+enum ActionType {
+  CREATE
+  APPROVE
+  REJECT
+  RECALL
+  TERMINATE
+  PUBLISH
+  COMMENT
+  DRAFT
+  EDIT
+  PROCESSING
+  UPDATE
+  REVISE
+}
+
+model ExtraApprovalLine {
+  id          Int         @id @default(autoincrement())
+  memoId      Int
+  createdById Int
+  createdAt   DateTime    @default(now())
+  closedAt    DateTime?
+  status      ExtraStatus @default(PENDING)
+  commentId   Int?        @unique
+
+  // ↔️ คู่กับ MasterMemo.extraApprovalLines / User.createdExtraApprovalLines
+  memo      MasterMemo @relation("MemoToExtraApprovalLines", fields: [memoId], references: [id], onDelete: Cascade)
+  createdBy User       @relation("UserToCreatedExtraApprovalLines", fields: [createdById], references: [id])
+  comment   Comment[]  @relation("ExtraApprovalLineToComment")
+
+  approvers ExtraApprover[]
+
+  @@index([commentId])
+}
+
+model ExtraApprover {
+  id        Int       @id @default(autoincrement())
+  extraId   Int
+  userId    Int
+  statusId  Int?
+  actedAt   DateTime?
+  version   Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  extra  ExtraApprovalLine @relation(fields: [extraId], references: [id], onDelete: Cascade)
+  // ↔️ คู่กับ User.extraApproverRecords
+  user   User              @relation("UserToExtraApprovers", fields: [userId], references: [id])
+  // ใช้ซ้ำตาราง Status (optional)
+  status Status?           @relation(fields: [statusId], references: [id])
+
+  @@unique([extraId, userId, version])
+}
+
+enum ExtraStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum ApprovalSlotType {
+  FIXED_USER // Fixed user (existing behavior)
+  DEPARTMENT_HEAD // Head/Manager of requester's department
+  MEMO_REQUESTER // The person who creates the memo
+  FLEXIBLE_SLOT // Generic flexible slot with custom name
+}
+
+enum ApprovalRequirement {
+  ALL // All approvers at this level must approve
+  ANY // Any approver at this level can approve
+}
+
+model MemoReference {
+  id              Int      @id @default(autoincrement())
+  mainMemoId      Int
+  referenceMemoId Int
+  createdAt       DateTime @default(now())
+  createdBy       Int
+
+  mainMemo      MasterMemo @relation("MainMemo", fields: [mainMemoId], references: [id], onDelete: Cascade)
+  referenceMemo MasterMemo @relation("ReferenceMemo", fields: [referenceMemoId], references: [id], onDelete: Cascade)
+  creator       User       @relation("MemoReferenceCreator", fields: [createdBy], references: [id])
+
+  // Prevent self-references and duplicates
+  @@unique([mainMemoId, referenceMemoId])
+  @@index([mainMemoId])
+  @@index([referenceMemoId])
+  @@index([createdBy])
+}
+
+model CommentTag {
+  id        Int      @id @default(autoincrement())
+  commentId Int
+  userId    Int
+  memoId    Int
+  createdAt DateTime @default(now())
+
+  comment Comment    @relation("CommentToTags", fields: [commentId], references: [id], onDelete: Cascade)
+  user    User       @relation("UserToCommentTags", fields: [userId], references: [id])
+  memo    MasterMemo @relation("MemoToCommentTags", fields: [memoId], references: [id])
+
+  @@unique([commentId])
+}
+
+model AdminLog {
+  id         Int      @id @default(autoincrement())
+  actorId    Int
+  actionType String // USER_CREATE, USER_UPDATE, USER_DELETE, etc.
+  module     String // USER, DEPARTMENT, BUSINESS_UNIT, LOA, CC_GROUP
+  targetId   Int? // ID ของ record ที่ถูกกระทำ
+  targetName String? // ชื่อของ target เช่น ชื่อ user, ชื่อ department
+  details    Json? // รายละเอียดเพิ่มเติม
+  createdAt  DateTime @default(now())
+
+  actor User @relation("AdminLogActor", fields: [actorId], references: [id])
+
+  @@index([actorId])
+  @@index([module])
+  @@index([createdAt])
+}
+
+model UserBusinessUnitAccess {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  businessUnitId Int
+  grantedAt      DateTime @default(now())
+  grantedBy      Int?
+
+  user          User         @relation("UserBUAccess", fields: [userId], references: [id], onDelete: Cascade)
+  businessUnit  BusinessUnit @relation("BUUserAccess", fields: [businessUnitId], references: [id], onDelete: Cascade)
+  grantedByUser User?        @relation("BUAccessGranter", fields: [grantedBy], references: [id])
+
+  @@unique([userId, businessUnitId])
+  @@index([userId])
+  @@index([businessUnitId])
+}
+
+model UserDCCManagementAccess {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  businessUnitId Int
+  grantedAt      DateTime @default(now())
+  grantedBy      Int?
+
+  user          User         @relation("UserDCCMgmtAccess", fields: [userId], references: [id], onDelete: Cascade)
+  businessUnit  BusinessUnit @relation("BUDCCMgmtAccess", fields: [businessUnitId], references: [id], onDelete: Cascade)
+  grantedByUser User?        @relation("DCCMgmtAccessGranter", fields: [grantedBy], references: [id])
+
+  @@unique([userId, businessUnitId])
+  @@index([userId])
+  @@index([businessUnitId])
+}
+
+model LoginSession {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  loginAt   DateTime  @default(now())
+  logoutAt  DateTime?
+  ipAddress String?
+  userAgent String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([loginAt])
+}

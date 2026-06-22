@@ -1,0 +1,51 @@
+{
+  "backToList": "Back to Document Types",
+  "createMemo": "Create Request",
+  "edit": "Edit",
+  "delete": "Delete",
+  "loading": "Loading...",
+  "error": {
+    "title": "Unable to load document type",
+    "backButton": "Back to Document Types"
+  },
+  "sections": {
+    "description": "Description",
+    "organizationalInfo": "Organizational Information",
+    "approvalLevels": "Approval Levels",
+    "templateFiles": "Template Files",
+    "metadata": "Metadata"
+  },
+  "fields": {
+    "businessUnit": "Business Unit",
+    "team": "Team",
+    "department": "Department",
+    "createdDate": "Created Date",
+    "lastUpdated": "Last Updated",
+    "defaultFile": "Default"
+  },
+  "permissions": {
+    "everyone": "Everyone",
+    "allDepartmentsAcrossBU": "All Departments Across BU",
+    "departmentsUnderSelectedBU": "Departments Under Selected BU",
+    "teamOnly": "Team Only"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "approvalLevel": {
+    "level": "Level {{level}}",
+    "signatureRequired": "Signature Required",
+    "flexibleSlot": "Flexible Slot",
+    "departmentHead": "Department Head",
+    "memoRequester": "Memo Requester",
+    "fixedUser": "Fixed User"
+  },
+  "files": {
+    "download": "Download"
+  },
+  "confirmDelete": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone.",
+  "deleteSuccess": "Document type deleted successfully",
+  "deleteError": "Failed to delete document type",
+  "cannotDeleteInUse": "Cannot delete this memo type because it is currently being used by {{count}} memo(s). Please remove or reassign those memos first."
+}

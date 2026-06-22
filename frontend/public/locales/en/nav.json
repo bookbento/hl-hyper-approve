@@ -1,0 +1,21 @@
+{
+  "dashboard": "Dashboard",
+  "profile": "Profile",
+  "approvar": "Approval Request",
+  "createMemo": "Create Request",
+  "typeMgmt": "Document Type Management",
+  "adminTools": "Admin Tools",
+  "memoTools": "Management Tools",
+  "createUser": "User Management",
+  "createTeam": "Create Team",
+  "createDept": "Manage Department",
+  "createBU": "Manage Business Unit",
+  "logout": "Logout",
+  "notifications": "Notifications",
+  "switchLang": "Switch Language",
+  "approvalline": "Approval Line Management",
+  "settings":"Settings",
+  "documentTypes": "Document Types",
+  "ccgroups":"CC Management",
+  "approversline":"Approval Line Management"
+}

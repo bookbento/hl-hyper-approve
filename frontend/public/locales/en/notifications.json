@@ -1,0 +1,9 @@
+{
+  "title": "Notifications",
+  "markAll": "Mark all as read",
+  "clearAll": "Clear all",
+  "noData": "No notifications.",
+  "createdBy": "Created by {{name}}",
+  "subjectLabel": "Subject",
+  "notifiedAt": "Notified at {{date}}"
+}

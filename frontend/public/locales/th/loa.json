@@ -1,0 +1,15 @@
+{
+  "title": "การจัดการสายอนุมัติ (LOA)",
+  "viewLog": "ดูประวัติ",
+  "totalRecords": "จำนวนทั้งหมด: {{count}} รายการ",
+  "pageSize": "จำนวนที่แสดงผล",
+  "businessUnitSelector": {
+    "label": "หน่วยธุรกิจ:",
+    "all": "หน่วยธุรกิจทั้งหมด",
+    "primary": "หลัก"
+  },
+  "businessUnitFilter": {
+    "label": "หน่วยธุรกิจ:",
+    "all": "หน่วยธุรกิจทั้งหมด"
+  }
+}

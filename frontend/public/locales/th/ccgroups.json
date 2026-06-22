@@ -1,0 +1,74 @@
+{
+  "title": "กลุ่มผู้รับสำเนา (CC Groups)",
+  "viewLog": "ดูประวัติ",
+  "searchPlaceholder": "ค้นหากลุ่ม...",
+  "searchGroupPlaceholder": "ค้นหากลุ่ม...",
+  "searchMemberPlaceholder": "ค้นหาสมาชิก...",
+  "searchUserPlaceholder": "ค้นหาผู้ใช้...",
+  "createNew": "สร้างกลุ่มใหม่",
+  "idLabel": "รหัส",
+  "col": {
+    "name": "ชื่อกลุ่ม",
+    "members": "สมาชิก",
+    "actions": "การจัดการ"
+  },
+  "members": "สมาชิก",
+  "noMembers": "ไม่มีสมาชิก",
+  "edit": "แก้ไข",
+  "delete": "ลบ",
+  "remove": "ลบออก",
+  "add": "เพิ่ม",
+  "addMember": "เพิ่มสมาชิก",
+  "addMemberTitle": "เพิ่มสมาชิกในกลุ่ม",
+  "noMatch": "ไม่พบกลุ่มที่ตรงกับคำค้น",
+  "noData": "ยังไม่มีกลุ่ม",
+  "noUsersAvailable": "ไม่มีผู้ใช้ที่สามารถเพิ่มได้",
+  "showing": "แสดง",
+  "groups": "กลุ่ม",
+  "prev": "ก่อนหน้า",
+  "next": "ถัดไป",
+  "cancel": "ยกเลิก",
+  "confirmDelete": "ลบกลุ่มนี้หรือไม่?",
+  "confirmRemoveMember": "ยืนยันการลบสมาชิก",
+  "confirmRemoveMemberMessage": "คุณแน่ใจหรือไม่ว่าต้องการลบสมาชิกคนนี้ออกจากกลุ่ม?",
+  "confirmAddMembers": "ยืนยันการเพิ่มสมาชิก",
+  "confirmAddMembersMessage": "คุณแน่ใจหรือไม่ว่าต้องการเพิ่มสมาชิกเหล่านี้เข้ากลุ่ม?",
+  "membersSelected": "สมาชิกที่เลือก",
+  "modal": {
+    "editTitle": "แก้ไขกลุ่ม CC",
+    "createTitle": "สร้างกลุ่ม CC",
+    "saveEdit": "บันทึกการเปลี่ยนแปลง",
+    "saveCreate": "สร้างกลุ่ม",
+    "memberPicker": "เลือกสมาชิกเพื่อเพิ่มในกลุ่ม CC นี้"
+  },
+  "form": {
+    "groupName": "ชื่อกลุ่ม",
+    "groupNamePh": "เช่น ผู้จัดการฝ่ายบุคคล"
+  },
+  "member": {
+    "searchPh": "ค้นหาผู้ใช้...",
+    "add": "เพิ่ม",
+    "noUsers": "ไม่พบผู้ใช้",
+    "selected": "สมาชิกที่เลือก",
+    "empty": "ยังไม่ได้เลือกสมาชิก",
+    "remove": "เอาออก"
+  },
+  "success": {
+    "groupUpdated": "อัปเดตกลุ่มเรียบร้อย",
+    "groupCreated": "สร้างกลุ่มเรียบร้อย",
+    "groupDeleted": "ลบกลุ่มเรียบร้อย",
+    "memberRemoved": "ลบสมาชิกเรียบร้อย",
+    "membersAdded": "เพิ่มสมาชิกเรียบร้อย"
+  },
+  "errors": {
+    "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
+    "loadGroupFailed": "โหลดข้อมูลกลุ่มไม่สำเร็จ",
+    "nameRequired": "กรุณากรอกชื่อกลุ่ม",
+    "deleteFailed": "ลบกลุ่มไม่สำเร็จ",
+    "removeMemberFailed": "ลบสมาชิกไม่สำเร็จ",
+    "addMemberFailed": "เพิ่มสมาชิกไม่สำเร็จ",
+    "noMembersSelected": "กรุณาเลือกสมาชิกอย่างน้อย 1 คน",
+    "allMembersExist": "สมาชิกที่เลือกทั้งหมดอยู่ในกลุ่มแล้ว",
+    "generic": "เกิดข้อผิดพลาด"
+  }
+}

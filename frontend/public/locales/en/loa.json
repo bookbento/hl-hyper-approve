@@ -1,0 +1,15 @@
+{
+  "title": "LOA Management",
+  "viewLog": "View Log",
+  "totalRecords": "Total records: {{count}}",
+  "pageSize": "Page size",
+  "businessUnitSelector": {
+    "label": "Business Unit:",
+    "all": "All Business Units",
+    "primary": "Primary"
+  },
+  "businessUnitFilter": {
+    "label": "Business Unit:",
+    "all": "All Business Units"
+  }
+}
