@@ -8,7 +8,6 @@ import path from "path";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import memoRoutes from "./routes/memo.routes";
-import businessUnitRoutes from "./routes/businessUnit.routes";
 import departmentRoutes from "./routes/department.routes";
 import typeRoutes from "./routes/type.routes";
 import approvalLineRoutes from "./routes/approval-line.routes";
@@ -168,7 +167,6 @@ app.use("/api/auth", authRoutes);
 app.get("/api/me", authenticate, me as RequestHandler);
 
 app.use("/api/users", userRoutes);
-app.use("/api/business-units", businessUnitRoutes);
 app.use("/api/departments", departmentRoutes);
 app.use("/api/types", typeRoutes);
 app.use("/api/memotypes", memotypeRoutes);
