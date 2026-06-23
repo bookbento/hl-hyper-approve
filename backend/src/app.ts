@@ -5,8 +5,6 @@ import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 
-import authRoutes from "./routes/auth.routes";
-import userRoutes from "./routes/user.routes";
 import memoRoutes from "./routes/memo.routes";
 
 import approvalLineRoutes from "./routes/approval-line.routes";
@@ -156,16 +154,10 @@ app.use("/img", express.static(path.join(viewsSrc,  "img")));
 // อย่าลืม: views ต้องมาหลัง /uploads
 app.use("/", express.static(path.join(__dirname, "../views")));
 
-// ✅ Import for /api/me route
-import { me } from "./controllers/auth.controller";
-import { authenticate } from "./middlewares/auth.middleware";
-
 // ✅ Routes
-app.use("/api/auth", authRoutes);
-// ✅ Add /api/me as a direct route for backward compatibility
-app.get("/api/me", authenticate, me as RequestHandler);
-
-app.use("/api/users", userRoutes);
+// /api/auth + /api/me — migrated to NestJS (removed from Express)
+// /api/users (CRUD + BU/DCC access + delegation) — migrated to NestJS;
+//   userSignature paths under /api/users still served by Express below
 // /api/departments — migrated to NestJS (removed from Express)
 // /api/types — migrated to NestJS (removed from Express)
 app.use("/api/memotypes", memotypeRoutes);
