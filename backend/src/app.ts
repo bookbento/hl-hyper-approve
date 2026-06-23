@@ -11,9 +11,7 @@ import approvalLineRoutes from "./routes/approval-line.routes";
 import memoStatusRoutes from "./routes/memoStatus.routes";
 import notificationRoutes from "./routes/notification.routes";
 import memotypeRoutes from "./routes/memotype.routes";
-import userSignatureRoutes from "./routes/userSignature.route";
 import memoccRoutes from "./routes/memocc.routes";
-import fileRoutes from "./routes/file.routes";
 import devExpiryRoutes from "./routes/dev-expiry.routes";
 
 import LOAManagementRoutes from "./routes/loa_management.routes";
@@ -136,7 +134,7 @@ app.use((req, res, next) => {
 // ✅ middleware หลัก
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());
-app.use("/api/secure-uploads", fileRoutes);
+// /api/secure-uploads — migrated to NestJS (FileServingModule)
 const viewsDist = path.resolve(__dirname, "../views");   // .../backend/dist/views
 const viewsSrc  = path.resolve(process.cwd(), "views");  // .../backend/views
 
@@ -157,12 +155,12 @@ app.use("/", express.static(path.join(__dirname, "../views")));
 // ✅ Routes
 // /api/auth + /api/me — migrated to NestJS (removed from Express)
 // /api/users (CRUD + BU/DCC access + delegation) — migrated to NestJS;
-//   userSignature paths under /api/users still served by Express below
+//   userSignature paths under /api/users — migrated to NestJS (Batch 3)
 // /api/departments — migrated to NestJS (removed from Express)
 // /api/types — migrated to NestJS (removed from Express)
 app.use("/api/memotypes", memotypeRoutes);
 app.use("/api/notifications", notificationRoutes);
-app.use("/api/users", userSignatureRoutes);
+// /api/users (userSignature) — migrated to NestJS (UserSignatureModule)
 app.use("/api", memoccRoutes);
 app.use("/api", approvalLineRoutes);
 app.use("/api", memoStatusRoutes);

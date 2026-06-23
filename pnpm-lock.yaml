@@ -50,9 +50,15 @@ importers:
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
+      file-type:
+        specifier: ^22.0.1
+        version: 22.0.1
       http-proxy-middleware:
         specifier: ^2.0.10
         version: 2.0.10(@types/express@5.0.6)
+      mime-types:
+        specifier: ^3.0.2
+        version: 3.0.2
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -65,6 +71,9 @@ importers:
       rxjs:
         specifier: ^7.8.1
         version: 7.8.2
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
     devDependencies:
       '@nestjs/cli':
         specifier: ^11.0.0
@@ -84,6 +93,9 @@ importers:
       '@types/jest':
         specifier: ^29.5.14
         version: 29.5.14
+      '@types/mime-types':
+        specifier: ^3.0.1
+        version: 3.0.1
       '@types/multer':
         specifier: ^2.1.0
         version: 2.1.0
