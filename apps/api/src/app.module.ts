@@ -8,6 +8,8 @@ import { DepartmentModule } from './modules/department/department.module';
 import { TypeModule } from './modules/type/type.module';
 import { AdminLogReadModule } from './modules/admin-log/admin-log-read.module';
 import { CcGroupModule } from './modules/cc-group/cc-group.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UserModule } from './modules/user/user.module';
 import { GatewayModule } from './common/gateway/gateway.module';
 
 @Module({
@@ -19,6 +21,8 @@ import { GatewayModule } from './common/gateway/gateway.module';
     TypeModule,
     AdminLogReadModule,
     CcGroupModule,
+    AuthModule,
+    UserModule,
     GatewayModule,
   ],
   providers: [
@@ -26,7 +30,7 @@ import { GatewayModule } from './common/gateway/gateway.module';
       provide: APP_PIPE,
       useValue: new ValidationPipe({
         whitelist: true,
-        forbidNonWhitelisted: true,
+        forbidNonWhitelisted: false, // allow extra fields for multipart/form-data
         transform: true,
       }),
     },
