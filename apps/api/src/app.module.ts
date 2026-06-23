@@ -5,6 +5,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AdminLogModule } from './common/admin-log/admin-log.module';
 import { BusinessUnitModule } from './modules/business-unit/business-unit.module';
 import { DepartmentModule } from './modules/department/department.module';
+import { TypeModule } from './modules/type/type.module';
 import { GatewayModule } from './common/gateway/gateway.module';
 
 @Module({
@@ -13,6 +14,7 @@ import { GatewayModule } from './common/gateway/gateway.module';
     AdminLogModule,
     BusinessUnitModule,
     DepartmentModule,
+    TypeModule,
     GatewayModule,
   ],
   providers: [
