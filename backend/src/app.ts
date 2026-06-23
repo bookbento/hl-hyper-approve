@@ -8,7 +8,6 @@ import path from "path";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import memoRoutes from "./routes/memo.routes";
-import departmentRoutes from "./routes/department.routes";
 import typeRoutes from "./routes/type.routes";
 import approvalLineRoutes from "./routes/approval-line.routes";
 import memoStatusRoutes from "./routes/memoStatus.routes";
@@ -167,7 +166,7 @@ app.use("/api/auth", authRoutes);
 app.get("/api/me", authenticate, me as RequestHandler);
 
 app.use("/api/users", userRoutes);
-app.use("/api/departments", departmentRoutes);
+// /api/departments — migrated to NestJS (removed from Express)
 app.use("/api/types", typeRoutes);
 app.use("/api/memotypes", memotypeRoutes);
 app.use("/api/notifications", notificationRoutes);

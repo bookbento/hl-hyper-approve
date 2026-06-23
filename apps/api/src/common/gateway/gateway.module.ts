@@ -13,6 +13,7 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *
  * Currently migrated to Nest (native handlers — NOT proxied):
  *   - /api/business-units  (all methods)
+ *   - /api/departments     (all methods)
  *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
  */
@@ -27,6 +28,8 @@ export class GatewayModule implements NestModule {
       .exclude(
         { path: 'api/business-units', method: RequestMethod.ALL },
         { path: 'api/business-units/(.*)', method: RequestMethod.ALL },
+        { path: 'api/departments', method: RequestMethod.ALL },
+        { path: 'api/departments/(.*)', method: RequestMethod.ALL },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
