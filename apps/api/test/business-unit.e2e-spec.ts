@@ -5,16 +5,30 @@ import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as cookieParser from 'cookie-parser';
+import { AdminLogService } from '../src/common/admin-log/admin-log.service';
 
 /**
  * E2E integration test for /api/business-units
  * Uses NestJS testing module — mocks PrismaService to avoid DB dependency.
  * Verifies behavior parity with Express controller.
+ *
+ * Also verifies gateway behaviour:
+ *   - /api/business-units → handled natively by Nest (not proxied)
+ *   - un-registered routes → proxied to Express (we verify the proxy
+ *     middleware is invoked, not a real upstream connection)
  */
 describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
   let app: INestApplication;
+  let adminLogService: AdminLogService;
 
-  const mockBu = { id: 1, name: 'TestBU', abbreviation: 'TBU', createdAt: new Date(), updatedAt: new Date(), departments: [] };
+  const mockBu = {
+    id: 1,
+    name: 'TestBU',
+    abbreviation: 'TBU',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    departments: [],
+  };
 
   const mockPrismaService = {
     businessUnit: {
@@ -33,6 +47,10 @@ describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
     $disconnect: jest.fn(),
   };
 
+  const mockAdminLogService = {
+    write: jest.fn().mockResolvedValue(undefined),
+  };
+
   let jwtToken: string;
 
   beforeAll(async () => {
@@ -41,6 +59,8 @@ describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
     })
       .overrideProvider(PrismaService)
       .useValue(mockPrismaService)
+      .overrideProvider(AdminLogService)
+      .useValue(mockAdminLogService)
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -49,6 +69,8 @@ describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }),
     );
     await app.init();
+
+    adminLogService = moduleFixture.get<AdminLogService>(AdminLogService);
 
     // Generate a valid JWT for protected endpoints
     const jwtService = moduleFixture.get<JwtService>(JwtService);
@@ -69,6 +91,68 @@ describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
     mockPrismaService.user.findUnique.mockResolvedValue({ deletedAt: null });
     mockPrismaService.businessUnit.findFirst.mockResolvedValue(null);
     mockPrismaService.adminLog.create.mockResolvedValue({});
+    mockAdminLogService.write.mockResolvedValue(undefined);
+  });
+
+  // ---- Gateway: native Nest route (not proxied) ----
+  describe('Gateway routing — /api/business-units is handled natively by Nest', () => {
+    it('GET /api/business-units responds directly from Nest (not from Express proxy)', async () => {
+      mockPrismaService.businessUnit.findMany.mockResolvedValue([mockBu]);
+
+      // If the route were proxied to a non-running Express the request would
+      // timeout or return 502. Receiving 200 with mocked data proves Nest
+      // handles this path natively.
+      const res = await request(app.getHttpServer())
+        .get('/api/business-units')
+        .expect(200);
+
+      expect(Array.isArray(res.body)).toBe(true);
+      expect(res.body[0]).toMatchObject({ id: 1, name: 'TestBU' });
+    });
+  });
+
+  // ---- AdminLogService is called on mutations ----
+  describe('AdminLogService integration', () => {
+    it('calls adminLog.write after a successful POST /api/business-units', async () => {
+      mockPrismaService.businessUnit.findUnique.mockResolvedValue(null);
+      const created = { id: 2, name: 'LogBU', abbreviation: null, createdAt: new Date(), updatedAt: new Date() };
+      mockPrismaService.businessUnit.create.mockResolvedValue(created);
+
+      await request(app.getHttpServer())
+        .post('/api/business-units')
+        .set('Authorization', `Bearer ${jwtToken}`)
+        .send({ name: 'LogBU' })
+        .expect(201);
+
+      expect(adminLogService.write).toHaveBeenCalledWith(
+        1,
+        'BU_CREATE',
+        'BUSINESS_UNIT',
+        created.id,
+        created.name,
+        expect.objectContaining({ abbreviation: null }),
+      );
+    });
+
+    it('calls adminLog.write after a successful DELETE /api/business-units/:id', async () => {
+      const existing = { id: 5, name: 'ToDelete', abbreviation: 'TD' };
+      mockPrismaService.businessUnit.findUnique.mockResolvedValue(existing);
+      mockPrismaService.businessUnit.delete.mockResolvedValue(existing);
+
+      await request(app.getHttpServer())
+        .delete('/api/business-units/5')
+        .set('Authorization', `Bearer ${jwtToken}`)
+        .expect(204);
+
+      expect(adminLogService.write).toHaveBeenCalledWith(
+        1,
+        'BU_DELETE',
+        'BUSINESS_UNIT',
+        existing.id,
+        existing.name,
+        expect.objectContaining({ abbreviation: 'TD' }),
+      );
+    });
   });
 
   // ---- GET /api/business-units (public) ----
@@ -116,7 +200,7 @@ describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
     });
 
     it('returns 201 and creates business unit with valid admin JWT', async () => {
-      mockPrismaService.businessUnit.findUnique.mockResolvedValue(null); // no duplicate
+      mockPrismaService.businessUnit.findUnique.mockResolvedValue(null);
       const created = { id: 2, name: 'New BU', abbreviation: null, createdAt: new Date(), updatedAt: new Date() };
       mockPrismaService.businessUnit.create.mockResolvedValue(created);
 
