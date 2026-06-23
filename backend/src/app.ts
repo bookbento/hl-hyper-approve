@@ -17,7 +17,7 @@ import userSignatureRoutes from "./routes/userSignature.route";
 import memoccRoutes from "./routes/memocc.routes";
 import fileRoutes from "./routes/file.routes";
 import devExpiryRoutes from "./routes/dev-expiry.routes";
-import ccGroupRoutes from "./routes/cc-group.routes";
+
 import LOAManagementRoutes from "./routes/loa_management.routes";
 
 
@@ -176,7 +176,7 @@ app.use("/api", approvalLineRoutes);
 app.use("/api", memoStatusRoutes);
 app.use("/api", memoRoutes);
 app.use("/api/dev", devExpiryRoutes);
-app.use("/api/cc-groups", ccGroupRoutes);
+// /api/cc-groups — migrated to NestJS (removed from Express)
 app.use("/api", LOAManagementRoutes);
 // /api/admin-logs — migrated to NestJS (removed from Express)
 

@@ -7,6 +7,7 @@ import { BusinessUnitModule } from './modules/business-unit/business-unit.module
 import { DepartmentModule } from './modules/department/department.module';
 import { TypeModule } from './modules/type/type.module';
 import { AdminLogReadModule } from './modules/admin-log/admin-log-read.module';
+import { CcGroupModule } from './modules/cc-group/cc-group.module';
 import { GatewayModule } from './common/gateway/gateway.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { GatewayModule } from './common/gateway/gateway.module';
     DepartmentModule,
     TypeModule,
     AdminLogReadModule,
+    CcGroupModule,
     GatewayModule,
   ],
   providers: [

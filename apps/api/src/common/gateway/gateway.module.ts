@@ -10,6 +10,7 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - /api/departments     (all methods)
  *   - /api/types           (GET)
  *   - /api/admin-logs      (all methods)
+ *   - /api/cc-groups       (all methods)
  *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
  */
@@ -29,6 +30,8 @@ export class GatewayModule implements NestModule {
         { path: 'api/types/(.*)', method: RequestMethod.ALL },
         { path: 'api/admin-logs', method: RequestMethod.ALL },
         { path: 'api/admin-logs/(.*)', method: RequestMethod.ALL },
+        { path: 'api/cc-groups', method: RequestMethod.ALL },
+        { path: 'api/cc-groups/(.*)', method: RequestMethod.ALL },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
