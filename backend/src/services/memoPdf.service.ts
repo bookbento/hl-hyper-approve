@@ -322,6 +322,16 @@ export const getMainFilePdf: RequestHandler = async (req, res) => {
       return;
     }
 
+    // Defense-in-depth: validate the resolved file stays within UPLOADS_DIR.
+    // path.basename() above already strips traversal segments; this guards
+    // against any future change that builds the path differently.
+    const resolvedPath = path.resolve(absolutePath);
+    const resolvedUploads = path.resolve(UPLOADS_DIR);
+    if (!resolvedPath.startsWith(resolvedUploads + path.sep)) {
+      res.status(403).json({ error: "Access denied" });
+      return;
+    }
+
     const cd = contentDisposition(target.fileName || `memo-${memoId}.pdf`, {
       type: "inline",
       fallback: false,
@@ -331,7 +341,7 @@ export const getMainFilePdf: RequestHandler = async (req, res) => {
       .header("Content-Type", "application/pdf")
       .header("Access-Control-Expose-Headers", "Content-Disposition")
       .header("Content-Disposition", cd)
-      .sendFile(absolutePath);
+      .sendFile(resolvedPath);
   } catch (err) {
     console.error("getMainFilePdf failed:", err);
     res.status(500).json({ error: "Failed to fetch PDF" });
