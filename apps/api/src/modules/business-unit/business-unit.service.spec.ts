@@ -1,6 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BusinessUnitService } from './business-unit.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AdminLogService } from '../../common/admin-log/admin-log.service';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 
@@ -14,9 +15,10 @@ const mockPrisma = {
     update: jest.fn(),
     delete: jest.fn(),
   },
-  adminLog: {
-    create: jest.fn(),
-  },
+};
+
+const mockAdminLog = {
+  write: jest.fn().mockResolvedValue(undefined),
 };
 
 describe('BusinessUnitService', () => {
@@ -27,6 +29,7 @@ describe('BusinessUnitService', () => {
       providers: [
         BusinessUnitService,
         { provide: PrismaService, useValue: mockPrisma },
+        { provide: AdminLogService, useValue: mockAdminLog },
       ],
     }).compile();
 
@@ -73,13 +76,20 @@ describe('BusinessUnitService', () => {
   // ---- create ----
   describe('create', () => {
     it('creates and returns a new business unit', async () => {
-      mockPrisma.businessUnit.findUnique.mockResolvedValue(null); // no duplicate
+      mockPrisma.businessUnit.findUnique.mockResolvedValue(null);
       const created = { id: 1, name: 'NewBU', abbreviation: 'NBU' };
       mockPrisma.businessUnit.create.mockResolvedValue(created);
-      mockPrisma.adminLog.create.mockResolvedValue({});
 
       const result = await service.create({ name: 'NewBU', abbreviation: 'NBU' }, 1);
       expect(result).toEqual(created);
+      expect(mockAdminLog.write).toHaveBeenCalledWith(
+        1,
+        'BU_CREATE',
+        'BUSINESS_UNIT',
+        created.id,
+        created.name,
+        { abbreviation: created.abbreviation },
+      );
     });
 
     it('throws ConflictException when name already exists', async () => {
@@ -107,7 +117,7 @@ describe('BusinessUnitService', () => {
 
       const result = await service.create({ name: 'Y' }, undefined);
       expect(result.name).toBe('Y');
-      expect(mockPrisma.adminLog.create).not.toHaveBeenCalled();
+      expect(mockAdminLog.write).not.toHaveBeenCalled();
     });
   });
 
@@ -117,13 +127,20 @@ describe('BusinessUnitService', () => {
 
     it('updates and returns the business unit', async () => {
       mockPrisma.businessUnit.findUnique.mockResolvedValue(existing);
-      mockPrisma.businessUnit.findFirst.mockResolvedValue(null); // no duplicate
+      mockPrisma.businessUnit.findFirst.mockResolvedValue(null);
       const updated = { id: 1, name: 'New', abbreviation: 'N' };
       mockPrisma.businessUnit.update.mockResolvedValue(updated);
-      mockPrisma.adminLog.create.mockResolvedValue({});
 
       const result = await service.update(1, { name: 'New', abbreviation: 'N' }, 1);
       expect(result).toEqual(updated);
+      expect(mockAdminLog.write).toHaveBeenCalledWith(
+        1,
+        'BU_UPDATE',
+        'BUSINESS_UNIT',
+        updated.id,
+        updated.name,
+        expect.objectContaining({ changes: expect.any(Object) }),
+      );
     });
 
     it('throws NotFoundException when target not found', async () => {
@@ -133,22 +150,39 @@ describe('BusinessUnitService', () => {
 
     it('throws ConflictException when another BU has same name', async () => {
       mockPrisma.businessUnit.findUnique.mockResolvedValue(existing);
-      mockPrisma.businessUnit.findFirst.mockResolvedValue({ id: 2, name: 'New' }); // duplicate
+      mockPrisma.businessUnit.findFirst.mockResolvedValue({ id: 2, name: 'New' });
 
       await expect(service.update(1, { name: 'New' }, 1)).rejects.toThrow(ConflictException);
+    });
+
+    it('does not call adminLog.write when no fields changed', async () => {
+      // same name, same abbreviation → changes object stays empty
+      mockPrisma.businessUnit.findUnique.mockResolvedValue(existing);
+      mockPrisma.businessUnit.findFirst.mockResolvedValue(null);
+      mockPrisma.businessUnit.update.mockResolvedValue(existing); // returns same values
+
+      await service.update(1, { name: 'Old', abbreviation: 'O' }, 1);
+      expect(mockAdminLog.write).not.toHaveBeenCalled();
     });
   });
 
   // ---- remove ----
   describe('remove', () => {
     it('deletes the business unit without throwing', async () => {
-      const existing = { id: 1, name: 'BU1', abbreviation: null };
-      mockPrisma.businessUnit.findUnique.mockResolvedValue(existing);
-      mockPrisma.businessUnit.delete.mockResolvedValue(existing);
-      mockPrisma.adminLog.create.mockResolvedValue({});
+      const bu = { id: 1, name: 'BU1', abbreviation: null };
+      mockPrisma.businessUnit.findUnique.mockResolvedValue(bu);
+      mockPrisma.businessUnit.delete.mockResolvedValue(bu);
 
       await expect(service.remove(1, 1)).resolves.toBeUndefined();
       expect(mockPrisma.businessUnit.delete).toHaveBeenCalledWith({ where: { id: 1 } });
+      expect(mockAdminLog.write).toHaveBeenCalledWith(
+        1,
+        'BU_DELETE',
+        'BUSINESS_UNIT',
+        bu.id,
+        bu.name,
+        { abbreviation: bu.abbreviation },
+      );
     });
 
     it('throws NotFoundException when business unit not found', async () => {

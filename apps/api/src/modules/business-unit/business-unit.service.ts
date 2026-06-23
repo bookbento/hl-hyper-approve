@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AdminLogService } from '../../common/admin-log/admin-log.service';
 import { CreateBusinessUnitDto } from './dto/create-business-unit.dto';
 import { UpdateBusinessUnitDto } from './dto/update-business-unit.dto';
 import { BusinessUnit, Prisma } from '@prisma/client';
@@ -21,7 +22,10 @@ export type BusinessUnitWithDepartments = BusinessUnit & {
  */
 @Injectable()
 export class BusinessUnitService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly adminLog: AdminLogService,
+  ) {}
 
   async findAll(): Promise<BusinessUnitWithDepartments[]> {
     return this.prisma.businessUnit.findMany({
@@ -62,9 +66,14 @@ export class BusinessUnitService {
       });
 
       if (actorId) {
-        await this.writeAdminLog(actorId, 'BU_CREATE', 'BUSINESS_UNIT', newUnit.id, newUnit.name, {
-          abbreviation: newUnit.abbreviation,
-        });
+        await this.adminLog.write(
+          actorId,
+          'BU_CREATE',
+          'BUSINESS_UNIT',
+          newUnit.id,
+          newUnit.name,
+          { abbreviation: newUnit.abbreviation },
+        );
       }
 
       return newUnit;
@@ -111,10 +120,20 @@ export class BusinessUnitService {
           changes['name'] = { old: existing.name, new: updated.name };
         }
         if (existing.abbreviation !== updated.abbreviation) {
-          changes['abbreviation'] = { old: existing.abbreviation, new: updated.abbreviation };
+          changes['abbreviation'] = {
+            old: existing.abbreviation,
+            new: updated.abbreviation,
+          };
         }
         if (Object.keys(changes).length > 0) {
-          await this.writeAdminLog(actorId, 'BU_UPDATE', 'BUSINESS_UNIT', updated.id, updated.name, { changes } as unknown as Prisma.InputJsonValue);
+          await this.adminLog.write(
+            actorId,
+            'BU_UPDATE',
+            'BUSINESS_UNIT',
+            updated.id,
+            updated.name,
+            { changes } as unknown as Prisma.InputJsonValue,
+          );
         }
       }
 
@@ -140,40 +159,17 @@ export class BusinessUnitService {
       await this.prisma.businessUnit.delete({ where: { id } });
 
       if (actorId) {
-        await this.writeAdminLog(actorId, 'BU_DELETE', 'BUSINESS_UNIT', existing.id, existing.name, {
-          abbreviation: existing.abbreviation,
-        });
+        await this.adminLog.write(
+          actorId,
+          'BU_DELETE',
+          'BUSINESS_UNIT',
+          existing.id,
+          existing.name,
+          { abbreviation: existing.abbreviation },
+        );
       }
     } catch {
       throw new InternalServerErrorException('Failed to delete business unit');
-    }
-  }
-
-  /** Matches Express createAdminLog helper — non-throwing. */
-  private async writeAdminLog(
-    actorId: number,
-    actionType: string,
-    module: string,
-    targetId: number | null | undefined,
-    targetName: string | null | undefined,
-    details: Prisma.InputJsonValue | null,
-  ): Promise<void> {
-    try {
-      await this.prisma.adminLog.create({
-        data: {
-          actorId,
-          actionType,
-          module,
-          targetId: targetId ?? null,
-          targetName: targetName ?? null,
-          details: details !== null && details !== undefined
-            ? (details as Prisma.InputJsonValue)
-            : Prisma.JsonNull,
-        },
-      });
-    } catch (error: unknown) {
-      // Log should not break main operations (mirrors Express behavior)
-      console.error('Failed to create admin log:', error);
     }
   }
 }
