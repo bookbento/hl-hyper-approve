@@ -14,21 +14,15 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - /api/auth            (all methods) — Batch 2
  *   - /api/me              (GET)         — Batch 2 (legacy alias)
  *   - /api/users           (CRUD + BU/DCC access + delegation + notification prefs) — Batch 2
+ *   - /api/users/:id/signatures           — Batch 3 (userSignature)
+ *   - /api/users/:id/default-signature    — Batch 3
+ *   - /api/users/signatures/:sigId/file   — Batch 3
+ *   - /api/users/signatures/:sigId        — Batch 3
+ *   - /api/secure-uploads                 — Batch 3 (file serving)
  *
  * Still proxied to Express:
- *   - /api/users/:id/signatures      — file upload (batch file infra)
- *   - /api/users/:id/default-signature
- *   - /api/users/signatures/:sigId
+ *   - /api/memotypes, /api/notifications, /api/memos, etc.
  *   - everything else under /api/*
- *
- * Path collision analysis (userSignature vs user CRUD):
- *   userSignature paths under /api/users:
- *     GET/POST  /:id/signatures
- *     PUT       /:id/default-signature
- *     GET       /signatures/:sigId/file
- *     DELETE    /signatures/:sigId
- *   These are NOT in the Nest exclude list → still proxy to Express.
- *   Nest user CRUD paths do not overlap with these signature paths.
  *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
  */
@@ -59,9 +53,6 @@ export class GatewayModule implements NestModule {
         { path: 'api/me', method: RequestMethod.GET },
 
         // ── Batch 2: User CRUD + access management ────────────────────────────
-        // /api/users GET (list) and specific sub-paths
-        // Signature paths (:id/signatures, :id/default-signature, signatures/:sigId)
-        // are intentionally NOT excluded here — they proxy to Express.
         { path: 'api/users', method: RequestMethod.GET },
         { path: 'api/users', method: RequestMethod.POST },
         { path: 'api/users/check-email', method: RequestMethod.GET },
@@ -91,6 +82,20 @@ export class GatewayModule implements NestModule {
         { path: 'api/users/:id/dcc-management-access', method: RequestMethod.GET },
         { path: 'api/users/:id/dcc-management-access', method: RequestMethod.PUT },
         { path: 'api/users/:id/manageable-business-units', method: RequestMethod.GET },
+
+        // ── Batch 3: UserSignature ────────────────────────────────────────────
+        // Note: "signatures/:sigId" paths must also be excluded so Nest handles them.
+        // "signatures" is a static segment — cannot match as :id — so listing both
+        // static and dynamic forms is intentional (explicit over wildcard policy).
+        { path: 'api/users/:id/signatures', method: RequestMethod.GET },
+        { path: 'api/users/:id/signatures', method: RequestMethod.POST },
+        { path: 'api/users/:id/default-signature', method: RequestMethod.PUT },
+        { path: 'api/users/signatures/:sigId/file', method: RequestMethod.GET },
+        { path: 'api/users/signatures/:sigId', method: RequestMethod.DELETE },
+
+        // ── Batch 3: Secure file serving ─────────────────────────────────────
+        { path: 'api/secure-uploads', method: RequestMethod.GET },
+        { path: 'api/secure-uploads/(.*)', method: RequestMethod.GET },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

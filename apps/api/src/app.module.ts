@@ -10,6 +10,8 @@ import { AdminLogReadModule } from './modules/admin-log/admin-log-read.module';
 import { CcGroupModule } from './modules/cc-group/cc-group.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
+import { UserSignatureModule } from './modules/user-signature/user-signature.module';
+import { FileServingModule } from './modules/file-serving/file-serving.module';
 import { GatewayModule } from './common/gateway/gateway.module';
 
 @Module({
@@ -23,6 +25,8 @@ import { GatewayModule } from './common/gateway/gateway.module';
     CcGroupModule,
     AuthModule,
     UserModule,
+    UserSignatureModule,
+    FileServingModule,
     GatewayModule,
   ],
   providers: [
