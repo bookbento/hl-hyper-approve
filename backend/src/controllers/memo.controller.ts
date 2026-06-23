@@ -2,9 +2,6 @@
 
 import { RequestHandler } from "express";
 import { prisma } from "../../prisma/client";
-import { PDFDocument, PDFPage, rgb, StandardFonts } from "pdf-lib";
-import fs from "fs";
-import path from "path";
 import {
   getUserDisplayName,
   toDisplayName,
@@ -13,8 +10,6 @@ import {
 import { evaluateAndUpdateMemoStatus } from "../services/memoApproveAction.service";
 import { getApproverLineStatus } from "../approverLine";
 import { makeEmailToken } from "../lib/token";
-// @ts-ignore
-import fontkit from "fontkit";
 import { ActionType, ExtraStatus, Prisma } from "@prisma/client";
 import { AuthenticatedRequest } from "../types/request";
 import { sendEmail } from "../lib/mailer";
@@ -45,7 +40,6 @@ export {
   getAwaitingApproval,
   getWaitingStatusId,
 } from "../services/memoQuery.service";
-import { createPdfForDownload } from "../services/pdf.core";
 export {
   getCommentsByMemoId,
   addCommentToMemo,
@@ -81,6 +75,17 @@ export {
   getStatusIdByName,
   absFromDbPath,
 } from "../services/memoLifecycle.service";
+
+// ─── PDF handlers (Wave 10) — moved to memoPdf.service.ts ───
+export {
+  uploadMainPDF,
+  saveSignaturePosition,
+  saveDatePosition,
+  saveNotePosition,
+  downloadMergedPdf,
+  downloadRawPdf,
+  getMainFilePdf,
+} from "../services/memoPdf.service";
 
 // GET /api/memos/:memoId/extra-approval-lines/:lineId?/eligible-users?q=...
 export const searchEligibleUsersForExtra: RequestHandler = async (req, res) => {
@@ -478,352 +483,6 @@ async function getCurrentWaitingLevelInfo(memoId: number) {
     .map((w) => w.loaUser.id);
   return { version, baseLevel, loaUserIdsAtLevel: ids };
 }
-
-// --- POST /api/memos/:id/upload-main ---
-export const uploadMainPDF: RequestHandler = async (req, res) => {
-  const memoId = +req.params.id;
-  const file = req.file!;
-  const newFile = await prisma.mainFile.create({
-    data: {
-      memoId,
-      filePath: file.path,
-      fileName: decodeFilename(file.originalname), // 👈
-      size: file.size,
-    },
-  });
-  res.status(201).json(newFile);
-};
-
-// --- POST /api/memos/signature ---
-export const saveSignaturePosition: RequestHandler = async (req, res) => {
-  const { memoId, fileId, userId, page, x, y } = req.body;
-  const s = await prisma.signaturePosition.create({
-    data: { memoId, fileId, userId, page, x, y },
-  });
-  res.status(201).json(s);
-};
-
-// --- POST /api/memos/date ---
-export const saveDatePosition: RequestHandler = async (req, res) => {
-  const { memoId, fileId, userId, page, x, y, date } = req.body;
-  const d = await prisma.datePosition.create({
-    data: {
-      memoId,
-      fileId,
-      userId,
-      page,
-      x,
-      y,
-      date: new Date(date),
-    },
-  });
-  res.status(201).json(d);
-};
-
-// --- POST /api/memos/note ---
-export const saveNotePosition: RequestHandler = async (req, res) => {
-  const { memoId, fileId, page, x, y, text } = req.body;
-  const n = await prisma.notePosition.create({
-    data: {
-      memoId,
-      fileId,
-      page,
-      x,
-      y,
-      text,
-    },
-  });
-  res.status(201).json(n);
-};
-
-// --- POST /api/memos/:id/status ---// --- POST /api/memos/:id/status ---
-// export const saveMemoStatus: RequestHandler = async (req, res) => {
-//   const { memoId, userId, statusId, fileId } = req.body;
-// if (statusId === 7) {
-//     // 1) ต้องกำลังอยู่ในสถานะ Processing ก่อน
-//     const latest = await prisma.memoStatusPivot.findFirst({
-//       where: { memoId },
-//       orderBy: { createdAt: "desc" },
-//       select: { statusId: true },
-//     });
-//     if (latest?.statusId !== 5) {
-//        res.status(409).json({ error: "Memo is not in Processing." });
-//        return;
-//     }
-
-//     // 2) ตรวจสิทธิ์ตามเลเวลต่ำสุดที่กำลัง waiting
-//     const allowed = await isCurrentMinWaitingApprover(memoId, userId);
-//     if (!allowed) {
-//        res.status(403).json({
-//         error: "Only the current waiting approver at the minimal level can terminate.",
-//       });
-//     }
-//   }
-//   const pivot = await prisma.memoStatusPivot.create({
-//     data: {
-//       memoId,
-//       userId,
-//       statusId,
-//     },
-//   });
-
-//   // เลือก ActionType ตาม statusId
-//   const statusActionTypeMap: Record<number, ActionType> = {
-//     1: ActionType.DRAFT,
-//     3: ActionType.APPROVE,
-//     4: ActionType.REJECT,
-//     5: ActionType.PROCESSING,
-//     6: ActionType.RECALL,
-//     7: ActionType.TERMINATE,
-//   };
-
-//   await prisma.memoHistory.create({
-//     data: {
-//       memoId,
-//       userId,
-//       fileId,
-//       statusId,
-//       action: `User ${userId} set status ${statusId}`,
-//       actiontype: statusActionTypeMap[statusId] ?? ActionType.UPDATE, // ✅ เพิ่ม
-//       timestamp: new Date(),
-//     },
-//   });
-
-//   broadcastMemoUpdate(memoId);
-//   res.status(201).json(pivot);
-// };
-
-export const downloadMergedPdf: RequestHandler = async (req, res) => {
-  const memoId = +req.params.id;
-  const showDraft = String(req.query.preview ?? "") === "1";
-  const forceInline = String(req.query.inline ?? "") === "1";
-
-  // ✅ ตรวจสิทธิ์
-  try {
-    const userId = getUserId(req);
-    const ok = await canViewMemo(userId, memoId);
-    if (!ok) {
-      res.status(403).json({ error: "Access denied" });
-      return;
-    }
-  } catch (e: any) {
-    res.status(e?.status || 401).json({ error: e?.message });
-    return;
-  }
-
-  // ✅ เรียกฟังก์ชันกลาง
-  let merged: Awaited<ReturnType<typeof createPdfForDownload>>;
-  try {
-    merged = await createPdfForDownload(memoId, showDraft);
-  } catch (err: any) {
-    if (err?.status === 404 || err?.message?.includes("No main PDF files found")) {
-      res.status(404).json({ error: "ไม่พบไฟล์ PDF สำหรับบันทึกข้อความนี้ (ไฟล์อาจถูกลบออกจากระบบ)" });
-      return;
-    }
-    console.error("❌ downloadMergedPdf failed:", err);
-    res.status(500).json({ error: "Failed to generate PDF" });
-    return;
-  }
-
-  // ส่งกลับ PDF - ต้องประกาศ cd ก่อนใช้
-  const memoRow = await prisma.masterMemo.findUnique({
-    where: { id: memoId },
-  });
-
-  const baseRaw =
-    memoRow?.memonumber && memoRow?.subject
-      ? `${memoRow.memonumber}-${memoRow.subject}`
-      : `memo-${memoId}`;
-  const safeBase = baseRaw.replace(/[\r\n]/g, " ").trim();
-  
-  // Use "inline" for preview mode (PDF viewer modal) or forceInline, "attachment" for download
-  const isInline = showDraft || forceInline;
-  const cd = contentDisposition(`${safeBase}.pdf`, { type: isInline ? "inline" : "attachment" });
-
-  // ถ้า recall แล้วไม่มี action → ส่งเปล่า
-  const lastRecall = await prisma.memoStatusPivot.findFirst({
-    where: { memoId, statusId: { in: [6] } },
-    orderBy: { createdAt: "desc" },
-  });
-
-  if (lastRecall && !showDraft) {
-    const actions = await prisma.memoApproverAction.findMany({
-      where: {
-        memoId,
-        status: { code: "approved" },
-        actedAt: { gte: lastRecall.createdAt },
-      },
-    });
-
-    if (actions.length === 0) {
-      const out = await merged.save();
-      res
-        .header("Content-Type", "application/pdf")
-        .header("Content-Disposition", cd)
-        .send(Buffer.from(out));
-      return;
-    }
-  }
-
-  const outBytes = await merged.save();
-  res
-    .header("Content-Type", "application/pdf")
-    .header("Content-Disposition", cd)
-    .send(Buffer.from(outBytes));
-};
-
-// --- GET /api/memos/:id/raw ---
-// คืน PDF รวม แต่ไม่มีลายเซ็นฝัง
-export const downloadRawPdf: RequestHandler = async (req, res) => {
-  const memoId = Number(req.params.id);
-
-  if (Number.isNaN(memoId)) {
-    res.status(400).json({ error: "Invalid memoId" });
-    return;
-  }
-
-  try {
-    const userId = getUserId(req);
-    const ok = await canViewMemo(userId, memoId);
-    if (!ok) {
-      res.status(403).json({ error: "Access denied" });
-      return;
-    }
-  } catch (e: any) {
-    res.status(e?.status || 401).json({ error: e?.message });
-    return;
-  }
-
-  try {
-    // ดึงข้อมูลไว้ตั้งชื่อไฟล์
-    const meta = await prisma.masterMemo.findUnique({
-      where: { id: memoId },
-      select: { memonumber: true, subject: true },
-    });
-
-    const files = await prisma.mainFile.findMany({
-      where: { memoId },
-      orderBy: { orderNo: "asc" },
-    });
-
-    if (!files.length) {
-      res.status(404).json({ error: "No files found for this memo" });
-      return;
-    }
-
-    const merged = await PDFDocument.create();
-    for (const f of files) {
-      const srcBytes = fs.readFileSync(path.resolve(f.filePath));
-      const srcDoc = await PDFDocument.load(srcBytes, { ignoreEncryption: true });
-      const pages = await merged.copyPages(srcDoc, srcDoc.getPageIndices());
-      pages.forEach((p) => merged.addPage(p));
-    }
-
-    const bytes = await merged.save();
-
-    // ---- ตั้งชื่อไฟล์: memonumber-subject.pdf ----
-    const baseName = meta
-      ? `${meta.memonumber}-${meta.subject}`
-      : `Memo_${memoId}`;
-
-    // กันอักขระต้องห้าม/ตัดความยาว/กัน header injection
-    const safeBase = baseName
-      .replace(/[\r\n]/g, " ") // กัน CRLF
-      .replace(/[\/\\?%*:|"<>]/g, " ") // กันอักขระต้องห้ามบนไฟล์ระบบทั่วไป
-      .replace(/\s+/g, " ") // เว้นวรรคซ้ำ ๆ ให้เหลือช่องเดียว
-      .trim()
-      .slice(0, 180);
-
-    const fileName = `${safeBase}.pdf`;
-
-    res
-      .set({
-        "Content-Type": "application/pdf",
-        // พรีวิว แต่กำหนดชื่อไฟล์เวลาบันทึก
-        // ถ้าจะบังคับโหลด: เปลี่ยน inline -> attachment
-        "Content-Disposition": `inline; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(
-          fileName,
-        )}`,
-        "Content-Length": bytes.length.toString(),
-      })
-      .send(Buffer.from(bytes));
-  } catch (err) {
-    console.error("❌ downloadRawPdf failed", err);
-    res.status(500).json({ error: "Failed to generate raw PDF" });
-  }
-};
-
-// --- GET /api/memos/:id/pdf?fileId=… ---
-export const getMainFilePdf: RequestHandler = async (req, res) => {
-  const memoId = Number(req.params.id);
-
-  const raw = req.query.fileId as string | undefined;
-  const fileId = raw ? Number(raw) : undefined;
-
-  // Validate
-  if (isNaN(memoId)) {
-    res.status(400).json({ error: "Invalid memoId" });
-    return;
-  }
-  if (raw && isNaN(fileId!)) {
-    res.status(400).json({ error: "Invalid fileId" });
-    return;
-  }
-
-  try {
-    const userId = getUserId(req);
-    const ok = await canViewMemo(userId, memoId);
-    if (!ok) {
-      res.status(403).json({ error: "Access denied" });
-      return;
-    }
-  } catch (e: any) {
-    res.status(e?.status || 401).json({ error: e?.message });
-    return;
-  }
-
-  try {
-    let target;
-    if (fileId !== undefined) {
-      target = await prisma.mainFile.findFirst({
-        where: { memoId, id: fileId },
-        select: { id: true, filePath: true, fileName: true }, // << เอา fileName มาด้วย
-      });
-    } else {
-      target = await prisma.mainFile.findFirst({
-        where: { memoId },
-        orderBy: { orderNo: "asc" },
-        select: { id: true, filePath: true, fileName: true }, // << เอา fileName มาด้วย
-      });
-    }
-    if (!target) {
-      res.status(404).json({ error: "File not found" });
-      return;
-    }
-
-    const absolutePath = path.join(UPLOADS_DIR, path.basename(target.filePath));
-    if (!fs.existsSync(absolutePath)) {
-      res.status(404).json({ error: "File missing on disk" });
-      return;
-    }
-
-    const rawBytes = fs.readFileSync(absolutePath);
-    const pdfDoc = await PDFDocument.load(rawBytes, { ignoreEncryption: true });
-    const cd = contentDisposition(target.fileName || `memo-${memoId}.pdf`, {
-      type: "inline",
-      fallback: false, // ให้ใช้ filename* อย่างเดียว (UTF-8)
-    });
-
-    res
-      .header("Content-Type", "application/pdf")
-      .header("Access-Control-Expose-Headers", "Content-Disposition")
-      .header("Content-Disposition", cd)
-      .sendFile(absolutePath);
-  } catch (err) {
-    console.error("❌ getMainFilePdf failed:", err);
-    res.status(500).json({ error: "Failed to fetch PDF" });
-  }
-};
 
 // recall handlers moved to memoRecall.service (Wave 8)
 export { recallMemo, recallMemoPreserve } from "../services/memoRecall.service";
