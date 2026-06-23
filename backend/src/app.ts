@@ -19,7 +19,7 @@ import fileRoutes from "./routes/file.routes";
 import devExpiryRoutes from "./routes/dev-expiry.routes";
 import ccGroupRoutes from "./routes/cc-group.routes";
 import LOAManagementRoutes from "./routes/loa_management.routes";
-import adminLogRoutes from "./routes/adminLog.routes";
+
 
 const app = express();
 
@@ -178,7 +178,7 @@ app.use("/api", memoRoutes);
 app.use("/api/dev", devExpiryRoutes);
 app.use("/api/cc-groups", ccGroupRoutes);
 app.use("/api", LOAManagementRoutes);
-app.use("/api/admin-logs", adminLogRoutes);
+// /api/admin-logs — migrated to NestJS (removed from Express)
 
 // ✅ Global error handler (must be last)
 app.use(((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
