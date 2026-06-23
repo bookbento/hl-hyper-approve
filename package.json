@@ -1,0 +1,20 @@
+{
+  "name": "hl-hyper-approve",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter backend dev & pnpm --filter apps/api start:dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:backend": "pnpm --filter backend test",
+    "test:api": "pnpm --filter apps/api test",
+    "test:api:e2e": "pnpm --filter apps/api test:e2e",
+    "test:frontend": "pnpm --filter my-react-app test:run",
+    "db:generate": "pnpm --filter @hl/database db:generate",
+    "db:migrate": "pnpm --filter @hl/database db:migrate",
+    "db:seed": "pnpm --filter @hl/database db:seed"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
