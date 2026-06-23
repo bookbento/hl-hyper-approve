@@ -19,9 +19,15 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - /api/users/signatures/:sigId/file   — Batch 3
  *   - /api/users/signatures/:sigId        — Batch 3
  *   - /api/secure-uploads                 — Batch 3 (file serving)
+ *   - /api/approval-lines                 — Batch 4 (approval-line)
+ *   - /api/teams                          — Batch 4 (approval-line)
+ *   - /api/memos/:id/approvers            — Batch 4 (approval-line)
+ *   - /api/memos/:id/approval-line        — Batch 4 (approval-line)
+ *   - /api/approval-requests/my           — Batch 4 (approval-line)
+ *   - /api/memotypes                      — Batch 4 (memotype)
  *
  * Still proxied to Express:
- *   - /api/memotypes, /api/notifications, /api/memos, etc.
+ *   - /api/memos (non-approver/approval-line sub-paths), /api/notifications, etc.
  *   - everything else under /api/*
  *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
@@ -96,6 +102,31 @@ export class GatewayModule implements NestModule {
         // ── Batch 3: Secure file serving ─────────────────────────────────────
         { path: 'api/secure-uploads', method: RequestMethod.GET },
         { path: 'api/secure-uploads/(.*)', method: RequestMethod.GET },
+
+        // ── Batch 4: Approval Line ────────────────────────────────────────────
+        // GET /api/teams
+        { path: 'api/teams', method: RequestMethod.GET },
+        // GET /api/teams/:id/approval-lines
+        { path: 'api/teams/:id/approval-lines', method: RequestMethod.GET },
+        // /api/approval-lines CRUD
+        { path: 'api/approval-lines', method: RequestMethod.GET },
+        { path: 'api/approval-lines', method: RequestMethod.POST },
+        { path: 'api/approval-lines/:id', method: RequestMethod.PUT },
+        { path: 'api/approval-lines/:id', method: RequestMethod.DELETE },
+        // Memo approval sub-paths (explicit — /api/memos/* still goes to Express for other paths)
+        { path: 'api/memos/:id/approvers', method: RequestMethod.GET },
+        { path: 'api/memos/:id/approval-line', method: RequestMethod.GET },
+        // My approval requests
+        { path: 'api/approval-requests/my', method: RequestMethod.GET },
+
+        // ── Batch 4: Memotype ─────────────────────────────────────────────────
+        { path: 'api/memotypes', method: RequestMethod.GET },
+        { path: 'api/memotypes', method: RequestMethod.POST },
+        { path: 'api/memotypes/count', method: RequestMethod.GET },
+        { path: 'api/memotypes/:id', method: RequestMethod.GET },
+        { path: 'api/memotypes/:id', method: RequestMethod.PUT },
+        { path: 'api/memotypes/:id', method: RequestMethod.DELETE },
+        { path: 'api/memotypes/:typeId/files/:fileId', method: RequestMethod.DELETE },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

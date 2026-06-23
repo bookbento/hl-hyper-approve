@@ -13,6 +13,8 @@ import { UserModule } from './modules/user/user.module';
 import { UserSignatureModule } from './modules/user-signature/user-signature.module';
 import { FileServingModule } from './modules/file-serving/file-serving.module';
 import { GatewayModule } from './common/gateway/gateway.module';
+import { ApprovalLineModule } from './modules/approval-line/approval-line.module';
+import { MemotypeModule } from './modules/memotype/memotype.module';
 
 @Module({
   imports: [
@@ -27,6 +29,8 @@ import { GatewayModule } from './common/gateway/gateway.module';
     UserModule,
     UserSignatureModule,
     FileServingModule,
+    ApprovalLineModule,
+    MemotypeModule,
     GatewayModule,
   ],
   providers: [
