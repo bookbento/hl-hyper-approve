@@ -27,11 +27,14 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
+    "file-type": "^22.0.1",
     "http-proxy-middleware": "^2.0.10",
+    "mime-types": "^3.0.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",
@@ -40,6 +43,7 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/express": "^5.0.1",
     "@types/jest": "^29.5.14",
+    "@types/mime-types": "^3.0.1",
     "@types/multer": "^2.1.0",
     "@types/node": "^22.15.17",
     "@types/passport-jwt": "^4.0.1",
@@ -65,6 +69,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(file-type|token-types|strtok3|peek-readable)/)"
+    ]
   }
 }
