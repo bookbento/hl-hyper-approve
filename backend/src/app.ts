@@ -10,11 +10,10 @@ import memoRoutes from "./routes/memo.routes";
 // /api/approval-lines — migrated to NestJS (Batch 4)
 // /api/memotypes — migrated to NestJS (Batch 4)
 import memoStatusRoutes from "./routes/memoStatus.routes";
-import notificationRoutes from "./routes/notification.routes";
-import memoccRoutes from "./routes/memocc.routes";
+// /api/notifications — migrated to NestJS (Batch 5)
+// /api/memos/:id/cc, /api/memos/cc/me — migrated to NestJS (Batch 5)
+// /api/approver-lines, /api/approvers/* — migrated to NestJS (Batch 5)
 import devExpiryRoutes from "./routes/dev-expiry.routes";
-
-import LOAManagementRoutes from "./routes/loa_management.routes";
 
 
 const app = express();
@@ -161,14 +160,14 @@ app.use("/", express.static(path.join(__dirname, "../views")));
 // /api/memotypes — migrated to NestJS (Batch 4 — removed from Express)
 // /api/approval-lines, /api/teams, /api/memos/:id/approvers,
 //   /api/memos/:id/approval-line, /api/approval-requests/my — migrated to NestJS (Batch 4)
-app.use("/api/notifications", notificationRoutes);
+// /api/notifications — migrated to NestJS (Batch 5 — removed from Express)
+// /api/memos/:id/cc, /api/memos/cc/me — migrated to NestJS (Batch 5)
+// /api/approver-lines, /api/approvers/* — migrated to NestJS (Batch 5)
 // /api/users (userSignature) — migrated to NestJS (UserSignatureModule)
-app.use("/api", memoccRoutes);
 app.use("/api", memoStatusRoutes);
 app.use("/api", memoRoutes);
 app.use("/api/dev", devExpiryRoutes);
 // /api/cc-groups — migrated to NestJS (removed from Express)
-app.use("/api", LOAManagementRoutes);
 // /api/admin-logs — migrated to NestJS (removed from Express)
 
 // ✅ Global error handler (must be last)

@@ -25,9 +25,15 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - /api/memos/:id/approval-line        — Batch 4 (approval-line)
  *   - /api/approval-requests/my           — Batch 4 (approval-line)
  *   - /api/memotypes                      — Batch 4 (memotype)
+ *   - /api/notifications                  — Batch 5 (notification)
+ *   - /api/approver-lines                 — Batch 5 (LOA management)
+ *   - /api/approvers                      — Batch 5 (LOA management)
+ *   - /api/approval-lines/:id/update-approvers — Batch 5 (LOA management)
+ *   - /api/memos/:id/cc                   — Batch 5 (memocc)
+ *   - /api/memos/cc/me                    — Batch 5 (memocc)
  *
  * Still proxied to Express:
- *   - /api/memos (non-approver/approval-line sub-paths), /api/notifications, etc.
+ *   - /api/memos (non-CC, non-approver sub-paths)
  *   - everything else under /api/*
  *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
@@ -90,9 +96,6 @@ export class GatewayModule implements NestModule {
         { path: 'api/users/:id/manageable-business-units', method: RequestMethod.GET },
 
         // ── Batch 3: UserSignature ────────────────────────────────────────────
-        // Note: "signatures/:sigId" paths must also be excluded so Nest handles them.
-        // "signatures" is a static segment — cannot match as :id — so listing both
-        // static and dynamic forms is intentional (explicit over wildcard policy).
         { path: 'api/users/:id/signatures', method: RequestMethod.GET },
         { path: 'api/users/:id/signatures', method: RequestMethod.POST },
         { path: 'api/users/:id/default-signature', method: RequestMethod.PUT },
@@ -104,19 +107,14 @@ export class GatewayModule implements NestModule {
         { path: 'api/secure-uploads/(.*)', method: RequestMethod.GET },
 
         // ── Batch 4: Approval Line ────────────────────────────────────────────
-        // GET /api/teams
         { path: 'api/teams', method: RequestMethod.GET },
-        // GET /api/teams/:id/approval-lines
         { path: 'api/teams/:id/approval-lines', method: RequestMethod.GET },
-        // /api/approval-lines CRUD
         { path: 'api/approval-lines', method: RequestMethod.GET },
         { path: 'api/approval-lines', method: RequestMethod.POST },
         { path: 'api/approval-lines/:id', method: RequestMethod.PUT },
         { path: 'api/approval-lines/:id', method: RequestMethod.DELETE },
-        // Memo approval sub-paths (explicit — /api/memos/* still goes to Express for other paths)
         { path: 'api/memos/:id/approvers', method: RequestMethod.GET },
         { path: 'api/memos/:id/approval-line', method: RequestMethod.GET },
-        // My approval requests
         { path: 'api/approval-requests/my', method: RequestMethod.GET },
 
         // ── Batch 4: Memotype ─────────────────────────────────────────────────
@@ -127,6 +125,33 @@ export class GatewayModule implements NestModule {
         { path: 'api/memotypes/:id', method: RequestMethod.PUT },
         { path: 'api/memotypes/:id', method: RequestMethod.DELETE },
         { path: 'api/memotypes/:typeId/files/:fileId', method: RequestMethod.DELETE },
+
+        // ── Batch 5: Notification ─────────────────────────────────────────────
+        { path: 'api/notifications', method: RequestMethod.GET },
+        { path: 'api/notifications/unread-count', method: RequestMethod.GET },
+        { path: 'api/notifications/mark-all-read', method: RequestMethod.PATCH },
+        { path: 'api/notifications/clear-read', method: RequestMethod.DELETE },
+        { path: 'api/notifications/:id/mark-read', method: RequestMethod.PATCH },
+
+        // ── Batch 5: LOA Management ───────────────────────────────────────────
+        { path: 'api/approver-lines', method: RequestMethod.GET },
+        { path: 'api/approver-lines/:userId', method: RequestMethod.GET },
+        { path: 'api/approver-lines/:lineId/memo-types', method: RequestMethod.GET },
+        { path: 'api/approver-lines/:id', method: RequestMethod.PUT },
+        { path: 'api/approvers/replace', method: RequestMethod.POST },
+        { path: 'api/approvers/bulk-update', method: RequestMethod.POST },
+        { path: 'api/approvers/bulk-signature-update', method: RequestMethod.POST },
+        { path: 'api/approvers/bulk-reorder', method: RequestMethod.POST },
+        { path: 'api/approval-lines/:id/update-approvers', method: RequestMethod.POST },
+
+        // ── Batch 5: MemoCc ───────────────────────────────────────────────────
+        // NOTE: /api/memos/cc/me MUST be listed BEFORE /api/memos/:id/cc
+        // to avoid :id matching "cc" as a parameter.
+        { path: 'api/memos/cc/me', method: RequestMethod.GET },
+        { path: 'api/memos/:id/cc', method: RequestMethod.GET },
+        { path: 'api/memos/:id/cc', method: RequestMethod.PUT },
+        { path: 'api/memos/:id/cc/:userId', method: RequestMethod.POST },
+        { path: 'api/memos/:id/cc/:userId', method: RequestMethod.DELETE },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

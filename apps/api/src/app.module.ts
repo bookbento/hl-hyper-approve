@@ -15,6 +15,9 @@ import { FileServingModule } from './modules/file-serving/file-serving.module';
 import { GatewayModule } from './common/gateway/gateway.module';
 import { ApprovalLineModule } from './modules/approval-line/approval-line.module';
 import { MemotypeModule } from './modules/memotype/memotype.module';
+import { NotificationModule } from './modules/notification/notification.module';
+import { LoaManagementModule } from './modules/loa-management/loa-management.module';
+import { MemoCcModule } from './modules/memocc/memocc.module';
 
 @Module({
   imports: [
@@ -31,6 +34,9 @@ import { MemotypeModule } from './modules/memotype/memotype.module';
     FileServingModule,
     ApprovalLineModule,
     MemotypeModule,
+    NotificationModule,
+    LoaManagementModule,
+    MemoCcModule,
     GatewayModule,
   ],
   providers: [
