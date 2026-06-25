@@ -18,6 +18,7 @@ import { MemotypeModule } from './modules/memotype/memotype.module';
 import { NotificationModule } from './modules/notification/notification.module';
 import { LoaManagementModule } from './modules/loa-management/loa-management.module';
 import { MemoCcModule } from './modules/memocc/memocc.module';
+import { MemoQueryModule } from './modules/memo-query/memo-query.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { MemoCcModule } from './modules/memocc/memocc.module';
     NotificationModule,
     LoaManagementModule,
     MemoCcModule,
+    MemoQueryModule,
     GatewayModule,
   ],
   providers: [

@@ -31,9 +31,19 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - /api/approval-lines/:id/update-approvers — Batch 5 (LOA management)
  *   - /api/memos/:id/cc                   — Batch 5 (memocc)
  *   - /api/memos/cc/me                    — Batch 5 (memocc)
+ *   - /api/memos                          — Batch 6a (memo-query READ)
+ *   - /api/memos/:id                      — Batch 6a (memo-query READ)
+ *   - /api/memos/awaiting-approval        — Batch 6a
+ *   - /api/memos/current-approvers        — Batch 6a
+ *   - /api/memos/search                   — Batch 6a
+ *   - /api/memos/search/stats             — Batch 6a
+ *   - /api/memos/search-for-reference     — Batch 6a
+ *   - /api/memos/users-delegation-info    — Batch 6a
+ *   - /api/memos/:id/references           — Batch 6a
+ *   - /api/memos/:id/reference-content/:referenceId — Batch 6a
  *
  * Still proxied to Express:
- *   - /api/memos (non-CC, non-approver sub-paths)
+ *   - /api/memos (write: POST/PUT/DELETE and other sub-paths)
  *   - everything else under /api/*
  *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
@@ -152,6 +162,27 @@ export class GatewayModule implements NestModule {
         { path: 'api/memos/:id/cc', method: RequestMethod.PUT },
         { path: 'api/memos/:id/cc/:userId', method: RequestMethod.POST },
         { path: 'api/memos/:id/cc/:userId', method: RequestMethod.DELETE },
+
+        // ── Batch 6a: Memo READ/query ─────────────────────────────────────────
+        // NOTE: static paths (search, awaiting-approval, etc.) are listed in
+        // the gateway here for completeness but Nest controller ordering is
+        // the authoritative source of path-resolution priority.
+        //
+        // POST endpoints
+        { path: 'api/memos/search', method: RequestMethod.POST },
+        { path: 'api/memos/search/stats', method: RequestMethod.POST },
+        { path: 'api/memos/users-delegation-info', method: RequestMethod.POST },
+        // GET static (must appear before /:id wildcards)
+        { path: 'api/memos/awaiting-approval', method: RequestMethod.GET },
+        { path: 'api/memos/current-approvers', method: RequestMethod.GET },
+        { path: 'api/memos/search-for-reference', method: RequestMethod.GET },
+        // GET /api/memos (list)
+        { path: 'api/memos', method: RequestMethod.GET },
+        // GET /api/memos/:id and sub-routes
+        { path: 'api/memos/:id', method: RequestMethod.GET },
+        { path: 'api/memos/:id/references', method: RequestMethod.GET },
+        { path: 'api/memos/:id/references', method: RequestMethod.PUT },
+        { path: 'api/memos/:id/reference-content/:referenceId', method: RequestMethod.GET },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
