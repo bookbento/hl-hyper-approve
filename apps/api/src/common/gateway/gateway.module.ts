@@ -42,9 +42,13 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - /api/memos/:id/references           — Batch 6a
  *   - /api/memos/:id/reference-content/:referenceId — Batch 6a
  *
- * Still proxied to Express:
- *   - /api/memos (write: POST/PUT/DELETE and other sub-paths)
- *   - everything else under /api/*
+ * Batch 6b (memo lifecycle WRITE endpoints):
+ *   - POST   /api/memos                   — createMemo
+ *   - PUT    /api/memos/:id               — updateMemo
+ *   - DELETE /api/memos/:id               — deleteMemo (soft)
+ *   - DELETE /api/memos/:id/force         — forceDeleteMemo (hard)
+ *   - POST   /api/memos/:id/renew-expiry  — renewExpiry
+ *   - POST   /api/memos/:id/upload-main   — uploadMainPDF
  *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
  */
@@ -164,25 +168,27 @@ export class GatewayModule implements NestModule {
         { path: 'api/memos/:id/cc/:userId', method: RequestMethod.DELETE },
 
         // ── Batch 6a: Memo READ/query ─────────────────────────────────────────
-        // NOTE: static paths (search, awaiting-approval, etc.) are listed in
-        // the gateway here for completeness but Nest controller ordering is
-        // the authoritative source of path-resolution priority.
-        //
-        // POST endpoints
         { path: 'api/memos/search', method: RequestMethod.POST },
         { path: 'api/memos/search/stats', method: RequestMethod.POST },
         { path: 'api/memos/users-delegation-info', method: RequestMethod.POST },
-        // GET static (must appear before /:id wildcards)
         { path: 'api/memos/awaiting-approval', method: RequestMethod.GET },
         { path: 'api/memos/current-approvers', method: RequestMethod.GET },
         { path: 'api/memos/search-for-reference', method: RequestMethod.GET },
-        // GET /api/memos (list)
         { path: 'api/memos', method: RequestMethod.GET },
-        // GET /api/memos/:id and sub-routes
         { path: 'api/memos/:id', method: RequestMethod.GET },
         { path: 'api/memos/:id/references', method: RequestMethod.GET },
         { path: 'api/memos/:id/references', method: RequestMethod.PUT },
         { path: 'api/memos/:id/reference-content/:referenceId', method: RequestMethod.GET },
+
+        // ── Batch 6b: Memo WRITE/lifecycle ────────────────────────────────────
+        // NOTE: specific sub-paths (:id/upload-main, :id/renew-expiry, :id/force)
+        // must appear before the bare :id wildcard entries.
+        { path: 'api/memos', method: RequestMethod.POST },
+        { path: 'api/memos/:id/upload-main', method: RequestMethod.POST },
+        { path: 'api/memos/:id/renew-expiry', method: RequestMethod.POST },
+        { path: 'api/memos/:id/force', method: RequestMethod.DELETE },
+        { path: 'api/memos/:id', method: RequestMethod.PUT },
+        { path: 'api/memos/:id', method: RequestMethod.DELETE },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

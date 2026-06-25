@@ -19,6 +19,7 @@ import { NotificationModule } from './modules/notification/notification.module';
 import { LoaManagementModule } from './modules/loa-management/loa-management.module';
 import { MemoCcModule } from './modules/memocc/memocc.module';
 import { MemoQueryModule } from './modules/memo-query/memo-query.module';
+import { MemoLifecycleModule } from './modules/memo-lifecycle/memo-lifecycle.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { MemoQueryModule } from './modules/memo-query/memo-query.module';
     LoaManagementModule,
     MemoCcModule,
     MemoQueryModule,
+    MemoLifecycleModule,
     GatewayModule,
   ],
   providers: [
