@@ -36,57 +36,6 @@ export const uploadMainPDF: RequestHandler = async (req, res) => {
 };
 
 // ---------------------------------------------------------------------------
-// saveSignaturePosition
-// POST /api/memos/signature
-// ---------------------------------------------------------------------------
-export const saveSignaturePosition: RequestHandler = async (req, res) => {
-  const { memoId, fileId, userId, page, x, y } = req.body;
-  const s = await prisma.signaturePosition.create({
-    data: { memoId, fileId, userId, page, x, y },
-  });
-  res.status(201).json(s);
-};
-
-// ---------------------------------------------------------------------------
-// saveDatePosition
-// POST /api/memos/date
-// ---------------------------------------------------------------------------
-export const saveDatePosition: RequestHandler = async (req, res) => {
-  const { memoId, fileId, userId, page, x, y, date } = req.body;
-  const d = await prisma.datePosition.create({
-    data: {
-      memoId,
-      fileId,
-      userId,
-      page,
-      x,
-      y,
-      date: new Date(date),
-    },
-  });
-  res.status(201).json(d);
-};
-
-// ---------------------------------------------------------------------------
-// saveNotePosition
-// POST /api/memos/note
-// ---------------------------------------------------------------------------
-export const saveNotePosition: RequestHandler = async (req, res) => {
-  const { memoId, fileId, page, x, y, text } = req.body;
-  const n = await prisma.notePosition.create({
-    data: {
-      memoId,
-      fileId,
-      page,
-      x,
-      y,
-      text,
-    },
-  });
-  res.status(201).json(n);
-};
-
-// ---------------------------------------------------------------------------
 // downloadMergedPdf
 // GET /api/memos/:id/pdf/merged  (also GET /api/memos/:id/download)
 // ---------------------------------------------------------------------------

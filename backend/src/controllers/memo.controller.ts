@@ -33,20 +33,9 @@ export {
   searchMemoStatsHandler,
   getCurrentApprovers,
   getMemoById,
-  getApprovers,
-  getMemoApprovalLine,
-  getBusinessUnits,
-  getApprovalLines,
   getAwaitingApproval,
   getWaitingStatusId,
 } from "../services/memoQuery.service";
-export {
-  getCommentsByMemoId,
-  addCommentToMemo,
-  deleteComment,
-  sendCommentEmailsAsync,
-  sendDeleteCommentEmailsAsync,
-} from "../services/memoComment.service";
 export {
   recomputeExtraLineStatus,
   createExtraApprovalLine,
@@ -79,9 +68,6 @@ export {
 // ─── PDF handlers (Wave 10) — moved to memoPdf.service.ts ───
 export {
   uploadMainPDF,
-  saveSignaturePosition,
-  saveDatePosition,
-  saveNotePosition,
   downloadMergedPdf,
   downloadRawPdf,
   getMainFilePdf,

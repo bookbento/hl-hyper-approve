@@ -6,9 +6,6 @@
  *
  * Scenarios covered:
  *   uploadMainPDF       — creates mainFile record, returns 201
- *   saveSignaturePosition — creates record, returns 201
- *   saveDatePosition    — creates record with Date conversion, returns 201
- *   saveNotePosition    — creates record, returns 201
  *   downloadMergedPdf   — 403 when canViewMemo=false, 404 when pdf.core throws 404,
  *                         500 on unknown error, 200 with PDF bytes on success,
  *                         recall+no-actions edge case returns merged PDF early
@@ -94,9 +91,6 @@ import { PDFDocument } from "pdf-lib";
 
 import {
   uploadMainPDF,
-  saveSignaturePosition,
-  saveDatePosition,
-  saveNotePosition,
   downloadMergedPdf,
   downloadRawPdf,
   getMainFilePdf,
@@ -154,72 +148,6 @@ describe("uploadMainPDF", () => {
         fileName: "test.pdf",
         size: 1024,
       },
-    });
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(created);
-  });
-});
-
-describe("saveSignaturePosition", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("creates signature position and returns 201", async () => {
-    const created = { id: 10 };
-    (prisma.signaturePosition.create as ReturnType<typeof vi.fn>).mockResolvedValue(created);
-
-    const req = makeReq({
-      body: { memoId: 1, fileId: 2, userId: 3, page: 1, x: 50, y: 60 },
-    });
-    const res = makeRes();
-
-    await saveSignaturePosition(req, res, vi.fn());
-
-    expect(prisma.signaturePosition.create).toHaveBeenCalledWith({
-      data: { memoId: 1, fileId: 2, userId: 3, page: 1, x: 50, y: 60 },
-    });
-    expect(res.status).toHaveBeenCalledWith(201);
-    expect(res.json).toHaveBeenCalledWith(created);
-  });
-});
-
-describe("saveDatePosition", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("creates date position with Date conversion and returns 201", async () => {
-    const created = { id: 20 };
-    (prisma.datePosition.create as ReturnType<typeof vi.fn>).mockResolvedValue(created);
-
-    const dateStr = "2025-01-15";
-    const req = makeReq({
-      body: { memoId: 1, fileId: 2, userId: 3, page: 1, x: 10, y: 20, date: dateStr },
-    });
-    const res = makeRes();
-
-    await saveDatePosition(req, res, vi.fn());
-
-    const call = (prisma.datePosition.create as ReturnType<typeof vi.fn>).mock.calls[0][0];
-    expect(call.data.date).toBeInstanceOf(Date);
-    expect(call.data.date.toISOString()).toContain("2025-01-15");
-    expect(res.status).toHaveBeenCalledWith(201);
-  });
-});
-
-describe("saveNotePosition", () => {
-  beforeEach(() => vi.clearAllMocks());
-
-  it("creates note position and returns 201", async () => {
-    const created = { id: 30 };
-    (prisma.notePosition.create as ReturnType<typeof vi.fn>).mockResolvedValue(created);
-
-    const req = makeReq({
-      body: { memoId: 1, fileId: 2, page: 1, x: 5, y: 5, text: "hello" },
-    });
-    const res = makeRes();
-
-    await saveNotePosition(req, res, vi.fn());
-
-    expect(prisma.notePosition.create).toHaveBeenCalledWith({
-      data: { memoId: 1, fileId: 2, page: 1, x: 5, y: 5, text: "hello" },
     });
     expect(res.status).toHaveBeenCalledWith(201);
     expect(res.json).toHaveBeenCalledWith(created);
