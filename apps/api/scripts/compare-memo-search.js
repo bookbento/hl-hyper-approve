@@ -6,6 +6,7 @@
 //   DATABASE_URL=... FRONTEND_URL=http://x EMAIL_TOKEN_SECRET=x JWT_SECRET=x \
 //     node apps/api/scripts/compare-memo-search.js .
 // (the extra env vars only satisfy backend import-time checks)
+// COMPARE_USERS=N compares the N users owning the most memos (default 5).
 //
 // Delete together with backend/ once Express is removed.
 const path = require('path');
@@ -43,16 +44,30 @@ const requests = [
   { currentApproverNames: ['a'] },
   { extraApproverContains: 'a' },
   { createdFrom: '2025-01-01', createdTo: '2026-12-31' },
+  { expiresFrom: '2026-03-01', expiresTo: '2026-09-30', sortBy: 'createdAt', sortDir: 'asc' },
+  { businessUnitId: 27 },
+  { departmentId: 'All', businessUnitId: 'All', sortBy: 'memonumber' },
+  { ccStatuses: ['a'] },
+  { extraApproverNames: ['a'], extraApproverIds: [1] },
+  { view: 'MY_APPROVAL', sortBy: 'latestAction', sortDir: 'asc' },
+  { statuses: ['Published', 'Recalled', 'Terminated', 'Rejected'], pageSize: 5, page: 2 },
+  { memonumberContains: '00', subjectContains: 'memo', authorContains: 'a' },
 ];
+// Search one memo by id, using an id that exists
+const extraRequests = async () => {
+  const [m] = await prisma.masterMemo.findMany({ select: { id: true }, orderBy: { id: 'desc' }, take: 1 });
+  return m ? [{ search: `MEMO-${m.id}` }] : [];
+};
 
 (async () => {
   const users = await prisma.$queryRaw`
     SELECT u.id FROM "User" u
     LEFT JOIN "MasterMemo" m ON m."userId" = u.id
     WHERE u."deletedAt" IS NULL
-    GROUP BY u.id ORDER BY COUNT(m.id) DESC LIMIT 5`;
+    GROUP BY u.id ORDER BY COUNT(m.id) DESC LIMIT ${Number(process.env.COMPARE_USERS || 5)}`;
   const userIds = users.map((u) => u.id);
   console.log('users:', userIds.join(','));
+  requests.push(...(await extraRequests()));
 
   let diffs = 0, checked = 0;
   for (const userId of userIds) {
