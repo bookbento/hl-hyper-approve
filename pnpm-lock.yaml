@@ -62,11 +62,14 @@ importers:
       jsonwebtoken:
         specifier: ^9.0.3
         version: 9.0.3
+      lru-cache:
+        specifier: ^11.5.1
+        version: 11.5.1
       mime-types:
         specifier: ^3.0.2
         version: 3.0.2
       multer:
-        specifier: 2.1.1
+        specifier: ^2.1.1
         version: 2.1.1
       passport:
         specifier: ^0.7.0
