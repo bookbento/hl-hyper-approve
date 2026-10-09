@@ -58,6 +58,15 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  * Batch 8a (PDF downloads):
  *   - GET /api/memos/:id/download[/:filename], /raw, /pdf
  *
+ * Batch 7b (extra approval lines):
+ *   - /api/memos/:id/extra-approval-lines/*  (+ /api/memos/extra-approval-lines/active/bulk)
+ *
+ * Batch 8b (approve / status / recall / email action):
+ *   - POST /api/memos/:id/action-signature | /action | /status
+ *   - POST /api/memos/:id/recall | /recall-preserve | /recall-clear
+ *   - GET  /api/memos/:id/actions | /approver-status, POST /api/memos/approver-status/bulk
+ *   - GET  /api/memos/action/email   (one-click link, no login)
+ *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
  */
 @Module({
@@ -217,11 +226,34 @@ export class GatewayModule implements NestModule {
         { path: 'api/memos/:id/extra-approval-lines', method: RequestMethod.POST },
         { path: 'api/memos/:id/extra-approval-lines', method: RequestMethod.GET },
         { path: 'api/memos/:id/extra-approval-lines/active', method: RequestMethod.GET },
-        { path: 'api/memos/:memoId/extra-approval-lines/eligible-users', method: RequestMethod.GET },
-        { path: 'api/memos/:memoId/extra-approval-lines/:lineId/eligible-users', method: RequestMethod.GET },
-        { path: 'api/memos/:memoId/extra-approval-lines/:lineId/action', method: RequestMethod.POST },
-        { path: 'api/memos/:memoId/extra-approval-lines/:lineId/append', method: RequestMethod.POST },
+        {
+          path: 'api/memos/:memoId/extra-approval-lines/eligible-users',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/memos/:memoId/extra-approval-lines/:lineId/eligible-users',
+          method: RequestMethod.GET,
+        },
+        {
+          path: 'api/memos/:memoId/extra-approval-lines/:lineId/action',
+          method: RequestMethod.POST,
+        },
+        {
+          path: 'api/memos/:memoId/extra-approval-lines/:lineId/append',
+          method: RequestMethod.POST,
+        },
         { path: 'api/memos/:memoId/extra-approval-lines/:lineId', method: RequestMethod.DELETE },
+        // ── Batch 8b: approve / status / recall / email action ───────────────
+        { path: 'api/memos/:id/action-signature', method: RequestMethod.POST },
+        { path: 'api/memos/:id/action', method: RequestMethod.POST },
+        { path: 'api/memos/:id/status', method: RequestMethod.POST },
+        { path: 'api/memos/:id/recall', method: RequestMethod.POST },
+        { path: 'api/memos/:id/recall-preserve', method: RequestMethod.POST },
+        { path: 'api/memos/:id/recall-clear', method: RequestMethod.POST },
+        { path: 'api/memos/:id/actions', method: RequestMethod.GET },
+        { path: 'api/memos/:id/approver-status', method: RequestMethod.GET },
+        { path: 'api/memos/approver-status/bulk', method: RequestMethod.POST },
+        { path: 'api/memos/action/email', method: RequestMethod.GET },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
