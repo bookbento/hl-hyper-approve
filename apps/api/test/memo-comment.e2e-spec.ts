@@ -9,6 +9,7 @@ import * as cookieParser from 'cookie-parser';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { MailService } from '../src/common/mail/mail.service';
 import { AdminLogService } from '../src/common/admin-log/admin-log.service';
+import { MemoAccessService } from '../src/modules/memo-query/memo-access.service';
 
 // Uploads land in a temp dir; upload.config reads UPLOADS_DIR at import time,
 // so AppModule is required only after this is set.
@@ -37,6 +38,7 @@ describe('MemoComment + MemoPosition e2e (AppModule with Prisma mock)', () => {
     $disconnect: jest.fn(),
   };
   const mockMail = { sendEmail: jest.fn().mockResolvedValue(undefined) };
+  const mockAccess = { canViewMemo: jest.fn(), canViewMemoSimple: jest.fn() };
 
   beforeAll(async () => {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -46,6 +48,8 @@ describe('MemoComment + MemoPosition e2e (AppModule with Prisma mock)', () => {
       .useValue(mockPrisma)
       .overrideProvider(MailService)
       .useValue(mockMail)
+      .overrideProvider(MemoAccessService)
+      .useValue(mockAccess)
       .overrideProvider(AdminLogService)
       .useValue({ write: jest.fn() })
       .compile();
@@ -66,6 +70,7 @@ describe('MemoComment + MemoPosition e2e (AppModule with Prisma mock)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockPrisma.user.findUnique.mockResolvedValue({ deletedAt: null });
+    mockAccess.canViewMemo.mockResolvedValue(true);
     mockPrisma.user.findMany.mockResolvedValue([{ name: 'Tagged', lastname: null, nickname: null }]);
     mockPrisma.memoStatusPivot.findFirst.mockResolvedValue({ status: { id: 1, name: 'Draft' } });
     mockPrisma.comment.create.mockResolvedValue({ id: 50 });
@@ -90,6 +95,16 @@ describe('MemoComment + MemoPosition e2e (AppModule with Prisma mock)', () => {
       const res = await auth(request(app.getHttpServer()).get('/api/memos/abc/comments'));
       expect(res.status).toBe(400);
       expect(res.body).toEqual({ error: 'Invalid memo ID' });
+    });
+
+    it('403s for a memo the user cannot see', async () => {
+      mockAccess.canViewMemo.mockResolvedValue(false);
+      const get = await auth(request(app.getHttpServer()).get('/api/memos/9/comments'));
+      expect(get.status).toBe(403);
+      expect(get.body).toEqual({ error: 'Access denied' });
+      const post = await auth(request(app.getHttpServer()).post('/api/memos/9/comments')).field('content', 'hi');
+      expect(post.status).toBe(403);
+      expect(mockPrisma.comment.create).not.toHaveBeenCalled();
     });
 
     it('lists comments', async () => {
@@ -142,6 +157,7 @@ describe('MemoComment + MemoPosition e2e (AppModule with Prisma mock)', () => {
     it('deletes a comment with mentions → 204', async () => {
       mockPrisma.comment.findUnique.mockResolvedValue({
         memoId: 9,
+        userId: 2,
         comment: 'ping',
         tags: [{ userId: 3 }],
         memo: { subject: 'S', memonumber: null, userId: 2 },
@@ -156,7 +172,7 @@ describe('MemoComment + MemoPosition e2e (AppModule with Prisma mock)', () => {
     });
 
     it('403s deleting a comment without mentions', async () => {
-      mockPrisma.comment.findUnique.mockResolvedValue({ memoId: 9, tags: [], memo: {}, user: {} });
+      mockPrisma.comment.findUnique.mockResolvedValue({ memoId: 9, userId: 2, tags: [], memo: {}, user: {} });
       const res = await auth(request(app.getHttpServer()).delete('/api/comments/50'));
       expect(res.status).toBe(403);
       expect(res.body).toEqual({ error: 'Only comments with mentions can be deleted.' });

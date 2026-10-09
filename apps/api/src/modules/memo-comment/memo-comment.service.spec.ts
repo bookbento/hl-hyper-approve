@@ -4,6 +4,7 @@ import { MemoCommentService, parseMentionUserIds } from './memo-comment.service'
 import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from '../../common/mail/mail.service';
 import { EmailPreferenceService } from '../../common/mail/email-preference.service';
+import { MemoAccessService } from '../memo-query/memo-access.service';
 
 const mockPrisma = {
   memoStatusPivot: { findFirst: jest.fn() },
@@ -17,6 +18,7 @@ const mockPrisma = {
 };
 const mockMail = { sendEmail: jest.fn() };
 const mockPrefs = { filterUsersForEmail: jest.fn() };
+const mockAccess = { canViewMemo: jest.fn() };
 
 const PROCESSING = { status: { id: 5, name: 'Processing' } };
 const DRAFT = { status: { id: 1, name: 'Draft' } };
@@ -37,6 +39,7 @@ describe('MemoCommentService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: MailService, useValue: mockMail },
         { provide: EmailPreferenceService, useValue: mockPrefs },
+        { provide: MemoAccessService, useValue: mockAccess },
       ],
     }).compile();
     service = module.get(MemoCommentService);
@@ -58,6 +61,7 @@ describe('MemoCommentService', () => {
     );
     mockPrefs.filterUsersForEmail.mockImplementation((ids: number[]) => Promise.resolve(ids));
     mockMail.sendEmail.mockResolvedValue(undefined);
+    mockAccess.canViewMemo.mockResolvedValue(true);
   });
 
   describe('parseMentionUserIds', () => {
@@ -75,6 +79,19 @@ describe('MemoCommentService', () => {
     it('rejects an empty comment without files', async () => {
       await expect(service.addComment({ ...base, content: '' })).rejects.toBeInstanceOf(BadRequestException);
       expect(mockPrisma.comment.create).not.toHaveBeenCalled();
+    });
+
+    it('403s and discards uploads when the user cannot see the memo', async () => {
+      mockAccess.canViewMemo.mockResolvedValue(false);
+      const tmp = require('path').join(require('os').tmpdir(), `hl-comment-1791518968645.pdf`);
+      require('fs').writeFileSync(tmp, 'x');
+      const file = { path: tmp, filename: 'f.pdf', originalname: 'f.pdf', mimetype: 'application/pdf', size: 1 } as Express.Multer.File;
+
+      await expect(service.addComment({ ...base, files: [file] })).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockAccess.canViewMemo).toHaveBeenCalledWith(2, 9);
+      expect(mockPrisma.comment.create).not.toHaveBeenCalled();
+      await new Promise((r) => setTimeout(r, 50));
+      expect(require('fs').existsSync(tmp)).toBe(false);
     });
 
     it('stores attachments with decoded names under /uploads/comments', async () => {
@@ -153,7 +170,13 @@ describe('MemoCommentService', () => {
     });
 
     it('refuses to delete a comment without mentions', async () => {
-      mockPrisma.comment.findUnique.mockResolvedValue({ memoId: 9, tags: [], memo: {}, user: {} });
+      mockPrisma.comment.findUnique.mockResolvedValue({ memoId: 9, userId: 2, tags: [], memo: {}, user: {} });
+      await expect(service.deleteComment(1, 2)).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockPrisma.comment.delete).not.toHaveBeenCalled();
+    });
+
+    it('refuses to delete a comment written by someone else', async () => {
+      mockPrisma.comment.findUnique.mockResolvedValue({ memoId: 9, userId: 7, tags: [{ userId: 3 }], memo: {}, user: {} });
       await expect(service.deleteComment(1, 2)).rejects.toBeInstanceOf(ForbiddenException);
       expect(mockPrisma.comment.delete).not.toHaveBeenCalled();
     });
@@ -161,6 +184,7 @@ describe('MemoCommentService', () => {
     it('deletes and notifies the mentioned user and the owner', async () => {
       mockPrisma.comment.findUnique.mockResolvedValue({
         memoId: 9,
+        userId: 2,
         comment: 'ping',
         tags: [{ userId: 3 }],
         memo: { subject: 'Budget', memonumber: null, userId: 1 },
@@ -184,6 +208,12 @@ describe('MemoCommentService', () => {
   });
 
   describe('getComments', () => {
+    it('403s when the user cannot see the memo', async () => {
+      mockAccess.canViewMemo.mockResolvedValue(false);
+      await expect(service.getComments(9, 2, 'http://api')).rejects.toBeInstanceOf(ForbiddenException);
+      expect(mockPrisma.comment.findMany).not.toHaveBeenCalled();
+    });
+
     it('maps tags, profile image and attachment urls', async () => {
       mockPrisma.comment.findMany.mockResolvedValue([
         {
@@ -201,7 +231,7 @@ describe('MemoCommentService', () => {
         },
       ]);
 
-      const [c] = await service.getComments(9, 'http://api');
+      const [c] = await service.getComments(9, 2, 'http://api');
       expect(c.hasMentions).toBe(true);
       expect(c.tags).toEqual([{ id: 3, name: 'Tagged' }]);
       expect(c.user.profileImage).toBeNull();

@@ -8,9 +8,9 @@
  * Ported from backend/src/services/memoComment.service.ts. Error bodies keep
  * the Express `{ error }` shape because the frontend toasts `data.error`.
  *
- * Note (unchanged from Express): none of these endpoints check that the
- * caller can see the memo, and any authenticated user can delete any comment
- * that has mentions.
+ * Access (tightened vs Express, which checked nothing): reading or posting
+ * requires MemoAccessService.canViewMemo — the same rule as opening the memo —
+ * and only the author can delete a comment (the UI only offers that anyway).
  */
 import {
   BadRequestException,
@@ -22,10 +22,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { ActionType, Prisma } from '@prisma/client';
+import * as fs from 'fs';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MailService } from '../../common/mail/mail.service';
 import { EmailPreferenceService } from '../../common/mail/email-preference.service';
 import { decodeFilename } from '../../common/upload/upload.config';
+import { MemoAccessService } from '../memo-query/memo-access.service';
 import {
   buildCommentHtml,
   buildCommentPlain,
@@ -100,11 +102,19 @@ export class MemoCommentService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly emailPrefs: EmailPreferenceService,
+    private readonly memoAccess: MemoAccessService,
   ) {}
+
+  private async assertCanViewMemo(userId: number, memoId: number): Promise<void> {
+    if (!(await this.memoAccess.canViewMemo(userId, memoId))) {
+      throw new ForbiddenException({ error: 'Access denied' });
+    }
+  }
 
   // ── GET /api/memos/:id/comments ─────────────────────────────────────────
 
-  async getComments(memoId: number, host: string) {
+  async getComments(memoId: number, userId: number, host: string) {
+    await this.assertCanViewMemo(userId, memoId);
     try {
       const comments = await this.prisma.comment.findMany({
         where: { memoId },
@@ -166,6 +176,13 @@ export class MemoCommentService {
     const { memoId, userId, content, files, rawMentions, host } = params;
     if (!content && files.length === 0) {
       throw new BadRequestException({ error: 'Comment or attachment is required' });
+    }
+    try {
+      await this.assertCanViewMemo(userId, memoId);
+    } catch (err) {
+      // multer already wrote the uploads; don't leave them orphaned
+      for (const f of files) fs.rm(f.path, { force: true }, () => undefined);
+      throw err;
     }
 
     try {
@@ -383,6 +400,9 @@ export class MemoCommentService {
       });
       if (!commentData) {
         throw new NotFoundException({ error: 'Comment not found' });
+      }
+      if (commentData.userId !== actorId) {
+        throw new ForbiddenException({ error: 'Only the author can delete this comment.' });
       }
       // Only comments with mentions can be deleted.
       if (commentData.tags.length === 0) {

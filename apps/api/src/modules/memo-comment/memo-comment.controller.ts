@@ -82,8 +82,8 @@ export class MemoCommentController {
   constructor(private readonly comments: MemoCommentService) {}
 
   @Get('api/memos/:id/comments')
-  async getComments(@Param('id') id: string, @Req() req: Request) {
-    return this.comments.getComments(parseId(id, 'Invalid memo ID'), hostOf(req));
+  async getComments(@Param('id') id: string, @CurrentUser() user: JwtPayload, @Req() req: Request) {
+    return this.comments.getComments(parseId(id, 'Invalid memo ID'), user.id, hostOf(req));
   }
 
   // Oversized files surface as 413 (Nest's multer mapping), which the
