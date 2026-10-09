@@ -20,10 +20,14 @@ import { LoaManagementModule } from './modules/loa-management/loa-management.mod
 import { MemoCcModule } from './modules/memocc/memocc.module';
 import { MemoQueryModule } from './modules/memo-query/memo-query.module';
 import { MemoLifecycleModule } from './modules/memo-lifecycle/memo-lifecycle.module';
+import { MailModule } from './common/mail/mail.module';
+import { MemoCommentModule } from './modules/memo-comment/memo-comment.module';
+import { MemoPositionModule } from './modules/memo-position/memo-position.module';
 
 @Module({
   imports: [
     PrismaModule,
+    MailModule,
     AdminLogModule,
     BusinessUnitModule,
     DepartmentModule,
@@ -41,6 +45,8 @@ import { MemoLifecycleModule } from './modules/memo-lifecycle/memo-lifecycle.mod
     MemoCcModule,
     MemoQueryModule,
     MemoLifecycleModule,
+    MemoCommentModule,
+    MemoPositionModule,
     GatewayModule,
   ],
   providers: [

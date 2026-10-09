@@ -50,6 +50,11 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - POST   /api/memos/:id/renew-expiry  — renewExpiry
  *   - POST   /api/memos/:id/upload-main   — uploadMainPDF
  *
+ * Batch 7a (comments + PDF overlay positions):
+ *   - GET/POST /api/memos/:id/comments
+ *   - DELETE   /api/comments/:commentId
+ *   - POST     /api/memos/signature | /api/memos/date | /api/memos/note
+ *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
  */
 @Module({
@@ -189,6 +194,14 @@ export class GatewayModule implements NestModule {
         { path: 'api/memos/:id/force', method: RequestMethod.DELETE },
         { path: 'api/memos/:id', method: RequestMethod.PUT },
         { path: 'api/memos/:id', method: RequestMethod.DELETE },
+
+        // ── Batch 7a: Comments + PDF overlay positions ────────────────────────
+        { path: 'api/memos/:id/comments', method: RequestMethod.GET },
+        { path: 'api/memos/:id/comments', method: RequestMethod.POST },
+        { path: 'api/comments/:commentId', method: RequestMethod.DELETE },
+        { path: 'api/memos/signature', method: RequestMethod.POST },
+        { path: 'api/memos/date', method: RequestMethod.POST },
+        { path: 'api/memos/note', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
