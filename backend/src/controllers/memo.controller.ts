@@ -65,13 +65,6 @@ export {
   absFromDbPath,
 } from "../services/memoLifecycle.service";
 
-// ─── PDF handlers (Wave 10) — moved to memoPdf.service.ts ───
-export {
-  uploadMainPDF,
-  downloadMergedPdf,
-  downloadRawPdf,
-  getMainFilePdf,
-} from "../services/memoPdf.service";
 
 // GET /api/memos/:memoId/extra-approval-lines/:lineId?/eligible-users?q=...
 export const searchEligibleUsersForExtra: RequestHandler = async (req, res) => {

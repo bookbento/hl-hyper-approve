@@ -1,8 +1,5 @@
 import { Router } from "express";
 import {
-  downloadMergedPdf,
-  downloadRawPdf,
-  getMainFilePdf,
   recallMemo,
   approveAction,
   createExtraApprovalLine,
@@ -27,12 +24,9 @@ const router = Router();
 //       DELETE /comments/:commentId) and POST /memos/signature|date|note.
 //       Removed dead duplicates already owned by Nest: GET /business-units,
 //       /approval-lines, /memos/:id/approvers, /memos/:id/approval-line.
+//       Batch 8a migrated: GET /memos/:id/download[/:filename], /raw, /pdf.
 
 router.post("/memos/:id/action-signature", authenticate, approveAction);
-router.get("/memos/:id/download", authenticate, downloadMergedPdf);
-router.get("/memos/:id/download/:filename", authenticate, downloadMergedPdf);
-router.get("/memos/:id/raw", authenticate, downloadRawPdf);
-router.get("/memos/:id/pdf", authenticate, getMainFilePdf);
 
 /* ---------- สถานะ ---------- */
 router.post("/memos/:id/recall", authenticate, recallMemo);
