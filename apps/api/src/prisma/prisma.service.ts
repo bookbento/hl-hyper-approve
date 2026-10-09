@@ -1,13 +1,12 @@
-import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@hl/database';
 
-@Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  async onModuleInit(): Promise<void> {
-    await this.$connect();
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    await this.$disconnect();
-  }
-}
+/**
+ * DI token + type for the shared Prisma client.
+ *
+ * Never instantiated: PrismaModule binds this token to the `prisma` singleton
+ * exported by @hl/database, so Nest and the legacy backend code it still loads
+ * (e.g. memoSearch.service) share one connection pool instead of opening two.
+ *
+ * Injection sites keep using `PrismaService` exactly as before.
+ */
+export abstract class PrismaService extends PrismaClient {}

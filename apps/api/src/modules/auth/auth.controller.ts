@@ -45,10 +45,9 @@ export class AuthController {
     @Req() req: Request & { cookies?: Record<string, string> },
     @Res({ passthrough: true }) res: Response,
   ) {
-    const ipAddress =
-      (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ??
-      req.ip ??
-      null;
+    // req.ip already honours X-Forwarded-For up to TRUST_PROXY_HOPS (main.ts).
+    // Reading the header directly would let any client pick its own logged IP.
+    const ipAddress = req.ip ?? null;
     const userAgent = (req.headers['user-agent'] as string) ?? null;
 
     const { message, isFirstLogin, refreshToken } = await this.authService.login(

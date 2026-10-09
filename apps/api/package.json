@@ -32,6 +32,7 @@
     "http-proxy-middleware": "^2.0.10",
     "jsonwebtoken": "^9.0.3",
     "mime-types": "^3.0.2",
+    "multer": "^2.1.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pdf-lib": "^1.17.1",

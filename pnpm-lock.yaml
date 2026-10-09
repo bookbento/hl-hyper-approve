@@ -65,6 +65,9 @@ importers:
       mime-types:
         specifier: ^3.0.2
         version: 3.0.2
+      multer:
+        specifier: 2.1.1
+        version: 2.1.1
       passport:
         specifier: ^0.7.0
         version: 0.7.0
@@ -480,12 +483,15 @@ importers:
         specifier: ^6.15.0
         version: 6.19.3(prisma@6.19.3(typescript@5.8.3))(typescript@5.8.3)
     devDependencies:
+      '@types/node':
+        specifier: ^22.20.0
+        version: 22.20.0
       prisma:
         specifier: ^6.15.0
         version: 6.19.3(typescript@5.8.3)
       ts-node:
         specifier: ^10.9.2
-        version: 10.9.2(@types/node@25.9.4)(typescript@5.8.3)
+        version: 10.9.2(@types/node@22.20.0)(typescript@5.8.3)
       typescript:
         specifier: ^5.8.3
         version: 5.8.3
@@ -8847,7 +8853,7 @@ snapshots:
 
   '@types/http-proxy@1.17.17':
     dependencies:
-      '@types/node': 25.9.4
+      '@types/node': 22.20.0
 
   '@types/istanbul-lib-coverage@2.0.6': {}
 

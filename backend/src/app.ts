@@ -19,7 +19,9 @@ import devExpiryRoutes from "./routes/dev-expiry.routes";
 const app = express();
 
 // ✅ กำหนด origin ที่อนุญาต
-app.set("trust proxy", true);
+// Requests arrive via the Nest gateway (1 hop) plus whatever sits in front of Nest
+// (TRUST_PROXY_HOPS, e.g. nginx). `true` would trust client-supplied X-Forwarded-For.
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? 0) + 1);
 const isProduction = process.env.NODE_ENV === "production";
 
 function normalizeOrigin(origin: string): string {

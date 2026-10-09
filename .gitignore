@@ -49,3 +49,6 @@ start-local.bat
 **/playwright-report
 **/test-results
 **.todo
+
+# @hl/database build output (built on install)
+packages/database/dist/
