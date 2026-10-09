@@ -784,7 +784,7 @@ export class MemoNotificationService {
     return v._max.version ?? 1;
   }
 
-  private async getUserDisplayName(userId: number): Promise<string> {
+  async getUserDisplayName(userId: number): Promise<string> {
     const u = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { name: true, lastname: true, nickname: true },
