@@ -24,6 +24,7 @@ import { MailModule } from './common/mail/mail.module';
 import { MemoCommentModule } from './modules/memo-comment/memo-comment.module';
 import { MemoPositionModule } from './modules/memo-position/memo-position.module';
 import { MemoPdfModule } from './modules/memo-pdf/memo-pdf.module';
+import { MemoNotificationModule } from './modules/memo-notification/memo-notification.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { MemoPdfModule } from './modules/memo-pdf/memo-pdf.module';
     MemoCommentModule,
     MemoPositionModule,
     MemoPdfModule,
+    MemoNotificationModule,
     GatewayModule,
   ],
   providers: [
