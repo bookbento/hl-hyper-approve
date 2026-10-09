@@ -40,6 +40,16 @@ export function collectConfigProblems(env: NodeJS.ProcessEnv = process.env): str
     if (!frontendUrl || !/^https?:\/\//.test(frontendUrl)) {
       problems.push('FRONTEND_URL must be an http(s) URL (used for links in emails)');
     }
+    // "Your turn" emails carry a one-click approve link: ${APP_BASE_URL}/api/memos/action/email?token=…
+    // signed with EMAIL_TOKEN_SECRET. Without them the link points at a placeholder host
+    // or the email cannot be built at all.
+    const appBaseUrl = env['APP_BASE_URL']?.trim();
+    if (!appBaseUrl || !/^https?:\/\//.test(appBaseUrl)) {
+      problems.push('APP_BASE_URL must be an http(s) URL (one-click approve links in emails)');
+    }
+    if (!env['EMAIL_TOKEN_SECRET']?.trim()) {
+      problems.push('EMAIL_TOKEN_SECRET is not set — approver emails cannot be signed');
+    }
     const missingSmtp = ['SMTP_HOST', 'SMTP_FROM'].filter((k) => !env[k]?.trim());
     if (missingSmtp.length) {
       problems.push(`${missingSmtp.join(', ')} not set — notification emails cannot be sent`);

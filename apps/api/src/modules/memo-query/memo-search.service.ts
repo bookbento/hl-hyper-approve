@@ -44,8 +44,8 @@ const FACET_CACHE_MAX = 500;
 
 @Injectable()
 export class MemoSearchNestService {
-  // Per-user metadata caches. Expire by TTL only — nothing invalidates them
-  // on approve/create yet (see MIGRATION-STATUS C2).
+  // Per-user metadata caches. Expire by TTL, and are dropped whenever a memo
+  // status changes (invalidateAll — MIGRATION-STATUS C2).
   private readonly statCountsCache = new LRUCache<string, StatCounts>({
     max: STAT_COUNTS_CACHE_MAX,
     ttl: STAT_COUNTS_CACHE_TTL_MS,
@@ -239,6 +239,16 @@ export class MemoSearchNestService {
     const fresh = await computeVisibleStatCounts(this.prisma, userId, preResolvedHiddenIds);
     this.statCountsCache.set(key, fresh);
     return fresh;
+  }
+
+  /**
+   * Drop every user's cached stats/facets. Called after a memo status write:
+   * one change moves counts for the owner, approvers and CCs alike, so
+   * clearing only the actor's entry would leave the others stale.
+   */
+  invalidateAll(): void {
+    this.statCountsCache.clear();
+    this.facetCache.clear();
   }
 
   // Step 1.11 — cached 60s per user

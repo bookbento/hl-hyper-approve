@@ -43,6 +43,6 @@ import { JwtAuthGuard } from '../../common/guards/jwt.guard';
     JwtAuthGuard,
     Reflector,
   ],
-  exports: [MemoAccessService, MemoQueryService],
+  exports: [MemoAccessService, MemoQueryService, MemoSearchNestService],
 })
 export class MemoQueryModule {}

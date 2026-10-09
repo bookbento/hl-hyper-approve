@@ -9,6 +9,8 @@ const prod = {
   FRONTEND_URL: 'https://approve.example.com',
   SMTP_HOST: 'smtp.example.com',
   SMTP_FROM: 'noreply@example.com',
+  APP_BASE_URL: 'https://approve.example.com',
+  EMAIL_TOKEN_SECRET: 'another-secret',
 };
 
 describe('collectConfigProblems', () => {
@@ -49,6 +51,19 @@ describe('collectConfigProblems', () => {
     expect(problems).toEqual(['SMTP_HOST, SMTP_FROM not set — notification emails cannot be sent']);
   });
 
+  it('requires APP_BASE_URL and EMAIL_TOKEN_SECRET in production', () => {
+    expect(
+      collectConfigProblems({
+        ...prod,
+        APP_BASE_URL: 'approve.example.com',
+        EMAIL_TOKEN_SECRET: '',
+      }),
+    ).toEqual([
+      'APP_BASE_URL must be an http(s) URL (one-click approve links in emails)',
+      'EMAIL_TOKEN_SECRET is not set — approver emails cannot be signed',
+    ]);
+  });
+
   it('does not require production-only vars outside production', () => {
     expect(collectConfigProblems({ ...base, NODE_ENV: 'development' })).toEqual([]);
   });
@@ -57,7 +72,7 @@ describe('collectConfigProblems', () => {
 describe('assertConfig', () => {
   it('reports every problem in a single error', () => {
     expect(() => assertConfig({ NODE_ENV: 'production' })).toThrow(
-      /5 problems[\s\S]*DATABASE_URL[\s\S]*JWT_SECRET[\s\S]*TRUST_PROXY_HOPS[\s\S]*FRONTEND_URL[\s\S]*SMTP_HOST/,
+      /7 problems[\s\S]*DATABASE_URL[\s\S]*JWT_SECRET[\s\S]*TRUST_PROXY_HOPS[\s\S]*FRONTEND_URL[\s\S]*APP_BASE_URL[\s\S]*EMAIL_TOKEN_SECRET[\s\S]*SMTP_HOST/,
     );
   });
 
