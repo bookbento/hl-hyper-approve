@@ -25,6 +25,7 @@ import { MemoCommentModule } from './modules/memo-comment/memo-comment.module';
 import { MemoPositionModule } from './modules/memo-position/memo-position.module';
 import { MemoPdfModule } from './modules/memo-pdf/memo-pdf.module';
 import { MemoNotificationModule } from './modules/memo-notification/memo-notification.module';
+import { ExtraApprovalModule } from './modules/extra-approval/extra-approval.module';
 
 @Module({
   imports: [
@@ -51,6 +52,7 @@ import { MemoNotificationModule } from './modules/memo-notification/memo-notific
     MemoPositionModule,
     MemoPdfModule,
     MemoNotificationModule,
+    ExtraApprovalModule,
     GatewayModule,
   ],
   providers: [

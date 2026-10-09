@@ -211,6 +211,17 @@ export class GatewayModule implements NestModule {
         { path: 'api/memos/:id/download/:filename', method: RequestMethod.GET },
         { path: 'api/memos/:id/raw', method: RequestMethod.GET },
         { path: 'api/memos/:id/pdf', method: RequestMethod.GET },
+
+        // ── Batch 7b: extra approval lines ───────────────────────────────────
+        { path: 'api/memos/extra-approval-lines/active/bulk', method: RequestMethod.POST },
+        { path: 'api/memos/:id/extra-approval-lines', method: RequestMethod.POST },
+        { path: 'api/memos/:id/extra-approval-lines', method: RequestMethod.GET },
+        { path: 'api/memos/:id/extra-approval-lines/active', method: RequestMethod.GET },
+        { path: 'api/memos/:memoId/extra-approval-lines/eligible-users', method: RequestMethod.GET },
+        { path: 'api/memos/:memoId/extra-approval-lines/:lineId/eligible-users', method: RequestMethod.GET },
+        { path: 'api/memos/:memoId/extra-approval-lines/:lineId/action', method: RequestMethod.POST },
+        { path: 'api/memos/:memoId/extra-approval-lines/:lineId/append', method: RequestMethod.POST },
+        { path: 'api/memos/:memoId/extra-approval-lines/:lineId', method: RequestMethod.DELETE },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
