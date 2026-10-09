@@ -4,6 +4,8 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
+    // Every route moved to Nest; only the expiry cron is left and it has no tests yet.
+    passWithNoTests: true,
     include: ["src/**/*.test.ts", "src/**/*.spec.ts"],
     env: {
       FRONTEND_URL: "http://localhost:3000",

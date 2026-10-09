@@ -3,13 +3,10 @@
 import express, { RequestHandler } from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import path from "path";
 
-import memoRoutes from "./routes/memo.routes";
 
 // /api/approval-lines — migrated to NestJS (Batch 4)
 // /api/memotypes — migrated to NestJS (Batch 4)
-import memoStatusRoutes from "./routes/memoStatus.routes";
 // /api/notifications — migrated to NestJS (Batch 5)
 // /api/memos/:id/cc, /api/memos/cc/me — migrated to NestJS (Batch 5)
 // /api/approver-lines, /api/approvers/* — migrated to NestJS (Batch 5)
@@ -63,16 +60,8 @@ function isApiRequest(req: express.Request): boolean {
   return req.path === "/api" || req.path.startsWith("/api/");
 }
 
-function isEmailActionRequest(req: express.Request): boolean {
-  return req.method === "GET" && req.path === "/api/memos/action/email";
-}
-
 function isPublicNoOriginApiRequest(req: express.Request): boolean {
-  if (req.path === "/api/health") {
-    return true;
-  }
-
-  return isEmailActionRequest(req);
+  return req.path === "/api/health";
 }
 
 function isTrustedBrowserNoOriginRequest(req: express.Request): boolean {
@@ -122,13 +111,7 @@ const corsMiddleware = cors({
   credentials: true,
 });
 
-app.use((req, res, next) => {
-  if (isEmailActionRequest(req)) {
-    return next();
-  }
-
-  return corsMiddleware(req, res, next);
-});
+app.use(corsMiddleware);
 
 
 
@@ -136,22 +119,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "5mb" }));
 app.use(cookieParser());
 // /api/secure-uploads — migrated to NestJS (FileServingModule)
-const viewsDist = path.resolve(__dirname, "../views");   // .../backend/dist/views
-const viewsSrc  = path.resolve(process.cwd(), "views");  // .../backend/views
-
-// เสิร์ฟไฟล์ทั้งหมดใต้ views จากทั้ง dist และ src (src เป็น fallback)
-app.use("/", express.static(viewsDist));
-app.use("/", express.static(viewsSrc));
-
-// หรือจะเจาะจงโฟลเดอร์รูปอย่างเดียวก็ได้
-app.use("/img", express.static(path.join(viewsDist, "img")));
-app.use("/img", express.static(path.join(viewsSrc,  "img")));
-
-// (ถ้าไม่ใช้จริง ๆ ให้ลบอันนี้ทิ้ง ป้องกันสับสน)
-// app.use("/api/uploads", express.static(UPLOADS_DIR, { ... }));
-
-// อย่าลืม: views ต้องมาหลัง /uploads
-app.use("/", express.static(path.join(__dirname, "../views")));
+// static views (email-action pages, /img) — migrated to NestJS (Batch 8b)
 
 // ✅ Routes
 // /api/auth + /api/me — migrated to NestJS (removed from Express)
@@ -166,8 +134,7 @@ app.use("/", express.static(path.join(__dirname, "../views")));
 // /api/memos/:id/cc, /api/memos/cc/me — migrated to NestJS (Batch 5)
 // /api/approver-lines, /api/approvers/* — migrated to NestJS (Batch 5)
 // /api/users (userSignature) — migrated to NestJS (UserSignatureModule)
-app.use("/api", memoStatusRoutes);
-app.use("/api", memoRoutes);
+// approve / status / recall / approver-status / email action — migrated to NestJS (Batch 8b)
 app.use("/api/dev", devExpiryRoutes);
 // /api/cc-groups — migrated to NestJS (removed from Express)
 // /api/admin-logs — migrated to NestJS (removed from Express)
