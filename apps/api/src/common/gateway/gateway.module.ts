@@ -55,6 +55,9 @@ import { ExpressProxyMiddleware } from './express-proxy.middleware';
  *   - DELETE   /api/comments/:commentId
  *   - POST     /api/memos/signature | /api/memos/date | /api/memos/note
  *
+ * Batch 8a (PDF downloads):
+ *   - GET /api/memos/:id/download[/:filename], /raw, /pdf
+ *
  * Everything else under /api/* is forwarded to EXPRESS_TARGET.
  */
 @Module({
@@ -202,6 +205,12 @@ export class GatewayModule implements NestModule {
         { path: 'api/memos/signature', method: RequestMethod.POST },
         { path: 'api/memos/date', method: RequestMethod.POST },
         { path: 'api/memos/note', method: RequestMethod.POST },
+
+        // ── Batch 8a: PDF downloads ───────────────────────────────────────────
+        { path: 'api/memos/:id/download', method: RequestMethod.GET },
+        { path: 'api/memos/:id/download/:filename', method: RequestMethod.GET },
+        { path: 'api/memos/:id/raw', method: RequestMethod.GET },
+        { path: 'api/memos/:id/pdf', method: RequestMethod.GET },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }

@@ -23,6 +23,7 @@ import { MemoLifecycleModule } from './modules/memo-lifecycle/memo-lifecycle.mod
 import { MailModule } from './common/mail/mail.module';
 import { MemoCommentModule } from './modules/memo-comment/memo-comment.module';
 import { MemoPositionModule } from './modules/memo-position/memo-position.module';
+import { MemoPdfModule } from './modules/memo-pdf/memo-pdf.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { MemoPositionModule } from './modules/memo-position/memo-position.module
     MemoLifecycleModule,
     MemoCommentModule,
     MemoPositionModule,
+    MemoPdfModule,
     GatewayModule,
   ],
   providers: [
