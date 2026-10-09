@@ -34,6 +34,16 @@ export function collectConfigProblems(env: NodeJS.ProcessEnv = process.env): str
     if (!hops || Number(hops) < 1) {
       problems.push('TRUST_PROXY_HOPS must be >= 1 in production (nginx in front = 1)');
     }
+
+    // Notification emails link to `${FRONTEND_URL}/memo/:id` and go out via SMTP.
+    const frontendUrl = env['FRONTEND_URL']?.trim();
+    if (!frontendUrl || !/^https?:\/\//.test(frontendUrl)) {
+      problems.push('FRONTEND_URL must be an http(s) URL (used for links in emails)');
+    }
+    const missingSmtp = ['SMTP_HOST', 'SMTP_FROM'].filter((k) => !env[k]?.trim());
+    if (missingSmtp.length) {
+      problems.push(`${missingSmtp.join(', ')} not set — notification emails cannot be sent`);
+    }
   }
 
   return problems;

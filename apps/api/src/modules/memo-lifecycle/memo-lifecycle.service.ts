@@ -28,7 +28,7 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ActionType, ExtraStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UPLOADS_DIR, toPublicUploadPath } from '../../common/upload/upload.config';
+import { UPLOADS_DIR, decodeFilename, toPublicUploadPath } from '../../common/upload/upload.config';
 
 // ── Type aliases ─────────────────────────────────────────────────────────────
 
@@ -121,14 +121,6 @@ export function absFromDbPath(input: string): string {
     s = s.slice('uploads/'.length);
   }
   return path.join(UPLOADS_DIR, s);
-}
-
-function decodeFilename(name: string): string {
-  try {
-    return Buffer.from(name, 'latin1').toString('utf8');
-  } catch {
-    return name;
-  }
 }
 
 // ── Service ───────────────────────────────────────────────────────────────────

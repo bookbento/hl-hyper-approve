@@ -72,6 +72,18 @@ export const PROFILES_DIR = path.join(UPLOADS_DIR, 'profiles');
 // File name helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Multer hands over the original filename as latin1; re-decode it as UTF-8 so
+ * Thai names survive. Mirrors backend/src/lib/filename.ts decodeFilename().
+ */
+export function decodeFilename(name: string): string {
+  try {
+    return Buffer.from(name, 'latin1').toString('utf8');
+  } catch {
+    return name;
+  }
+}
+
 /** Sanitise an original filename — strip dangerous chars, normalise unicode. */
 export function sanitizeName(name: string): string {
   return name.normalize('NFC').replace(/[^\w.\-]+/g, '_');
