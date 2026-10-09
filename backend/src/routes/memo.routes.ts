@@ -2,14 +2,6 @@ import { Router } from "express";
 import {
   recallMemo,
   approveAction,
-  createExtraApprovalLine,
-  getActiveExtraApprovalLine,
-  getActiveExtraApprovalLinesBulk,
-  actOnExtraApprovalLine,
-  appendExtraApprovers,
-  searchEligibleUsersForExtra,
-  listExtraApprovalLines,
-  removeExtraApprovalLine,
 } from "../controllers/memo.controller";
 import { authenticate } from "../middlewares/auth.middleware";
 
@@ -25,33 +17,11 @@ const router = Router();
 //       Removed dead duplicates already owned by Nest: GET /business-units,
 //       /approval-lines, /memos/:id/approvers, /memos/:id/approval-line.
 //       Batch 8a migrated: GET /memos/:id/download[/:filename], /raw, /pdf.
+//       Batch 7b migrated: all /memos/:id/extra-approval-lines/* routes.
 
 router.post("/memos/:id/action-signature", authenticate, approveAction);
 
 /* ---------- สถานะ ---------- */
 router.post("/memos/:id/recall", authenticate, recallMemo);
-
-/* ---------- Extra Approval Lines ---------- */
-router.post("/memos/:id/extra-approval-lines", authenticate, createExtraApprovalLine);
-router.get("/memos/:id/extra-approval-lines", authenticate, listExtraApprovalLines);
-router.post("/memos/extra-approval-lines/active/bulk", authenticate, getActiveExtraApprovalLinesBulk);
-router.get("/memos/:id/extra-approval-lines/active", authenticate, getActiveExtraApprovalLine);
-router.post("/memos/:memoId/extra-approval-lines/:lineId/action", authenticate, actOnExtraApprovalLine);
-router.delete("/memos/:memoId/extra-approval-lines/:lineId", authenticate, removeExtraApprovalLine);
-router.post(
-  "/memos/:memoId/extra-approval-lines/:lineId/append",
-  authenticate,
-  appendExtraApprovers
-);
-router.get(
-  "/memos/:memoId/extra-approval-lines/eligible-users",
-  authenticate,
-  searchEligibleUsersForExtra
-);
-router.get(
-  "/memos/:memoId/extra-approval-lines/:lineId/eligible-users",
-  authenticate,
-  searchEligibleUsersForExtra
-);
 
 export default router;
