@@ -22,7 +22,7 @@ export DB_NAME="hlememo"
 
 # Paths / ports
 export APP_ROOT="/var/www/hlememo"
-export BACKEND_DIR="$APP_ROOT/backend"
+export API_DIR="$APP_ROOT/apps/api"
 export FRONTEND_DIR="$APP_ROOT/frontend"
 export APP_PORT="3001"
 export LOG_DIR="$APP_ROOT/logs"
@@ -61,7 +61,7 @@ sudo systemctl enable --now postgresql
 printStep "[2/7] Creating application directories..."
 
 # App folders with proper permissions
-sudo mkdir -p "$APP_ROOT"/{backend,frontend,logs,uploads}
+sudo mkdir -p "$APP_ROOT"/{logs,uploads}
 sudo chown -R "$USER":"$USER" "$APP_ROOT"
 sudo chmod -R 755 "$APP_ROOT"
 sudo chmod -R 775 "$UPLOAD_DIR" # Ensure uploads directory is writable
@@ -94,142 +94,62 @@ sudo -u postgres createdb -O "${DB_USER}" "${DB_NAME}"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE \"${DB_NAME}\" TO \"${DB_USER}\""
 
 
-# Write backend .env (production)
-cd "$BACKEND_DIR"
-export JWT_SECRET="$(openssl rand -hex 32)"
-cat > .env <<EOF
-# Database
+# Write apps/api/.env (production) — read by node --env-file (apps/api/ecosystem.config.js).
+# Template with every variable: apps/api/env-example.txt
+mkdir -p "$API_DIR"
+cd "$API_DIR"
+if [ ! -f .env ]; then
+cat > .env <<EOF2
 DATABASE_URL=postgresql://${DB_USER}:${DB_PASS}@localhost:5432/${DB_NAME}
-
-# Server
-PORT=${APP_PORT}
 NODE_ENV=production
-HOST=127.0.0.1
-
-# CORS (same-origin + IP + local dev)
-CORS_ORIGIN=http://${DOMAIN},http://${IP},http://localhost:5173
-
-# JWT
-JWT_SECRET=${JWT_SECRET}
-JWT_EXPIRES_IN=7d
-ACCESS_TOKEN_EXPIRES_IN=7d
-
-# File Upload
-MAX_FILE_SIZE=104857600
-UPLOAD_PATH=./uploads
-ALLOWED_FILE_TYPES=pdf,jpg,jpeg,png,heic
-
-# Optional email/LINE
-EMAIL_FROM=
-EMAIL_HOST=
-EMAIL_PORT=587
-EMAIL_USER=
-EMAIL_PASS=
-LINE_NOTIFY_TOKEN=
-
-# Security
-BCRYPT_ROUNDS=12
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
-EOF
-
-printStep "[4/7] Setting up backend application..."
-
-# Create logs directory with appropriate permissions
-mkdir -p "$BACKEND_DIR/logs"
-touch "$BACKEND_DIR/logs/app.log"
-chmod 755 "$BACKEND_DIR/logs"
-chmod 644 "$BACKEND_DIR/logs/app.log"
-
-# Install deps, generate client, migrate, seed (if scripts exist)
-npm ci || npm install || { echo "Failed to install npm dependencies";  }
-rm -rf prisma/migrations
-npx prisma migrate reset --force --skip-generate
-npx prisma db push
-npm run db:seed    
-
-# Build backend for production
-echo "Building backend for production..."
-npm run build || { echo "Failed to build backend. Check if build script exists in package.json";  }
-
-
-
-
-printStep "[5/7] Starting backend with PM2..."
-
-
-# Ensure PM2 is installed
-if ! command -v pm2 >/dev/null; then
-  echo "PM2 is not installed. Installing..."
-  sudo npm install -g pm2@latest || { echo "Failed to install PM2";  }
+PORT=${APP_PORT}
+TRUST_PROXY_HOPS=1
+JWT_SECRET=$(openssl rand -hex 32)
+EMAIL_TOKEN_SECRET=$(openssl rand -hex 32)
+APP_BASE_URL=https://${DOMAIN}
+FRONTEND_URL=https://${DOMAIN}
+CORS_ORIGIN=https://${DOMAIN}
+UPLOADS_DIR=${UPLOAD_DIR}
+# Fill these in before starting the API (it refuses to boot without SMTP_HOST/SMTP_FROM)
+SMTP_HOST=
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_REQUIRE_TLS=true
+SMTP_USER=
+SMTP_PASS=
+SMTP_FROM=
+EOF2
+chmod 600 .env
 fi
 
-if pm2 describe hlememo-backend > /dev/null; then
-  pm2 restart hlememo-backend --update-env
-else
-  pm2 start npm --name "hlememo-backend" -- run start
-fi
+printStep "[4/7] Installing + building the monorepo..."
 
-pm2 save
+cd "$APP_ROOT"
+corepack enable || sudo npm install -g corepack
+# @hl/database postinstall: prisma generate + build
+CI=1 corepack pnpm install --frozen-lockfile
 
+# Schema: fresh DB → migrations from packages/database, then lookup data.
+# (Never `migrate reset` here — it drops the database.)
+set -a; . "$API_DIR/.env"; set +a
+corepack pnpm db:migrate
+corepack pnpm db:seed
+corepack pnpm db:init-preferences
 
+corepack pnpm --filter apps/api build
+corepack pnpm --filter my-react-app build
 
+printStep "[5/7] Starting the API with PM2..."
 
-
-
-
-APP_NAME="hlememo-backend"
-CWD="$(pwd)"
-
-# Detect the compiled entry
-if [ -f "dist/index.js" ]; then
-  ENTRY="./dist/index.js"
-elif [ -f "dist/src/index.js" ]; then
-  ENTRY="./dist/src/index.js"
-elif [ -f "dist/src/app.js" ]; then
-  ENTRY="./dist/src/app.js"
-else
-  echo "❌ Could not find a compiled entry (dist/index.js or dist/src/index.js). Did you run: npm run build ?"
-  exit 1
-fi
-
-# Create PM2 ecosystem config
-cat > ecosystem.config.js <<EOL
-module.exports = {
-  apps: [{
-    name: "hlememo-backend",
-    cwd: "/var/www/hlememo/backend",
-    script: "./dist/src/index.js",
-    exec_mode: "fork",
-    instances: 1,
-    autorestart: true,
-    max_memory_restart: "300M",
-    env: { NODE_ENV: "production" },
-    out_file: "/var/www/hlememo/backend/logs/hlememo-backend.out.log",
-    error_file: "/var/www/hlememo/backend/logs/hlememo-backend.err.log",
-    merge_logs: true,
-    time: true
-  }]
-};
-EOL
-
-# Make sure logs dir exists
-mkdir -p logs
-
-# Start/reload and persist
-if pm2 describe "${APP_NAME}" >/dev/null 2>&1; then
-  pm2 reload ecosystem.config.js --update-env
-else
-  pm2 start ecosystem.config.js
-fi
+mkdir -p "$API_DIR/logs"
+cd "$API_DIR"
+pm2 startOrReload ecosystem.config.js --update-env
 pm2 save || { echo "Failed to save PM2 process list";  }
-
-echo "✅ PM2 is running ${APP_NAME} with entry: ${ENTRY}"
-
+pm2 startup systemd -u "$USER" --hp "$HOME" || true
 
 # Quick health check (direct to Node)
-echo "Checking backend health..."
-sleep 2 # Give service time to start
+echo "Checking API health..."
+sleep 3
 curl -i "http://127.0.0.1:${APP_PORT}/api/health" || echo "Warning: Backend health check failed. Check if the service is running."
 
 
@@ -371,79 +291,12 @@ sudo ln -sf /etc/nginx/sites-available/hlememo /etc/nginx/sites-enabled/hlememo
 sudo nginx -t && sudo systemctl reload nginx
 
 
-printStep "[7/7.1] Build + Migrate backend"
-cd "$BACKEND_DIR"
+printStep "[7/7] Redeploy"
+# Builds, migrations and the pm2 reload for later releases live in deploy-production.sh.
+cd "$APP_ROOT"
+echo "Run: sudo ./deploy-production.sh"
 
-npx prisma generate
-npx prisma migrate deploy
-npm run db:seed || echo "No seed script found or seeding failed, continuing..."
-
-echo "Building backend for production..."
-npm run build || { echo "Failed to build backend. Check if build script exists in package.json";  }
-
-printStep "[7/7.2] Build frontend"
-cd "$FRONTEND_DIR"
-npm run build || { echo "Failed to build frontend application";  }
-
-# (ถ้าอยาก) reload nginx ให้หยิบไฟล์ใหม่ทันที
-sudo systemctl reload nginx || true
-
-printStep "[7/7.3] Start/Reload backend with PM2"
-cd "$BACKEND_DIR"
-APP_NAME="hlememo-backend"
-ECOS="$BACKEND_DIR/ecosystem.config.js"
-
-
-
-# start หรือ reload
-if pm2 describe "$APP_NAME" >/dev/null 2>&1; then
-  pm2 reload "$ECOS" --update-env
-else
-  pm2 start "$ECOS"
-fi
-pm2 save || { echo "Failed to save PM2 process list";  }
-
-# Health check ตรงไปที่ Node (ไม่ผ่าน nginx)
-sleep 2
-curl -fsSI "http://127.0.0.1:${APP_PORT}/api/health" || echo "Health check failed (check PM2 logs)"
-pm2 status "$APP_NAME"
-
-
-
-printStep "[7/7] Building frontend application..."
-
-# Make frontend use relative /api (no localhost in bundle)
-cd "$FRONTEND_DIR"
-grep -Rlz "http://localhost:3001/api\|https://localhost:3001/api\|http://127.0.0.1:3001/api" src \
-  | xargs -0 -r sed -i -E 's#https?://(localhost|127\.0\.0\.1):3001/api#/api#g'
-
-
-
-
-
-
-
-# Remove env files so build doesn't inject stale API URLs
-rm -f .env .env.production .env.development .env.local || true
-
-# Build frontend
-npm ci || npm install || { echo "Failed to install frontend dependencies";  }
-npm run build || { echo "Failed to build frontend application";  }
-
-
-# Reload Nginx to pick up new static files
-sudo systemctl reload nginx
-
-printStep "Running smoke tests..."
-
-# Check if nginx is running properly
-if ! systemctl is-active --quiet nginx; then
-  echo "Warning: Nginx is not running. Attempting to start..."
-  sudo systemctl start nginx
-fi
-
-
-
+printStep "[7/7] Frontend fallback for Apache..."
 # Create a .htaccess file for SPA routing fallback (if Apache is used instead of Nginx)
 cat > "${FRONTEND_DIR}/dist/.htaccess" <<EOL
 <IfModule mod_rewrite.c>
@@ -479,6 +332,11 @@ echo "  http://${DOMAIN}/"
 echo "  http://${IP}/"  
 echo "==========================================================="
 
+
+################################################################################
+# Ops notes from the Express era (backend/ no longer exists — see deploy-production.sh).
+# Not meant to run top to bottom. Do NOT run the old "migrate reset" lines: they drop the DB.
+################################################################################
 
 
 

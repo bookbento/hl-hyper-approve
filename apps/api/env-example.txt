@@ -1,0 +1,38 @@
+# apps/api/.env — read by `node --env-file=.env` (pm2: ecosystem.config.js).
+# For local dev: copy to .env, then `pnpm --filter apps/api start:dev`
+# (start:dev does not read .env by itself — export the vars or use `node --env-file`).
+
+PORT=3001
+NODE_ENV=development
+DATABASE_URL="postgresql://postgres:1234@localhost:5432/local_eapp"
+
+# Required in production (assertConfig refuses to boot otherwise)
+JWT_SECRET=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# 1 behind nginx
+TRUST_PROXY_HOPS=0
+EMAIL_TOKEN_SECRET=xxxxxxxxxxxxxxxxxxxxxxx
+# host of the one-click /api/memos/action/email links
+APP_BASE_URL=http://localhost:3001
+# links to /memo/:id in emails
+FRONTEND_URL=http://localhost:5173
+
+# CORS allow-list (comma-separated); FRONTEND_URL / APP_BASE_URL / FRONT_BASE_URL are added too
+CORS_ORIGIN=
+
+# SMTP
+SMTP_HOST=smtp.office365.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_REQUIRE_TLS=true
+SMTP_USER=support@production-domain.com
+SMTP_PASS='XXXXXXXX'
+SMTP_FROM="ระบบแจ้งเตือน <support@production-domain.com>"
+
+# Uploads (default: <repo>/uploads)
+UPLOADS_DIR=
+
+# Memo expiry cron: set to off on every process but one
+MEMO_EXPIRY_CRON=on
+TZ_OFFSET_MINUTES=420
+
+MEMO_SEARCH_TIMING=0

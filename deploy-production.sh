@@ -1,366 +1,228 @@
 #!/bin/bash
 ################################################################################
-# Production Deployment Script for E-Approval System
+# Production deployment — HL Hyper Approve (pnpm monorepo, NestJS API)
 # Domain: https://e-approval.hylifeconnect.com
-# Server Path: /var/www/hlememo
-################################################################################
+# Server path: /var/www/hlememo
 #
-# HOW TO RUN THIS SCRIPT:
+#   cd /var/www/hlememo && sudo ./deploy-production.sh
 #
-# 1. Upload to server (choose one method):
-#    
-#    Method A - Using SCP from local machine:
-#    scp deploy-production.sh user@your-server-ip:/var/www/hlememo/
-#    
-#    Method B - Create directly on server:
-#    ssh user@your-server-ip
-#    nano /var/www/hlememo/deploy-production.sh
-#    # Paste the script content, then Ctrl+X, Y, Enter
+# What it does
+#   1. checks, filesystem + DB backups (/var/www/backup)
+#   2. syncs the repo to origin/$DEPLOY_BRANCH (default: production), keeping .env files
+#   3. pnpm install → build @hl/database, apps/api, frontend
+#   4. Prisma migrations (baselines a db-push database once, see below)
+#   5. pm2: replaces the old Express app (hlememo-backend) with hlememo-api on :3001
+#      — nginx keeps proxying /api to 127.0.0.1:3001, no nginx change needed
+#   6. health check + logs
 #
-# 2. Make it executable:
-#    chmod +x /var/www/hlememo/deploy-production.sh
+# Env: apps/api/.env (read via node --env-file, see apps/api/ecosystem.config.js and
+# apps/api/env-example.txt). On the first run it is created from backend/.env.
+# Besides the old variables, production needs TRUST_PROXY_HOPS=1, APP_BASE_URL,
+# EMAIL_TOKEN_SECRET, FRONTEND_URL, SMTP_HOST, SMTP_FROM — the API refuses to boot
+# and lists everything missing otherwise.
 #
-# 3. Run the deployment:
-#    cd /var/www/hlememo
-#    sudo ./deploy-production.sh
+# Migrations: the DB used to be managed with `prisma db push`. On the first run the
+# script compares the live DB with schema.prisma; if the only difference is the
+# MemoStatusPivot latest-status index it marks 0_init as applied and runs
+# `migrate deploy`. Any other difference stops the deploy and prints the SQL.
 #
-# 4. Monitor the output:
-#    - Watch for ⚠️ warnings or ❌ errors
-#    - Check post-deployment verification section
-#    - Review backend logs at the end
-#
-# IMPORTANT NOTES:
-# - This script requires sudo privileges
-# - Ensure production .env file exists before first run
-# - Script will backup and restore .env automatically
-# - All backups saved to /var/www/backup/
-# - Script stops on any error (set -e)
-#
-# ROLLBACK IF NEEDED:
-# If deployment fails, restore from backup:
-#   cd /var/www
-#   LATEST_BACKUP=$(ls -t /var/www/backup/files/hlememo_files_*.tar.gz | head -1)
-#   sudo tar -xzf "$LATEST_BACKUP"
-#   pm2 restart hlememo-backend
-#
+# Rollback
+#   pm2 delete hlememo-api
+#   cd /var/www && sudo tar -xzf "$(ls -t /var/www/backup/files/hlememo_files_*.tar.gz | head -1)"
+#   cd /var/www/hlememo/backend && pm2 start ecosystem.config.js   # old Express app
+#   (DB dump: /var/www/backup/db — the index migration is additive, no restore needed)
 ################################################################################
 
-set -e
-set -o pipefail
+set -euo pipefail
 
-echo "========================================"
-echo "🚀 Production Deployment Started"
-echo "Time: $(date)"
-echo "========================================"
-
-########################################
-# Variables
-########################################
+DEPLOY_BRANCH="${DEPLOY_BRANCH:-production}"
 APP_ROOT="/var/www"
 APP_NAME="hlememo"
 APP_DIR="$APP_ROOT/$APP_NAME"
+API_DIR="$APP_DIR/apps/api"
+DB_PKG_DIR="$APP_DIR/packages/database"
+FRONTEND_DIR="$APP_DIR/frontend"
+API_PORT=3001
+PM2_APP="hlememo-api"
+LEGACY_PM2_APP="hlememo-backend"
 
 BACKUP_ROOT="/var/www/backup"
 FS_BACKUP_DIR="$BACKUP_ROOT/files"
 DB_BACKUP_DIR="$BACKUP_ROOT/db"
+STAMP="$(date +%Y%m%d_%H%M%S)"
 
-DB_NAME="hlememo"
-DB_USER="hlememouser"
-DB_PASSWORD="HlEpass2025x"
+ACTUAL_USER="${SUDO_USER:-$USER}"
+as_user() { sudo -u "$ACTUAL_USER" "$@"; }
+
+step() { echo; echo "[$(date '+%H:%M:%S')] $*"; }
+die() { echo "❌ $*" >&2; exit 1; }
+
+echo "========================================"
+echo "🚀 Production deployment ($DEPLOY_BRANCH) — $(date)"
+echo "========================================"
 
 ########################################
-# Pre-Deployment Checks
+step "🔍 Pre-deployment checks"
 ########################################
-echo "🔍 Running pre-deployment checks..."
+[ -d "$APP_DIR/.git" ] || die "Not a git checkout: $APP_DIR"
+systemctl is-active --quiet postgresql || die "PostgreSQL is not running"
+systemctl is-active --quiet nginx || die "Nginx is not running"
+command -v node >/dev/null || die "node not found"
+NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
+[ "$NODE_MAJOR" -ge 20 ] || die "Node >= 20 required (--env-file); found $(node -v)"
+command -v pm2 >/dev/null || die "pm2 not found"
 
-# Check if app directory exists
-if [ ! -d "$APP_DIR" ]; then
-  echo "❌ ERROR: Application directory not found: $APP_DIR"
-  exit 1
+# First run on the monorepo: carry the Express .env over.
+if [ ! -f "$API_DIR/.env" ]; then
+  if [ -f "$APP_DIR/backend/.env" ]; then
+    mkdir -p "$API_DIR"
+    cp "$APP_DIR/backend/.env" "$API_DIR/.env"
+    echo "ℹ️  Created apps/api/.env from backend/.env — review it against apps/api/env-example.txt"
+  else
+    die "apps/api/.env not found (template: apps/api/env-example.txt)"
+  fi
 fi
+chmod 600 "$API_DIR/.env"
 
-# Check if backend directory exists
-if [ ! -d "$APP_DIR/backend" ]; then
-  echo "❌ ERROR: Backend directory not found: $APP_DIR/backend"
-  exit 1
-fi
+# Load the API env for pg_dump / prisma (same file pm2 gives the app).
+set -a
+# shellcheck disable=SC1091
+. "$API_DIR/.env"
+set +a
+: "${DATABASE_URL:?DATABASE_URL missing in apps/api/.env}"
+PG_URL="${DATABASE_URL%%\?*}" # pg_dump rejects Prisma's ?schema=… parameter
 
-# Check if frontend directory exists
-if [ ! -d "$APP_DIR/frontend" ]; then
-  echo "❌ ERROR: Frontend directory not found: $APP_DIR/frontend"
-  exit 1
-fi
-
-# Check if PostgreSQL is running
-if ! systemctl is-active --quiet postgresql; then
-  echo "❌ ERROR: PostgreSQL is not running"
-  exit 1
-fi
-
-# Check if Nginx is running
-if ! systemctl is-active --quiet nginx; then
-  echo "❌ ERROR: Nginx is not running"
-  exit 1
-fi
-
-echo "✅ Pre-deployment checks passed"
+for k in TRUST_PROXY_HOPS APP_BASE_URL EMAIL_TOKEN_SECRET FRONTEND_URL SMTP_HOST SMTP_FROM JWT_SECRET; do
+  [ -n "${!k:-}" ] || echo "⚠️  $k is not set in apps/api/.env — the API will refuse to start"
+done
+echo "✅ Checks passed"
 
 ########################################
-# Prepare Backup Directories
+step "📦 Backups"
 ########################################
-sudo mkdir -p "$FS_BACKUP_DIR"
-sudo mkdir -p "$DB_BACKUP_DIR"
-
-########################################
-# Filesystem Backup
-########################################
-echo "📦 Creating filesystem backup..."
-
-cd "$APP_ROOT"
-
-FS_BACKUP_NAME="hlememo_files_$(date +%Y%m%d_%H%M%S).tar.gz"
-
-sudo tar -czf "$FS_BACKUP_DIR/$FS_BACKUP_NAME" \
-  --exclude="$APP_NAME/backend/node_modules" \
-  --exclude="$APP_NAME/frontend/node_modules" \
+sudo mkdir -p "$FS_BACKUP_DIR" "$DB_BACKUP_DIR"
+(cd "$APP_ROOT" && sudo tar -czf "$FS_BACKUP_DIR/hlememo_files_$STAMP.tar.gz" \
+  --exclude="$APP_NAME/node_modules" \
+  --exclude="$APP_NAME/*/node_modules" \
+  --exclude="$APP_NAME/*/*/node_modules" \
   --exclude="$APP_NAME/.git" \
   --exclude="$APP_NAME/uploads" \
   --exclude="$APP_NAME/backend/uploads" \
-  "$APP_NAME"
-
-echo "✅ Filesystem backup saved to $FS_BACKUP_DIR"
-
-########################################
-# Database Backup
-########################################
-echo "🗄️ Creating database backup..."
-
-export PGPASSWORD="$DB_PASSWORD"
-
-DB_BACKUP_FILE="$DB_BACKUP_DIR/hlememo_db_$(date +%Y%m%d_%H%M%S).sql"
-
-# Run pg_dump and save to file (without sudo for redirect)
-pg_dump -U "$DB_USER" -d "$DB_NAME" > "$DB_BACKUP_FILE"
-
-# Move to backup directory with sudo if needed
-if [ ! -f "$DB_BACKUP_FILE" ]; then
-  # If direct write failed, try with temp file
-  TEMP_BACKUP="/tmp/hlememo_db_$(date +%Y%m%d_%H%M%S).sql"
-  pg_dump -U "$DB_USER" -d "$DB_NAME" > "$TEMP_BACKUP"
-  sudo mv "$TEMP_BACKUP" "$DB_BACKUP_FILE"
-fi
-
-unset PGPASSWORD
-
-echo "✅ Database backup saved to $DB_BACKUP_FILE"
+  "$APP_NAME")
+pg_dump "$PG_URL" | sudo tee "$DB_BACKUP_DIR/hlememo_db_$STAMP.sql" >/dev/null
+echo "✅ Backups in $BACKUP_ROOT"
 
 ########################################
-# Backup Production .env Files
+step "💾 Keeping .env files"
 ########################################
-echo "💾 Backing up production .env files..."
-
-# Backup to a safe location outside the git directory
-BACKUP_TEMP_DIR="/tmp/hlememo_env_backup_$(date +%Y%m%d_%H%M%S)"
-mkdir -p "$BACKUP_TEMP_DIR"
-
-cd "$APP_DIR/backend"
-if [ -f .env ]; then
-  cp .env "$BACKUP_TEMP_DIR/backend.env"
-  echo "✅ Backend .env backed up to $BACKUP_TEMP_DIR"
-else
-  echo "⚠️  Warning: backend/.env not found!"
-fi
-
-cd "$APP_DIR/frontend"
-if [ -f .env ]; then
-  cp .env "$BACKUP_TEMP_DIR/frontend.env"
-  echo "✅ Frontend .env backed up to $BACKUP_TEMP_DIR"
-fi
+ENV_TMP="$(mktemp -d)"
+trap 'rm -rf "$ENV_TMP"' EXIT
+cp "$API_DIR/.env" "$ENV_TMP/api.env"
+[ -f "$FRONTEND_DIR/.env" ] && cp "$FRONTEND_DIR/.env" "$ENV_TMP/frontend.env"
+[ -f "$APP_DIR/backend/.env" ] && cp "$APP_DIR/backend/.env" "$ENV_TMP/backend.env"
 
 ########################################
-# Update Source Code
+step "📥 Syncing to origin/$DEPLOY_BRANCH"
 ########################################
-echo "📥 Updating Git repository..."
-
 cd "$APP_DIR"
-
-# Get the actual user who invoked sudo (not root)
-ACTUAL_USER="${SUDO_USER:-$USER}"
-
-# Allow the directory to be operated on
-sudo -u "$ACTUAL_USER" git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
-
-# Configure pull strategy
-sudo -u "$ACTUAL_USER" git config pull.rebase false 2>/dev/null || true
-
-# Check if remote is using HTTPS and convert to SSH
-CURRENT_REMOTE=$(sudo -u "$ACTUAL_USER" git remote get-url origin)
+as_user git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
+CURRENT_REMOTE="$(as_user git remote get-url origin)"
 if [[ "$CURRENT_REMOTE" == https://github.com/* ]]; then
-  echo "🔧 Converting git remote from HTTPS to SSH..."
-  # Extract repo path from HTTPS URL
-  REPO_PATH=$(echo "$CURRENT_REMOTE" | sed 's|https://github.com/||' | sed 's|\.git$||')
-  SSH_URL="git@github.com:${REPO_PATH}.git"
-  sudo -u "$ACTUAL_USER" git remote set-url origin "$SSH_URL"
-  echo "✅ Remote URL updated to: $SSH_URL"
+  REPO_PATH="$(echo "$CURRENT_REMOTE" | sed -e 's|https://github.com/||' -e 's|\.git$||')"
+  as_user git remote set-url origin "git@github.com:${REPO_PATH}.git"
+fi
+as_user git fetch origin
+as_user git checkout -B "$DEPLOY_BRANCH" "origin/$DEPLOY_BRANCH"
+as_user git reset --hard "origin/$DEPLOY_BRANCH"
+as_user git clean -fd
+echo "✅ At $(as_user git log --oneline -1)"
+
+cp "$ENV_TMP/api.env" "$API_DIR/.env" && chmod 600 "$API_DIR/.env"
+[ -f "$ENV_TMP/frontend.env" ] && cp "$ENV_TMP/frontend.env" "$FRONTEND_DIR/.env"
+if [ -f "$ENV_TMP/backend.env" ]; then
+  # backend/ is gone from the repo; keep its .env next to the backups for reference.
+  sudo cp "$ENV_TMP/backend.env" "$BACKUP_ROOT/backend.env.$STAMP"
 fi
 
-# Fetch latest changes (run as actual user to use their SSH keys)
-echo "Fetching as user: $ACTUAL_USER"
-sudo -u "$ACTUAL_USER" git fetch origin
-
-# Show current branch
-echo "Current branch: $(sudo -u "$ACTUAL_USER" git branch --show-current)"
-
-# Reset to remote state (discard any local changes)
-sudo -u "$ACTUAL_USER" git reset --hard origin/main
-sudo -u "$ACTUAL_USER" git clean -fd
-
-# Pull latest changes
-sudo -u "$ACTUAL_USER" git pull origin main
-
-echo "✅ Git repository synced with origin/main"
+########################################
+step "📦 pnpm install"
+########################################
+corepack enable >/dev/null 2>&1 || sudo npm install -g corepack
+# @hl/database's postinstall runs `prisma generate` and builds its dist/.
+# Build steps run as root like the old npm-based script (existing node_modules are root-owned).
+CI=1 corepack pnpm install --frozen-lockfile
 
 ########################################
-# Restore Production .env Files
+step "🏗️  Build"
 ########################################
-echo "♻️  Restoring production .env files..."
+corepack pnpm --filter apps/api build
+[ -f "$API_DIR/dist/main.js" ] || die "apps/api/dist/main.js missing after build"
+corepack pnpm --filter my-react-app build
+[ -f "$FRONTEND_DIR/dist/index.html" ] || die "frontend/dist/index.html missing after build"
 
-cd "$APP_DIR/backend"
-if [ -f "$BACKUP_TEMP_DIR/backend.env" ]; then
-  cp "$BACKUP_TEMP_DIR/backend.env" .env
-  echo "✅ Backend .env restored"
-else
-  echo "❌ ERROR: backend .env backup not found at $BACKUP_TEMP_DIR"
-  echo "Please manually create backend/.env with production settings"
-  exit 1
+########################################
+step "🧬 Database migrations"
+########################################
+cd "$DB_PKG_DIR"
+PRISMA="corepack pnpm exec prisma"
+
+has_baseline() {
+  psql "$PG_URL" -tAc "SELECT 1 FROM _prisma_migrations WHERE migration_name = '0_init' AND finished_at IS NOT NULL" 2>/dev/null | grep -q 1
+}
+
+if ! has_baseline; then
+  echo "No baseline yet (DB was managed with db push) — checking drift against schema.prisma…"
+  DRIFT_SQL="$($PRISMA migrate diff \
+    --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script)"
+  # Everything except comments, blank lines and the B1 index that the next migration adds.
+  UNEXPECTED="$(echo "$DRIFT_SQL" | grep -v '^--' | grep -v '^[[:space:]]*$' \
+    | grep -v 'MemoStatusPivot_memoId_createdAt_id_idx' || true)"
+  if [ -n "$UNEXPECTED" ]; then
+    echo "$DRIFT_SQL"
+    die "Live DB differs from schema.prisma beyond the expected index. Review the SQL above, fix the DB, then re-run."
+  fi
+  $PRISMA migrate resolve --applied 0_init
+  echo "✅ Baselined 0_init"
 fi
+$PRISMA migrate deploy
 
-cd "$APP_DIR/frontend"
-if [ -f "$BACKUP_TEMP_DIR/frontend.env" ]; then
-  cp "$BACKUP_TEMP_DIR/frontend.env" .env
-  echo "✅ Frontend .env restored"
+########################################
+step "♻️  pm2"
+########################################
+mkdir -p "$API_DIR/logs"
+if pm2 describe "$LEGACY_PM2_APP" >/dev/null 2>&1; then
+  echo "Stopping the old Express app ($LEGACY_PM2_APP) — the API takes over :$API_PORT"
+  pm2 delete "$LEGACY_PM2_APP"
 fi
-
-# Verify production settings
-echo "🔍 Verifying backend .env configuration..."
-cd "$APP_DIR/backend"
-if grep -q "NODE_ENV=production" .env; then
-  echo "✅ NODE_ENV is set to production"
-else
-  echo "⚠️  WARNING: NODE_ENV is not set to production!"
-fi
-
-if grep -q "e-approval.hylifeconnect.com" .env; then
-  echo "✅ Production domain configured"
-else
-  echo "⚠️  WARNING: Production domain not found in .env!"
-fi
-
-# Clean up temp backup
-rm -rf "$BACKUP_TEMP_DIR"
-echo "✅ Temporary backup cleaned up"
-
-########################################
-# Backend Dependencies
-########################################
-echo "📦 Installing backend dependencies..."
-cd "$APP_DIR/backend"
-sudo npm ci
-
-########################################
-# Frontend Dependencies
-########################################
-echo "📦 Installing frontend dependencies..."
-cd "$APP_DIR/frontend"
-sudo npm ci
-
-########################################
-# Prisma
-########################################
-echo "🧬 Running Prisma..."
-cd "$APP_DIR/backend"
-sudo npx prisma generate
-sudo npx prisma db push
-
-########################################
-# Backend Build
-########################################
-echo "🏗️ Building backend..."
-sudo rm -rf dist
-sudo npm run build
-ls -la dist/src/
-
-########################################
-# Frontend Build
-########################################
-echo "🏗️ Building frontend..."
-cd "$APP_DIR/frontend"
-sudo rm -rf dist
-sudo npm run build
-ls -la dist/
-
-########################################
-# Reload Services
-########################################
-echo "🔄 Reloading Nginx..."
-sudo systemctl reload nginx
-
-########################################
-# PM2 Restart
-########################################
-echo "♻️ Restarting PM2 process..."
-
-# Check if PM2 process exists
-if pm2 list | grep -q "hlememo-backend"; then
-  pm2 restart hlememo-backend --update-env
-  echo "✅ PM2 process restarted"
-else
-  echo "⚠️  Warning: hlememo-backend process not found in PM2"
-  echo "You may need to start it manually with: pm2 start ecosystem.config.js"
-fi
-
+cd "$API_DIR"
+pm2 startOrReload ecosystem.config.js --update-env
 pm2 save
-pm2 list
 
 ########################################
-# Done
+step "🔄 Nginx"
 ########################################
-echo "========================================"
-echo "✅ Deployment completed successfully"
-echo "Time: $(date)"
-echo "========================================"
+sudo nginx -t && sudo systemctl reload nginx
 
 ########################################
-# Post-Deployment Verification
+step "🔍 Health check"
 ########################################
-echo ""
-echo "🔍 Post-Deployment Verification:"
-echo "--------------------------------"
-
-# Check PM2 status
-echo "PM2 Status:"
-pm2 status | grep hlememo-backend || echo "⚠️  hlememo-backend not found in PM2"
-
-# Check if backend is responding
-echo ""
-echo "Backend Health Check:"
-sleep 3  # Give backend time to start
-if curl -s -o /dev/null -w "%{http_code}" http://localhost:3001/api/health | grep -q "200"; then
-  echo "✅ Backend is responding"
-else
-  echo "⚠️  Backend health check failed - check logs with: pm2 logs hlememo-backend"
+HEALTHY=0
+for _ in $(seq 1 15); do
+  if curl -fs -o /dev/null "http://127.0.0.1:$API_PORT/api/health"; then HEALTHY=1; break; fi
+  sleep 2
+done
+pm2 logs "$PM2_APP" --lines 20 --nostream || true
+if [ "$HEALTHY" -ne 1 ]; then
+  die "API did not answer /api/health on :$API_PORT — see the logs above (rollback steps at the top of this script)"
 fi
 
-# Show recent logs
-echo ""
-echo "Recent Backend Logs (last 10 lines):"
-pm2 logs hlememo-backend --lines 10 --nostream
-
-echo ""
+echo
 echo "========================================"
-echo "📋 Next Steps:"
-echo "1. Test login at: https://e-approval.hylifeconnect.com"
-echo "2. Verify file uploads work"
-echo "3. Check email notifications"
-echo "4. Monitor logs: pm2 logs hlememo-backend"
+echo "✅ Deployment completed — $(date)"
+echo "Next: log in at https://e-approval.hylifeconnect.com, open a memo, check that an"
+echo "email goes out, and watch: pm2 logs $PM2_APP"
+if [ -d "$APP_DIR/backend" ]; then
+  echo "ℹ️  $APP_DIR/backend is no longer used (only untracked files remain)."
+  echo "   Check backend/uploads and backend/src/uploads for files before deleting it."
+fi
 echo "========================================"
