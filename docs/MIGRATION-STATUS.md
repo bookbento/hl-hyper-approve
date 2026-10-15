@@ -165,7 +165,7 @@ dump อยู่นอก repo (scratchpad ของ session) ห้ามเ�
 | A2 ✅ | Prisma client ตัวเดียว | sentral `packages/db/src/client.ts` | factory + lazy singleton, log `query` เฉพาะ dev (ดูหนี้ข้อ 2) |
 | A3 ✅ | ตรวจ env ทั้งหมดตอนบูต | sentral/food-review `assertProductionConfig()` | เก็บปัญหาทุกข้อแล้ว throw ครั้งเดียว เช่น `DATABASE_URL`, JWT secret, `EXPRESS_TARGET`, SMTP จะได้ไม่ต้อง deploy ซ้ำทีละตัว |
 | A4 ✅ | `trust proxy` ตาม hop | sentral `TRUST_PROXY_HOPS` | หลัง nginx ค่า `req.ip` ใน AdminLog/LoginLog จะถูก |
-| A5 | เก็บ timing log ของ search | ตัวเดิม `MEMO_SEARCH_TIMING=1` | ตอน port memo search อย่าทิ้ง phase timing: hiddenIds/count/fetchItems/snapshots/stats/facets |
+| A5 ✅ | เก็บ timing log ของ search | ตัวเดิม `MEMO_SEARCH_TIMING=1` | ตอน port memo search อย่าทิ้ง phase timing: hiddenIds/count/fetchItems/snapshots/stats/facets |
 | A6 | จำกัด `pageSize` | ตัวเดิม ข้อ 6 | ใส่ `@Max(200)` ใน `search-memos.dto.ts` แล้วแยก export endpoint สำหรับดึงทั้งหมด |
 | A7 | gzip | — | ทั้ง Express และ Nest ยังไม่มี `compression()` เช็ก nginx ก่อน ถ้า nginx ยังไม่ gzip `/api` ให้เปิดที่ nginx (ดีกว่าทำใน Node) |
 
@@ -185,13 +185,26 @@ dump อยู่นอก repo (scratchpad ของ session) ห้ามเ�
 | C1 | แยก rows ออกจาก stats/facets | ตัวเดิม ข้อ 1 | มี `/api/memos/search/stats` แล้ว ให้ทำ facets แบบเดียวกัน แล้วให้ frontend โหลดเป็น background |
 | C2 (บางส่วน) | Cache invalidation | ตัวเดิม ข้อ 2 | LRU cache ของ stats/facets ตอนนี้หมดอายุตาม TTL 60 วินาทีอย่างเดียว ยังไม่มีการ invalidate เมื่อ approve/create พอ batch 8 ย้ายมาอยู่ process เดียวกันแล้ว ค่อยเพิ่ม `invalidateUser(userId)` ใน service ที่เปลี่ยน status |
 | C3 | Keyset pagination | sentral `center-*.service.ts` (`cursor: { id }, skip: 1`) | ใช้กับ list ที่โตไม่หยุด เช่น admin-logs, notifications, login logs แทน `skip/offset` ส่วนตาราง dashboard ที่ต้องกระโดดไปหน้าไหนก็ได้ ใช้ offset ต่อไป |
-| C4 | TanStack Query `staleTime` | HL-assets-management-inventory `DashboardShell.tsx` (`staleTime: 60_000`) | frontend ตัวนี้ยังไม่มี data-fetching cache ทุกหน้า fetch ใหม่หมด ควรเริ่มที่ข้อมูล master เช่น BU, department, type, memotype, user list |
+| C4 ✅ (แบบอื่น) | TanStack Query `staleTime` | HL-assets-management-inventory `DashboardShell.tsx` (`staleTime: 60_000`) | frontend ตัวนี้ยังไม่มี data-fetching cache ทุกหน้า fetch ใหม่หมด ควรเริ่มที่ข้อมูล master เช่น BU, department, type, memotype, user list |
 | C5 | Virtualized list | kuji `@tanstack/react-virtual` | ใช้กับตาราง/dropdown ที่ยาวมาก เช่นเลือก user ใน CC หรือ approval line |
 | C6 | Lazy-load ข้อมูลหนักของแถว | ตัวเดิม ข้อ 5 | approver snapshots, latest comment, history ให้โหลดตอน expand/hover แทนการ enrich ทุกแถว |
 
 ทำ A1–A4 เสร็จแล้ว (2026-10-09): `common/config/assert-config.ts` ตรวจ `DATABASE_URL`, `TRUST_PROXY_HOPS`, `EXPRESS_TARGET` และใน production ตรวจ `JWT_SECRET` กับ `TRUST_PROXY_HOPS>=1`
 (7a เพิ่มการตรวจ `FRONTEND_URL`/SMTP ใน production แล้ว) ส่วน `auth.controller` เปลี่ยนจากอ่าน `x-forwarded-for` เองมาใช้ `req.ip` และ Express ตั้ง `trust proxy` เป็น hops+1 (แทน `true`)
 ระหว่างทำพบด้วยว่า `apps/api` ไม่ได้ประกาศ `multer` เป็น dependency ทำให้ `node dist/main` บูตไม่ได้หลัง `pnpm install` แก้แล้ว
+
+### รอบ performance 2026-10-15 (วัดใน Chrome กับข้อมูล demo 19k memo)
+
+| เรื่อง | ก่อน → หลัง | commit |
+|---|---|---|
+| Dashboard ใช้ server-side search อย่างเดียว (ลบ `VITE_USE_MEMO_SEARCH` + ทางเก่าที่โหลด `/api/memos` ทั้งหมด + `/cc` ทีละแถว + `cc/me`) | ~100 request / 7.5s → 6 request / ~1.1s (cache ว่าง) | `7e1321e` |
+| Lazy-load ทุกหน้า + แยก react-vendor, worker ของ pdf.js ย้ายไป `lib/pdfWorker.ts` | JS ก้อนแรก 769 KB gzip → dashboard 217 KB | `650b1aa` |
+| GET cache ชั้น axios (`lib/httpCache.ts`: /me, BU, department, basic-info + รวม request ซ้ำ), batch `basic-info`, ตัด HEAD ของ PDF (server สร้าง PDF สองรอบ) | หน้า memo 18 → 14 request, PDF สร้างครั้งเดียว | `b2ada3e` |
+| SQL "ถึงคิวใคร" เขียนใหม่ด้วย window function (CTE ถูกประเมินผิดเป็น 1 แถว → nested loop), awaiting-approval ตัด N+1, current-approvers ตัด OR ยักษ์ | resolver 2.3s → 74ms, facets 1.45s → 0.25s, statCounts ~1.3s → 0.12s, awaiting 1.5s → 0.12s, current-approvers 0.93s → 0.32s (ผลเทียบโค้ดเดิมทุก user 114 checks ต่าง 0) | `3d88791` |
+
+ใช้ TanStack Query (C4) แทนด้วย cache ชั้น axios เพราะ `/api/me` ถูกเรียก 11 ที่ใน component ยาว 3–5 พันบรรทัด ถ้าจะย้ายไป TanStack ทีหลังก็ทำทีละหน้าได้
+ยังไม่ทำ: ETag/304 (คำตอบเป็นของแต่ละ user และตอนนี้ query เร็วแล้ว), `cc` กับ `extra-approval-lines/active` ที่หน้า memo ยังเรียกซ้ำสองที่ (ข้อมูลเปลี่ยนหลัง approve ทันที ไม่ควร cache), MemoViewer chunk ยังใหญ่ (533 KB gzip รวม pdf)
+`frontend/.env` บน server ไม่ต้องมี `VITE_USE_MEMO_SEARCH` แล้ว
 
 B1 ทำแล้ว (migration `20261015000000_memo_status_pivot_latest_idx`) พร้อม tie-breaker `id desc` ทุกจุดที่หาสถานะล่าสุดด้วย Prisma (`common/latest-status-order.ts`, SQL ของ search มีอยู่แล้ว)
 และ `loaUserId` เป็นตัวตัดสินลำดับ approver ในระดับเดียวกัน (หมายเหตุ 8a-2)
