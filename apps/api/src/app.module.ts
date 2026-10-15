@@ -27,6 +27,7 @@ import { MemoPdfModule } from './modules/memo-pdf/memo-pdf.module';
 import { MemoNotificationModule } from './modules/memo-notification/memo-notification.module';
 import { ExtraApprovalModule } from './modules/extra-approval/extra-approval.module';
 import { MemoStatusModule } from './modules/memo-status/memo-status.module';
+import { MemoExpiryModule } from './modules/memo-expiry/memo-expiry.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { MemoStatusModule } from './modules/memo-status/memo-status.module';
     MemoNotificationModule,
     ExtraApprovalModule,
     MemoStatusModule,
+    MemoExpiryModule,
     GatewayModule,
   ],
   providers: [

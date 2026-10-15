@@ -254,6 +254,8 @@ export class GatewayModule implements NestModule {
         { path: 'api/memos/:id/approver-status', method: RequestMethod.GET },
         { path: 'api/memos/approver-status/bulk', method: RequestMethod.POST },
         { path: 'api/memos/action/email', method: RequestMethod.GET },
+        // ── memo-expiry dev tools (not registered in production) ─────────────
+        { path: 'api/dev/expiry/(.*)', method: RequestMethod.POST },
       )
       .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
