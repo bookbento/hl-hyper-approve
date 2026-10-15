@@ -168,6 +168,9 @@ importers:
       '@ant-design/icons':
         specifier: ^6.0.0
         version: 6.2.5(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@fontsource/prompt':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@fortawesome/free-solid-svg-icons':
         specifier: ^7.2.0
         version: 7.2.0
@@ -1426,6 +1429,9 @@ packages:
 
   '@floating-ui/utils@0.2.11':
     resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
+
+  '@fontsource/prompt@5.3.0':
+    resolution: {integrity: sha512-cU4VVn7G0wSI3pu3a7tynpTQ5hk3Lm9nEjTOBLhVYsqbOlvVIj6Tc1f3450BOGSpDiPOxmYGj/D7rE/z/TYPJg==}
 
   '@fortawesome/fontawesome-common-types@6.7.2':
     resolution: {integrity: sha512-Zs+YeHUC5fkt7Mg1l6XTniei3k4bwG/yo3iFUtZWd/pMx9g3fdvkSK9E0FOC+++phXOka78uJcYb8JaFkW52Xg==}
@@ -7581,6 +7587,8 @@ snapshots:
       tabbable: 6.5.0
 
   '@floating-ui/utils@0.2.11': {}
+
+  '@fontsource/prompt@5.3.0': {}
 
   '@fortawesome/fontawesome-common-types@6.7.2': {}
 

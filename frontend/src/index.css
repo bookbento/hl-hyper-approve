@@ -5,6 +5,10 @@
    text-brand-900, ease-spring, etc. Motion durations are kept short: approvers
    click through dozens of memos a day. */
 @theme {
+  /* Prompt for everything, as in malinmarket (loaded in main.tsx). Signature
+     fonts (Allura, Caprasimo) are set inline where they are used. */
+  --font-sans: "Prompt", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+
   --color-brand-50: #eef7f3;
   --color-brand-100: #d5ece2;
   --color-brand-200: #a9d8c4;
@@ -27,6 +31,12 @@
   --animate-rb-row-in: rb-row-in 0.42s var(--ease-out-expo) both;
   --animate-rb-shine: rb-shine 3.2s linear infinite;
   --animate-rb-float: rb-float 7s ease-in-out infinite;
+}
+
+/* antd sets its own font-family with zero-specificity :where() rules; follow the
+   app font instead (a ConfigProvider would pull antd into the entry chunk). */
+[class^="ant-"], [class*=" ant-"] {
+  font-family: var(--font-sans);
 }
 
 @keyframes rb-row-in {
