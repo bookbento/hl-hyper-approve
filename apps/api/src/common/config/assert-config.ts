@@ -16,10 +16,6 @@ export function collectConfigProblems(env: NodeJS.ProcessEnv = process.env): str
     problems.push(`TRUST_PROXY_HOPS must be an integer >= 0 (got "${hops}")`);
   }
 
-  const expressTarget = env['EXPRESS_TARGET']?.trim();
-  if (expressTarget && !/^https?:\/\/[^/]+/.test(expressTarget)) {
-    problems.push(`EXPRESS_TARGET must be an http(s) URL (got "${expressTarget}")`);
-  }
 
   if (env['NODE_ENV'] === 'production') {
     // Every JwtModule falls back to 'changeme' when JWT_SECRET is missing,

@@ -21,9 +21,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { PDFDocument } from 'pdf-lib';
 import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
-
-// Resolve uploads dir — mirrors Express UPLOADS_DIR
-const UPLOADS_DIR = process.env['UPLOADS_DIR'] ?? path.join(process.cwd(), '..', '..', 'uploads');
+import { UPLOADS_DIR } from '../../common/upload/upload.config';
 
 // ── helper: display name ──────────────────────────────────────────────────────
 

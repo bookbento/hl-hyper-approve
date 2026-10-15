@@ -12,10 +12,8 @@ import { AdminLogService } from '../src/common/admin-log/admin-log.service';
  * Uses NestJS testing module — mocks PrismaService to avoid DB dependency.
  * Verifies behavior parity with Express controller.
  *
- * Also verifies gateway behaviour:
- *   - /api/business-units → handled natively by Nest (not proxied)
- *   - un-registered routes → proxied to Express (we verify the proxy
- *     middleware is invoked, not a real upstream connection)
+ * Also covers /api/health and the 404 for routes nobody owns (the Express
+ * backend and the gateway that proxied to it are gone).
  */
 describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
   let app: INestApplication;
@@ -94,14 +92,18 @@ describe('BusinessUnit e2e (AppModule with Prisma mock)', () => {
     mockAdminLogService.write.mockResolvedValue(undefined);
   });
 
-  // ---- Gateway: native Nest route (not proxied) ----
-  describe('Gateway routing — /api/business-units is handled natively by Nest', () => {
-    it('GET /api/business-units responds directly from Nest (not from Express proxy)', async () => {
-      mockPrismaService.businessUnit.findMany.mockResolvedValue([mockBu]);
+  describe('routing', () => {
+    it('GET /api/health answers without auth', async () => {
+      const res = await request(app.getHttpServer()).get('/api/health').expect(200);
+      expect(res.body).toEqual({ ok: true, time: expect.any(String) });
+    });
 
-      // If the route were proxied to a non-running Express the request would
-      // timeout or return 502. Receiving 200 with mocked data proves Nest
-      // handles this path natively.
+    it('an unknown /api route is a Nest 404 (nothing is proxied any more)', async () => {
+      await request(app.getHttpServer()).get('/api/no-such-route').expect(404);
+    });
+
+    it('GET /api/business-units is served by Nest', async () => {
+      mockPrismaService.businessUnit.findMany.mockResolvedValue([mockBu]);
       const res = await request(app.getHttpServer())
         .get('/api/business-units')
         .expect(200);

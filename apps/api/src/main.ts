@@ -4,6 +4,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import { assertConfig } from './common/config/assert-config';
+import { originPolicy } from './common/http/origin-policy';
 
 async function bootstrap(): Promise<void> {
   // Fail before DI with one readable list of everything that's misconfigured.
@@ -23,9 +24,15 @@ async function bootstrap(): Promise<void> {
   // can close the connection pool.
   app.enableShutdownHooks();
 
+  // Same limit Express had (Nest's default is 100kb).
+  app.useBodyParser('json', { limit: '5mb' });
+
+  // CORS allow-list + production no-origin filter, as Express enforced in front of every route.
+  app.use(...originPolicy());
   app.use(cookieParser());
 
-  const port = process.env['PORT'] ?? 3002;
+  // 3001: what nginx (upstream hlememo_backend) and the Vite dev proxy point at — the port Express used.
+  const port = process.env['PORT'] ?? 3001;
   await app.listen(port);
   console.log(`NestJS app running on http://localhost:${port}`);
 }

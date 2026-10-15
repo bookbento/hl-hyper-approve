@@ -1,18 +1,15 @@
 /**
  * Shared file upload configuration for NestJS.
  *
- * Mirrors backend/src/middlewares/upload.ts so that Nest and Express
- * read/write to the SAME uploads directory on disk.
+ * Same uploads directory the Express backend used (<repo>/uploads), so
+ * existing files keep resolving after the cut-over.
  *
  * UPLOADS_DIR resolution order:
  *   1. process.env.UPLOADS_DIR (absolute → use as-is, relative → resolve from monorepo root)
  *   2. Default: <monorepo-root>/uploads
  *
  * The monorepo root is resolved by walking up from __dirname until we find
- * a directory that contains pnpm-workspace.yaml (or apps/ + backend/ siblings).
- * This approach is identical to backend's findAncestorDir strategy but looks
- * for the workspace root rather than the "backend" directory, keeping the
- * two apps aligned on the same parent folder.
+ * a directory that contains pnpm-workspace.yaml.
  *
  * Security (คุณอิเอริ review):
  *   - All user-supplied paths are sanitised before use.
@@ -29,15 +26,12 @@ import * as fs from 'fs';
 
 /**
  * Walk up from `start` until we find a directory that looks like the
- * monorepo root (contains pnpm-workspace.yaml or has both apps/ and backend/).
+ * monorepo root (contains pnpm-workspace.yaml).
  */
 function findMonorepoRoot(start: string): string {
   let dir = path.resolve(start);
   for (let i = 0; i < 15; i++) {
-    const hasWorkspace = fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'));
-    const hasApps = fs.existsSync(path.join(dir, 'apps'));
-    const hasBackend = fs.existsSync(path.join(dir, 'backend'));
-    if (hasWorkspace || (hasApps && hasBackend)) {
+    if (fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'))) {
       return dir;
     }
     const parent = path.dirname(dir);

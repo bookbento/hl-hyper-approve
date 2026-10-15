@@ -30,11 +30,6 @@ describe('collectConfigProblems', () => {
     expect(collectConfigProblems({ ...base, TRUST_PROXY_HOPS: 'true' })).toHaveLength(1);
   });
 
-  it('rejects an EXPRESS_TARGET that is not an http(s) URL', () => {
-    expect(collectConfigProblems({ ...base, EXPRESS_TARGET: 'localhost:3000' })).toHaveLength(1);
-    expect(collectConfigProblems({ ...base, EXPRESS_TARGET: 'http://127.0.0.1:3000' })).toEqual([]);
-  });
-
   it('rejects missing or default JWT_SECRET in production', () => {
     expect(collectConfigProblems({ ...prod, JWT_SECRET: undefined })).toHaveLength(1);
     expect(collectConfigProblems({ ...prod, JWT_SECRET: 'changeme' })).toHaveLength(1);

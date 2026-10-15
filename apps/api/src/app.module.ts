@@ -12,7 +12,6 @@ import { AuthModule } from './modules/auth/auth.module';
 import { UserModule } from './modules/user/user.module';
 import { UserSignatureModule } from './modules/user-signature/user-signature.module';
 import { FileServingModule } from './modules/file-serving/file-serving.module';
-import { GatewayModule } from './common/gateway/gateway.module';
 import { ApprovalLineModule } from './modules/approval-line/approval-line.module';
 import { MemotypeModule } from './modules/memotype/memotype.module';
 import { NotificationModule } from './modules/notification/notification.module';
@@ -28,6 +27,7 @@ import { MemoNotificationModule } from './modules/memo-notification/memo-notific
 import { ExtraApprovalModule } from './modules/extra-approval/extra-approval.module';
 import { MemoStatusModule } from './modules/memo-status/memo-status.module';
 import { MemoExpiryModule } from './modules/memo-expiry/memo-expiry.module';
+import { HealthModule } from './modules/health/health.module';
 
 @Module({
   imports: [
@@ -57,7 +57,7 @@ import { MemoExpiryModule } from './modules/memo-expiry/memo-expiry.module';
     ExtraApprovalModule,
     MemoStatusModule,
     MemoExpiryModule,
-    GatewayModule,
+    HealthModule,
   ],
   providers: [
     {
