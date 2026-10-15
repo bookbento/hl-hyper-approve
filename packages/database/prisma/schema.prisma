@@ -88,6 +88,8 @@ model MemoStatusPivot {
   user      User       @relation(fields: [userId], references: [id])
 
   @@unique([memoId, userId, statusId], name: "memoId_userId_statusId")
+  // latest status per memo: ORDER BY createdAt DESC, id DESC (B1)
+  @@index([memoId, createdAt(sort: Desc), id(sort: Desc)])
 }
 
 model MemoType {

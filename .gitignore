@@ -52,3 +52,6 @@ start-local.bat
 
 # @hl/database build output (built on install)
 packages/database/dist/
+
+# Prisma migrations are source, not dumps
+!packages/database/prisma/migrations/**/migration.sql

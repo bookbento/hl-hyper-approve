@@ -453,6 +453,26 @@ async function main() {
   ]);
   console.log(`✅ Created ${notificationTypes.length} notification types`);
 
+  // Rows above use explicit ids, which do not advance the serial sequences, so
+  // the next normal insert would collide (e.g. creating the first real user).
+  await prisma.$executeRawUnsafe(`
+    DO $$ DECLARE r record; BEGIN
+      FOR r IN
+        SELECT c.relname AS tbl, a.attname AS col,
+               pg_get_serial_sequence(format('%I', c.relname), a.attname) AS seq
+        FROM pg_class c
+        JOIN pg_namespace n ON n.oid = c.relnamespace
+        JOIN pg_attribute a ON a.attrelid = c.oid AND a.attnum > 0 AND NOT a.attisdropped
+        WHERE n.nspname = 'public' AND c.relkind = 'r'
+          AND pg_get_serial_sequence(format('%I', c.relname), a.attname) IS NOT NULL
+      LOOP
+        EXECUTE format('SELECT setval(%L, COALESCE((SELECT MAX(%I) FROM %I), 0) + 1, false)',
+                       r.seq, r.col, r.tbl);
+      END LOOP;
+    END $$;
+  `);
+  console.log('✅ Serial sequences moved past seeded ids');
+
 
   console.log('✅ Seed data created successfully.');
 }
