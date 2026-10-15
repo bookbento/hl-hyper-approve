@@ -40,10 +40,6 @@ import type {
 } from "../../lib/api/memoSearch.types";
 import { subscribeMemoDashboardRefresh } from "../../lib/memoDashboardEvents";
 
-// Feature flag — opt-in to server-side pagination. Set to true in
-// frontend/.env via VITE_USE_MEMO_SEARCH=true. Toggle requires `vite` rebuild.
-const USE_NEW_SEARCH =
-  import.meta.env.VITE_USE_MEMO_SEARCH === "true";
 const DASHBOARD_STAT_COUNTS_CACHE_KEY = "dashboard:statCounts:v1";
 
 pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
@@ -1453,7 +1449,6 @@ const loadSortStateFromStorage = (): { key: ColKey; dir: SortDir } | null => {
 const normalizeSavedColFilters = (
   filters: Record<ColKey, ColumnFilterState>
 ): Record<ColKey, ColumnFilterState> => {
-  if (!USE_NEW_SEARCH) return filters;
   const normalized = { ...filters };
   (["current", "extra", "ccStatus"] as const).forEach((key) => {
     const values = normalized[key]?.values;
@@ -1492,12 +1487,11 @@ const Dashboard: React.FC = () => {
   const timeAgo = useTimeAgo();
   const [memos, setMemos] = useState<Memo[]>([]);
 
-  // Server-side search authoritative data (populated by adapter useEffect
-  // when USE_NEW_SEARCH=true; null otherwise). These shadow legacy
-  // computed values (statusCounts, totalRows, options) when populated.
+  // Server-side search authoritative data (populated by the adapter useEffect).
+  // These shadow the computed values (statusCounts, totalRows, options) once loaded.
   const [serverStatCounts, setServerStatCounts] =
     useState<ServerStatCounts | null>(() =>
-      USE_NEW_SEARCH ? loadStatCountsFromStorage() : null
+      loadStatCountsFromStorage()
     );
   const [serverStatCountsLoading, setServerStatCountsLoading] =
     useState(false);
@@ -1787,7 +1781,7 @@ const Dashboard: React.FC = () => {
 
   // รายชื่อ Current Approver ทั้งหมด (จาก approverMap; ถ้าไม่มีให้ fallback จาก memo.currentApprover.names)
   const currentApproverOptions = useMemo(() => {
-    if (USE_NEW_SEARCH && serverFacets) {
+    if (serverFacets) {
       return serverFacets.currentApprovers
         .map((u) => ({ value: String(u.id), label: u.name }))
         .sort((a, b) => thCollator.compare(a.label, b.label));
@@ -1813,7 +1807,7 @@ const Dashboard: React.FC = () => {
       byId.set(approver.id, approver);
     }
 
-    if (USE_NEW_SEARCH && serverFacets) {
+    if (serverFacets) {
       for (const approver of [
         ...serverFacets.currentApprovers,
         ...serverFacets.extraApprovers,
@@ -2028,7 +2022,7 @@ const Dashboard: React.FC = () => {
     extraMap[m.id]?.approvers?.map((a) => a.name).join(", ") ?? "";
 
   const extraApproverOptions = useMemo(() => {
-    if (USE_NEW_SEARCH && serverFacets) {
+    if (serverFacets) {
       return serverFacets.extraApprovers
         .map((u) => ({ value: String(u.id), label: u.name }))
         .sort((a, b) => thCollator.compare(a.label, b.label));
@@ -2103,19 +2097,21 @@ const Dashboard: React.FC = () => {
   type Me = { id: number; name?: string; nickname?: string; lastname?: string };
   const [me, setMe] = useState<Me | null>(null);
 
-  // ⬅️ ADD: โหลด memos ที่ user เป็น CC
-  const [myCCMemos, setMyCCMemos] = useState<Memo[]>([]);
-
-  // ⬅️ ADD: Set ของ memo IDs ที่ user เป็น CC (สำหรับ sort/filter)
-  const myCCMemoIds = useMemo(() => {
-    return new Set(myCCMemos.map(m => m.id));
-  }, [myCCMemos]);
-
-  // ⬅️ ADD: เก็บข้อมูล CC ของแต่ละ memo
+  // ⬅️ ADD: เก็บข้อมูล CC ของแต่ละ memo (search rows carry ccUsers)
   const [memosCCData, setMemosCCData] = useState<Record<number, Array<{ id: number, name: string, lastname?: string, nickname?: string }>>>({});
 
+  // memo ids on the current page where I'm CC'd — was a separate /api/memos/cc/me call
+  const myCCMemoIds = useMemo(() => {
+    const ids = new Set<number>();
+    if (!me) return ids;
+    for (const [id, list] of Object.entries(memosCCData)) {
+      if (list.some((u) => u.id === me.id)) ids.add(Number(id));
+    }
+    return ids;
+  }, [memosCCData, me]);
+
   const ccStatusOptions = useMemo(() => {
-    if (USE_NEW_SEARCH && serverFacets) {
+    if (serverFacets) {
       return serverFacets.ccUsers
         .map((u) => ({ value: String(u.id), label: u.name }))
         .sort((a, b) => thCollator.compare(a.label, b.label));
@@ -2164,66 +2160,13 @@ const Dashboard: React.FC = () => {
       .then((res) => setMe(res.data))
       .catch(() => setMe(null));
   }, []);
+  // useMemoSearch loads the rows; nothing to wait for here.
   useEffect(() => {
-    // SKIP when server-side search is enabled — useMemoSearch handles loading
-    if (USE_NEW_SEARCH) {
-      setLoading(false);
-      return;
-    }
-    // Fetch memos
-    axios
-      .get<Memo[]>("/api/memos", {
-        withCredentials: true,
-      })
-      .then((res) => {
-        const normalized = (res.data || []).map((m) => ({
-          ...m,
-          latestComment: m.latestComment
-            ? {
-              ...m.latestComment,
-              attachments: (m.latestComment.attachments ?? []).map((a) => ({
-                ...a,
-                url: toSecureUploadUrl(a.url),
-              })),
-            }
-            : null,
-        }));
-        setMemos(normalized);
-      })
-      .catch((err) => {
-        if (err.response) {
-          console.error(
-            "❌ API Error:",
-            err.response.status,
-            err.response.data
-          );
-          if (err.response.status === 401) {
-            console.warn("🔴 Not authenticated. Redirecting to /login...");
-            window.location.href = "/login";
-          }
-        } else {
-          console.error("❌ Request failed:", err.message);
-        }
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-
-    // Fetch current approvers for filter
-    axios
-      .get<CurrentApprover[]>("/api/memos/current-approvers", {
-        withCredentials: true,
-      })
-      .then((res) => {
-        setCurrentApprovers(res.data);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch current approvers:", err);
-      });
+    setLoading(false);
   }, []);
 
   useEffect(() => {
-    if (!USE_NEW_SEARCH || !filterOpen || currentApproversLoadedRef.current) {
+    if (!filterOpen || currentApproversLoadedRef.current) {
       return;
     }
 
@@ -2251,94 +2194,7 @@ const Dashboard: React.FC = () => {
     };
   }, [filterOpen]);
 
-  // Separate useEffect for CC memos (depends on me)
-  useEffect(() => {
-    if (!me) return;
 
-    axios
-      .get("/api/memos/cc/me", { withCredentials: true })
-      .then((res) => {
-        // Convert CC memo format to regular memo format
-        const ccMemos: Memo[] = (res.data || []).map((ccMemo: any) => ({
-          id: ccMemo.id,
-          subject: ccMemo.subject,
-          memonumber: ccMemo.memonumber,
-          user: ccMemo.owner,
-          status: ccMemo.latestStatus,
-          createdAt: ccMemo.latestStatusAt,
-          // Add minimal required fields
-          department: { id: 0, name: "" },
-          businessUnit: { id: 0, name: "" },
-          team: { id: 0, name: "" },
-          memoType: { name: ccMemo.type || "" },
-        }));
-        setMyCCMemos(ccMemos);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch CC memos:", err);
-      });
-  }, [me]);
-
-  // ⬅️ ADD: โหลดข้อมูล CC ของแต่ละ memo
-  useEffect(() => {
-    if (USE_NEW_SEARCH) return; // hook adapter populates memosCCData
-    if (!memos.length || !me) return;
-
-    const fetchCCData = async () => {
-      const ccDataMap: Record<number, Array<{ id: number, name: string, lastname?: string, nickname?: string }>> = {};
-
-      await Promise.all(
-        memos.map(async (memo) => {
-          try {
-            // เช็คว่า user เป็น creator หรือ CC ของ memo นี้หรือไม่
-            const isCreator = memo.user?.id === me.id;
-            const isCC = myCCMemoIds.has(memo.id);
-
-            if (isCreator || isCC) {
-              const { data } = await axios.get(`/api/memos/${memo.id}/cc`, { withCredentials: true });
-              ccDataMap[memo.id] = data.users || [];
-            }
-          } catch (error) {
-            console.error(`Failed to fetch CC data for memo ${memo.id}:`, error);
-            ccDataMap[memo.id] = [];
-          }
-        })
-      );
-
-      setMemosCCData(ccDataMap);
-    };
-
-    fetchCCData();
-  }, [memos, me, myCCMemoIds]);
-  useEffect(() => {
-    if (USE_NEW_SEARCH) return; // hook adapter populates approverMap
-    if (!memos.length) return;
-
-    const ids = memos.map((m) => m.id);
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const { data } = await axios.post<Record<number, ApproverStatus[]>>(
-          "/api/memos/approver-status/bulk",
-          { memoIds: ids },
-          { withCredentials: true }
-        );
-        if (cancelled) return;
-        // Backend omits memos the user can't see; default those to [] so callers
-        // never read undefined for an id that's in the dashboard list.
-        const next: Record<number, ApproverStatus[]> = {};
-        for (const id of ids) next[id] = data?.[id] ?? [];
-        setApproverMap(next);
-      } catch (e) {
-        if (!cancelled) console.error("bulk approver-status failed", e);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [memos]);
 
   useEffect(() => {
     axios
@@ -2364,67 +2220,6 @@ const Dashboard: React.FC = () => {
       });
   }, []);
 
-  useEffect(() => {
-    if (USE_NEW_SEARCH) return; // hook adapter populates extraMap
-    if (!memos.length) return;
-
-    const ids = memos.map((m) => m.id);
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const { data } = await axios.post<
-          Record<
-            number,
-            { id: number; status: string; createdAt?: string; approvers: any[] } | null
-          >
-        >(
-          "/api/memos/extra-approval-lines/active/bulk",
-          { memoIds: ids },
-          { withCredentials: true }
-        );
-        if (cancelled) return;
-
-        const next: Record<number, ExtraSummary | null> = {};
-        for (const id of ids) {
-          const entry = data?.[id];
-          if (!entry) {
-            next[id] = null;
-            continue;
-          }
-          const rows: ExtraApproverRow[] = (entry.approvers ?? []).map(
-            (a: any, idx: number) => ({
-              userId: a?.user?.id,
-              name: displayName(a.user),
-              statusCode: normalizeStatusCode(a?.status?.name),
-              since: a?.since ?? a?.createdAt ?? null,
-              actedAt: a?.actedAt ?? null,
-              level: a?.level ?? a?.approvalLevel ?? null,
-              order: a?.order ?? a?.seq ?? a?.sequence ?? idx,
-            })
-          );
-          // ✅ เรียง: level -> order -> name
-          const sorted = rows.sort((x, y) => {
-            const lx = x.level ?? Number.MAX_SAFE_INTEGER;
-            const ly = y.level ?? Number.MAX_SAFE_INTEGER;
-            if (lx !== ly) return lx - ly;
-            const ox = x.order ?? 0;
-            const oy = y.order ?? 0;
-            if (ox !== oy) return ox - oy;
-            return x.name.localeCompare(y.name);
-          });
-          next[id] = { status: entry.status, approvers: sorted };
-        }
-        setExtraMap(next);
-      } catch (e) {
-        if (!cancelled) console.error("bulk extra-approval-lines failed", e);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [memos]);
 
   // ⬅️ ADD: รายการ/จำนวนเมโม่ที่ถึงคิวเรา (หลัก+extra)
   const myApprovalMemos = useMemo(
@@ -2438,7 +2233,7 @@ const Dashboard: React.FC = () => {
   // Use server-authoritative count when flag on (counts the FULL set,
   // not the paged slice).
   const approvalRequestCount =
-    USE_NEW_SEARCH && serverStatCounts
+    serverStatCounts
       ? serverStatCounts.myApproval
       : myApprovalMemos.length;
 
@@ -2494,7 +2289,7 @@ const Dashboard: React.FC = () => {
   // When server-side search is enabled, prefer authoritative counts from
   // /api/memos/search response (counts the FULL visible set, not paged slice).
   const statusCounts = useMemo(() => {
-    if (USE_NEW_SEARCH && serverStatCounts) {
+    if (serverStatCounts) {
       return {
         total: serverStatCounts.total,
         Draft: serverStatCounts.Draft,
@@ -2529,14 +2324,11 @@ const Dashboard: React.FC = () => {
   }, [memos, serverStatCounts]);
 
   // คำนวณจำนวน memos ที่ user เป็น CC (ไม่รวม Deleted)
-  const myCCMemosCount = useMemo(() => {
-    if (USE_NEW_SEARCH && serverStatCounts) return serverStatCounts.myCC;
-    return myCCMemos.filter(m => m.status !== "Deleted").length;
-  }, [myCCMemos, serverStatCounts]);
+  const myCCMemosCount = serverStatCounts?.myCC ?? 0;
 
   // คำนวณจำนวน memos ที่ user สร้างเอง
   const myCreatedMemosCount = useMemo(() => {
-    if (USE_NEW_SEARCH && serverStatCounts) return serverStatCounts.myCreated;
+    if (serverStatCounts) return serverStatCounts.myCreated;
     if (!me) return 0;
     return memos.filter((m) => m.user?.id === me.id).length;
   }, [memos, me, serverStatCounts]);
@@ -2738,29 +2530,11 @@ const Dashboard: React.FC = () => {
           .filter((v) => !Number.isNaN(v))
       );
       filtered = filtered.filter((m) => {
-        if (USE_NEW_SEARCH) {
-          const ccList = memosCCData[m.id] || [];
-          return ccList.some(
-            (ccUser) =>
-              selectedNames.has(ccUserLabel(ccUser)) || selectedIds.has(ccUser.id)
-          );
-        }
-
-        if (!me) return false;
-
-        const isCreator = m.user?.id === me.id;
-        const isCC = myCCMemoIds.has(m.id);
-
-        if (isCreator || isCC) {
-          const ccList = memosCCData[m.id] || [];
-          // เช็คว่ามีชื่อที่เลือกอยู่ใน CC list หรือไม่
-          return ccList.some(
-            (ccUser) =>
-              selectedNames.has(ccUserLabel(ccUser)) || selectedIds.has(ccUser.id)
-          );
-        }
-
-        return false;
+        const ccList = memosCCData[m.id] || [];
+        return ccList.some(
+          (ccUser) =>
+            selectedNames.has(ccUserLabel(ccUser)) || selectedIds.has(ccUser.id)
+        );
       });
     }
 
@@ -2908,7 +2682,6 @@ const Dashboard: React.FC = () => {
     view, // ✅ เพิ่ม view
     me,
     t, // ✅ เพิ่ม t
-    myCCMemos, // ✅ เพิ่ม myCCMemos
     myCCMemoIds, // ✅ เพิ่ม myCCMemoIds สำหรับ CC Status column
     memosCCData, // ✅ เพิ่ม memosCCData สำหรับ CC filter
     sortByLatestAction, // ✅
@@ -2920,12 +2693,8 @@ const Dashboard: React.FC = () => {
   const [page, setPage] = useState(1);
 
   // ─── Server-side search hook (Phase 2) ────────────────────────────
-  // Active only when USE_NEW_SEARCH=true. Replaces /api/memos + bulk
-  // endpoints with a single /api/memos/search call.
+  // A single /api/memos/search call per page (replaced /api/memos + per-row/bulk calls).
   const newSearchRequest = useMemo(() => {
-    if (!USE_NEW_SEARCH) {
-      return {} as ReturnType<typeof colFiltersToSearchRequest>;
-    }
     return colFiltersToSearchRequest({
       colFilters: colFilters as Record<SearchColKey, typeof colFilters[keyof typeof colFilters]>,
       sortState: sortState as { key: SearchColKey; dir: "asc" | "desc" } | null,
@@ -2953,7 +2722,7 @@ const Dashboard: React.FC = () => {
 
   const newSearch = useMemoSearch({
     request: newSearchRequest,
-    enabled: USE_NEW_SEARCH,
+    enabled: true,
     debounceMs: 350,
   });
 
@@ -2992,7 +2761,7 @@ const Dashboard: React.FC = () => {
   );
 
   useEffect(() => {
-    if (!USE_NEW_SEARCH || searchMetaLoadedRef.current.statCounts) return;
+    if (searchMetaLoadedRef.current.statCounts) return;
 
     const controller = new AbortController();
     void reloadServerStatCounts({ signal: controller.signal });
@@ -3003,8 +2772,6 @@ const Dashboard: React.FC = () => {
   }, [reloadServerStatCounts]);
 
   useEffect(() => {
-    if (!USE_NEW_SEARCH) return;
-
     let refreshTimer: number | undefined;
     let pendingHiddenRefresh = false;
 
@@ -3048,10 +2815,8 @@ const Dashboard: React.FC = () => {
     };
   }, [reloadServerStatCounts]);
 
-  const searchResultsLoading =
-    USE_NEW_SEARCH && !newSearch.error && newSearch.isFetching;
+  const searchResultsLoading = !newSearch.error && newSearch.isFetching;
   const statCardsLoading =
-    USE_NEW_SEARCH &&
     !newSearch.error &&
     !serverStatCounts &&
     (serverStatCountsLoading || !newSearch.data || searchResultsLoading);
@@ -3071,7 +2836,7 @@ const Dashboard: React.FC = () => {
   // Adapter: populate legacy state from hook data so existing render code
   // (filter chain, dropdown options, etc.) continues to work unchanged.
   useEffect(() => {
-    if (!USE_NEW_SEARCH || !newSearch.data) return;
+    if (!newSearch.data) return;
 
     const items = newSearch.data.items.map((m) => ({
       ...m,
@@ -3149,25 +2914,13 @@ const Dashboard: React.FC = () => {
     setLoading(false);
   }, [newSearch.data]);
 
-  // Pagination metadata: server-side when flag on, client-side otherwise.
-  const totalRows = USE_NEW_SEARCH ? serverTotal : visibleMemos.length;
+  // Pagination metadata comes from the server.
+  const totalRows = serverTotal;
   const pageSizeNum = pageSize === "All" ? totalRows || 1 : pageSize;
-  const totalPages = USE_NEW_SEARCH
-    ? serverTotalPages
-    : pageSize === "All"
-      ? 1
-      : Math.max(1, Math.ceil(totalRows / pageSizeNum));
+  const totalPages = serverTotalPages;
 
+  // reset to page 1 when filter inputs change
   useEffect(() => {
-    // reset to page 1 when filters/results change (skip when flag-on:
-    // server-side search resets via different signal — see below)
-    if (USE_NEW_SEARCH) return;
-    setPage(1);
-  }, [visibleMemos, pageSize]);
-
-  // Flag-on: reset page 1 when filter inputs change
-  useEffect(() => {
-    if (!USE_NEW_SEARCH) return;
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -3188,14 +2941,8 @@ const Dashboard: React.FC = () => {
   // ⬇️ Define the missing pagedMemos
   const start = pageSize === "All" ? 0 : (page - 1) * pageSizeNum;
   const end = pageSize === "All" ? totalRows : start + pageSizeNum;
-  const pagedMemos = useMemo(
-    () =>
-      USE_NEW_SEARCH
-        // Server already paginated — return all current items
-        ? visibleMemos
-        : visibleMemos.slice(start, end),
-    [visibleMemos, start, end]
-  );
+  // Server already paginated — the current items are the page.
+  const pagedMemos = visibleMemos;
   const showTableSkeleton = searchResultsLoading && pagedMemos.length === 0;
   const tableColumnCount =
     1 + Object.values(visibleColumns).filter(Boolean).length;
@@ -3352,7 +3099,7 @@ const Dashboard: React.FC = () => {
 
   // ⬅️ ADD: ถึงคิวเราบนไลน์หลักไหม
   function isMyTurnMain(memo: Memo): boolean {
-    if (USE_NEW_SEARCH && typeof memo.isMyTurnMain === "boolean") {
+    if (typeof memo.isMyTurnMain === "boolean") {
       return memo.isMyTurnMain;
     }
     if (!me) return false;
@@ -3400,7 +3147,7 @@ const Dashboard: React.FC = () => {
 
   // ⬅️ ADD: ถึงคิวเราบน extra ไหม
   function isMyTurnExtra(memo: Memo): boolean {
-    if (USE_NEW_SEARCH && typeof memo.isMyTurnExtra === "boolean") {
+    if (typeof memo.isMyTurnExtra === "boolean") {
       return memo.isMyTurnExtra;
     }
     if (!me) return false;
