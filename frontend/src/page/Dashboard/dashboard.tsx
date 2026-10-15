@@ -35,6 +35,8 @@ import type {
   Facets as ServerFacets,
 } from "../../lib/api/memoSearch.types";
 import { subscribeMemoDashboardRefresh } from "../../lib/memoDashboardEvents";
+import { AnimatedContent, BlurText } from "../../components/motion";
+import StatCard from "./StatCard";
 
 const DASHBOARD_STAT_COUNTS_CACHE_KEY = "dashboard:statCounts:v1";
 
@@ -2333,6 +2335,7 @@ const Dashboard: React.FC = () => {
     () => [
       {
         key: "total",
+        accent: "#0ea5e9",
         labelKey: "stats.total",
         status: "All" as const,
         borderClass: "border-sky-400",
@@ -2341,6 +2344,7 @@ const Dashboard: React.FC = () => {
       },
       {
         key: "Draft",
+        accent: "#64748b",
         labelKey: "stats.draft",
         status: "Draft" as const,
         borderClass: "border-gray-500",
@@ -2349,6 +2353,7 @@ const Dashboard: React.FC = () => {
       },
       {
         key: "Processing",
+        accent: "#eab308",
         labelKey: "stats.processing",
         status: "Processing" as const,
         borderClass: "border-yellow-500",
@@ -2357,6 +2362,7 @@ const Dashboard: React.FC = () => {
       },
       {
         key: "Approved",
+        accent: "#22c55e",
         labelKey: "stats.approved",
         status: "Approved" as const,
         borderClass: "border-green-500",
@@ -2365,6 +2371,7 @@ const Dashboard: React.FC = () => {
       },
       {
         key: "Rejected",
+        accent: "#f97316",
         labelKey: "stats.rejected",
         status: "Rejected" as const,
         borderClass: "border-orange-500",
@@ -2373,6 +2380,7 @@ const Dashboard: React.FC = () => {
       },
       {
         key: "Terminated",
+        accent: "#ef4444",
         labelKey: "stats.terminated",
         status: "Terminated" as const,
         borderClass: "border-red-500",
@@ -2816,17 +2824,6 @@ const Dashboard: React.FC = () => {
     !serverStatCounts &&
     (serverStatCountsLoading || !newSearch.data || searchResultsLoading);
 
-  const renderStatCount = (value: number) =>
-    statCardsLoading ? (
-      <span
-        className="inline-block h-8 w-20 animate-pulse rounded-md bg-gray-200 align-middle"
-        aria-label={t("loading")}
-      >
-        <span className="sr-only">{t("loading")}</span>
-      </span>
-    ) : (
-      value.toLocaleString()
-    );
 
   // Adapter: populate legacy state from hook data so existing render code
   // (filter chain, dropdown options, etc.) continues to work unchanged.
@@ -3335,171 +3332,67 @@ const Dashboard: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 sm:mb-6 gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-              {t("title")}
-            </h1>
-            <p className="text-gray-600 text-sm sm:text-base">
-              {t("subtitle")}
-            </p>
+            <BlurText
+              as="h1"
+              text={t("title")}
+              className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900"
+            />
+            <AnimatedContent delay={0.15} distance={6}>
+              <p className="text-gray-500 text-sm sm:text-base">{t("subtitle")}</p>
+            </AnimatedContent>
           </div>
         </div>
 
         {/* Stats Bar - Optimized Responsive Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 mb-6">
-          {/* ——— Total Approvals (ย้ายมาไว้หน้า) ——— */}
           {totalCfg && (
-            <button
-              type="button"
+            <StatCard
+              index={0}
+              label={t(totalCfg.labelKey)}
+              value={statusCounts[totalCfg.key as keyof typeof statusCounts]}
+              accent={totalCfg.accent}
+              active={view === "ALL"}
+              loading={statCardsLoading}
+              loadingLabel={t("loading")}
               onClick={() => setView("ALL")}
-              aria-pressed={view === "ALL"}
-              className={[
-                "relative overflow-hidden bg-white p-4 rounded-lg shadow border-l-4",
-                "transform transition-all duration-300 cursor-pointer",
-                totalCfg.borderClass,
-                view === "ALL" ? "scale-[1.05]" : "",
-              ].join(" ")}
-              title={t(totalCfg.labelKey)}
-            >
-              <span
-                className={[
-                  "absolute inset-0 origin-left transition-transform duration-300 ease-out opacity-25",
-                  totalCfg.bgFlashClass,
-                  view === "ALL" ? "scale-x-100" : "scale-x-0",
-                ].join(" ")}
-              />
-              <div className="relative z-10">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">
-                  {t(totalCfg.labelKey)}
-                </h3>
-                <p
-                  className="text-2xl font-bold text-gray-800"
-                  aria-busy={statCardsLoading}
-                  aria-live="polite"
-                >
-                  {renderStatCount(
-                    statusCounts[totalCfg.key as keyof typeof statusCounts]
-                  )}
-                </p>
-              </div>
-            </button>
+            />
           )}
-
-          {/* ——— Approval Request (คงโค้ดเดิม) ——— */}
-          <button
-            type="button"
-            onClick={() =>
-              setView((v) => (v === "MY_APPROVAL" ? "ALL" : "MY_APPROVAL"))
-            }
+          <StatCard
+            index={1}
+            label={t("stats.approvalRequest") || "Approval Request"}
+            value={approvalRequestCount}
+            accent="#6366f1"
+            active={onlyMyApproval}
+            loading={statCardsLoading}
+            loadingLabel={t("loading")}
             disabled={!me}
-            aria-pressed={onlyMyApproval}
-            className={[
-              "relative overflow-hidden bg-white p-4 rounded-lg shadow border-l-4",
-              "transform transition-all duration-300 cursor-pointer",
-              "border-indigo-500",
-              onlyMyApproval ? "scale-[1.05]" : "",
-            ].join(" ")}
-            title={t("stats.approvalRequest") || "Approval Request"}
-          >
-            <span
-              className={[
-                "absolute inset-0 origin-left transition-transform duration-300 ease-out opacity-25",
-                "bg-indigo-500",
-                onlyMyApproval ? "scale-x-100" : "scale-x-0",
-              ].join(" ")}
-            />
-            <div className="relative z-10">
-              <h3 className="text-sm font-medium text-gray-500 mb-1">
-                {t("stats.approvalRequest") || "Approval Request"}
-              </h3>
-              <p
-                className="text-2xl font-bold text-gray-800"
-                aria-busy={statCardsLoading}
-                aria-live="polite"
-              >
-                {renderStatCount(approvalRequestCount)}
-              </p>
-            </div>
-          </button>
-
-          {/* ——— My Created Memos ——— */}
-          <button
-            type="button"
-            onClick={() =>
-              setView((v) => (v === "MY_CREATED" ? "ALL" : "MY_CREATED"))
-            }
+            onClick={() => setView((v) => (v === "MY_APPROVAL" ? "ALL" : "MY_APPROVAL"))}
+          />
+          <StatCard
+            index={2}
+            label={t("stats.myCreatedMemos") || "My Created Memos"}
+            value={myCreatedMemosCount}
+            accent="#a855f7"
+            active={onlyMyCreated}
+            loading={statCardsLoading}
+            loadingLabel={t("loading")}
             disabled={!me}
-            aria-pressed={onlyMyCreated}
-            className={[
-              "relative overflow-hidden bg-white p-4 rounded-lg shadow border-l-4",
-              "transform transition-all duration-300 cursor-pointer",
-              "border-purple-500",
-              onlyMyCreated ? "scale-[1.05]" : "",
-            ].join(" ")}
-            title={t("stats.myCreatedMemos") || "My Created Memos"}
-          >
-            <span
-              className={[
-                "absolute inset-0 origin-left transition-transform duration-300 ease-out opacity-25",
-                "bg-purple-500",
-                onlyMyCreated ? "scale-x-100" : "scale-x-0",
-              ].join(" ")}
-            />
-            <div className="relative z-10">
-              <h3 className="text-sm font-medium text-gray-500 mb-1">
-                {t("stats.myCreatedMemos") || "My Created Memos"}
-              </h3>
-              <p
-                className="text-2xl font-bold text-gray-800"
-                aria-busy={statCardsLoading}
-                aria-live="polite"
-              >
-                {renderStatCount(myCreatedMemosCount)}
-              </p>
-            </div>
-          </button>
-
-          {/* ——— การ์ดสถานะที่เหลือ ——— */}
-          {otherCfgs.map((config) => {
-            const isActive = view === (`STATUS:${config.status}` as View);
+            onClick={() => setView((v) => (v === "MY_CREATED" ? "ALL" : "MY_CREATED"))}
+          />
+          {otherCfgs.map((config, i) => {
+            const targetView = `STATUS:${config.status}` as View;
             return (
-              <button
+              <StatCard
                 key={config.key}
-                type="button"
-                onClick={() => {
-                  const targetView = `STATUS:${config.status}` as View;
-                  setView((prev) => prev === targetView ? "ALL" : targetView);
-                }}
-                aria-pressed={isActive}
-                className={[
-                  "relative overflow-hidden bg-white p-4 rounded-lg shadow border-l-4",
-                  "transform transition-all duration-300 cursor-pointer",
-                  config.borderClass,
-                  isActive ? "scale-[1.05]" : "",
-                ].join(" ")}
-                title={t(config.labelKey)}
-              >
-                <span
-                  className={[
-                    "absolute inset-0 origin-left transition-transform duration-300 ease-out opacity-25",
-                    config.bgFlashClass,
-                    isActive ? "scale-x-100" : "scale-x-0",
-                  ].join(" ")}
-                />
-                <div className="relative z-10">
-                  <h3 className="text-sm font-medium text-gray-500 mb-1">
-                    {t(config.labelKey)}
-                  </h3>
-                  <p
-                    className="text-2xl font-bold text-gray-800"
-                    aria-busy={statCardsLoading}
-                    aria-live="polite"
-                  >
-                    {renderStatCount(
-                      statusCounts[config.key as keyof typeof statusCounts]
-                    )}
-                  </p>
-                </div>
-              </button>
+                index={3 + i}
+                label={t(config.labelKey)}
+                value={statusCounts[config.key as keyof typeof statusCounts]}
+                accent={config.accent}
+                active={view === targetView}
+                loading={statCardsLoading}
+                loadingLabel={t("loading")}
+                onClick={() => setView((prev) => (prev === targetView ? "ALL" : targetView))}
+              />
             );
           })}
         </div>
@@ -3661,7 +3554,8 @@ const Dashboard: React.FC = () => {
               <div
                 key={memo.id}
                 onClick={() => navigate(`/memo/${memo.id}`)}
-                className="bg-white rounded-lg shadow border p-4 cursor-pointer hover:bg-gray-50 transition"
+                className="animate-rb-row-in bg-white rounded-card shadow-card border border-gray-100 p-4 cursor-pointer hover:shadow-card-hover transition-shadow"
+                style={{ animationDelay: `${Math.min(index, 12) * 28}ms` }}
               >
                 {/* หัวการ์ด: เลขลำดับ + เลขเอกสาร + สถานะ */}
                 <div className="flex justify-between items-center mb-2">
@@ -4227,7 +4121,11 @@ const Dashboard: React.FC = () => {
                     ))
                   ) : (
                     pagedMemos.map((memo, index) => (
-                    <tr key={memo.id}>
+                    <tr
+                      key={memo.id}
+                      className="animate-rb-row-in transition-colors hover:bg-brand-50/60"
+                      style={{ animationDelay: `${Math.min(index, 12) * 28}ms` }}
+                    >
                       {/* Order Number Cell */}
                       <td className="px-2 py-3 text-center align-middle">
                         <div className="inline-flex items-center justify-center w-8 h-8 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">

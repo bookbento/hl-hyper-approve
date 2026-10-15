@@ -1,5 +1,63 @@
 @import "tailwindcss";
 
+/* ── Design tokens (React Bits–style UI, prototype) ───────────────────────────
+   Brand green comes from the existing #183e33. Utilities: bg-brand-700,
+   text-brand-900, ease-spring, etc. Motion durations are kept short: approvers
+   click through dozens of memos a day. */
+@theme {
+  --color-brand-50: #eef7f3;
+  --color-brand-100: #d5ece2;
+  --color-brand-200: #a9d8c4;
+  --color-brand-300: #74bea0;
+  --color-brand-400: #3f9c7a;
+  --color-brand-500: #23805f;
+  --color-brand-600: #1a654c;
+  --color-brand-700: #183e33;
+  --color-brand-800: #12302a;
+  --color-brand-900: #0b1f1b;
+  --color-mint: #7ef0c2;
+
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --radius-card: 1rem;
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.04), 0 4px 16px -4px rgb(16 24 40 / 0.08);
+  --shadow-card-hover: 0 2px 4px rgb(16 24 40 / 0.06), 0 12px 32px -8px rgb(24 62 51 / 0.25);
+
+  --animate-rb-row-in: rb-row-in 0.42s var(--ease-out-expo) both;
+  --animate-rb-shine: rb-shine 3.2s linear infinite;
+  --animate-rb-float: rb-float 7s ease-in-out infinite;
+}
+
+@keyframes rb-row-in {
+  from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes rb-shine {
+  from { background-position: 150% 0; }
+  to { background-position: -50% 0; }
+}
+@keyframes rb-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+@keyframes rb-aurora-a {
+  0%, 100% { transform: translate(-10%, -10%) scale(1); }
+  50% { transform: translate(15%, 10%) scale(1.25); }
+}
+@keyframes rb-aurora-b {
+  0%, 100% { transform: translate(10%, 15%) scale(1.1); }
+  50% { transform: translate(-15%, -5%) scale(0.9); }
+}
+
+/* Only the decorative rb-* animations; loading spinners keep spinning.
+   framer-motion components check useReducedMotion() themselves. */
+@media (prefers-reduced-motion: reduce) {
+  [class*="animate-rb-"], .rb-aurora-blob {
+    animation: none !important;
+  }
+}
+
 @font-face {
   font-family: 'Allura';
   src: url('/fonts/Allura-Regular.ttf') format('truetype');
