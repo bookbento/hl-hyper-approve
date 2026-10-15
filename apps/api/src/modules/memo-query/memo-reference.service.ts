@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { MemoAccessService } from './memo-access.service';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 @Injectable()
 export class MemoReferenceNestService {
@@ -61,7 +62,7 @@ export class MemoReferenceNestService {
         createdAt: true,
         memoNumberRecord: { select: { memonumber: true } },
         statuses: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           take: 1,
           select: { status: { select: { name: true } } },
         },
@@ -109,7 +110,7 @@ export class MemoReferenceNestService {
             userId: true,
             memoNumberRecord: { select: { memonumber: true } },
             statuses: {
-              orderBy: { createdAt: 'desc' },
+              orderBy: LATEST_STATUS_ORDER,
               take: 1,
               select: { status: { select: { name: true } } },
             },
@@ -264,7 +265,7 @@ export class MemoReferenceNestService {
         userId: true,
         memoNumberRecord: { select: { memonumber: true } },
         statuses: {
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           take: 1,
           select: { status: { select: { name: true } } },
         },

@@ -25,6 +25,7 @@ import { MemoAccessService } from '../memo-query/memo-access.service';
 import { MemoSearchNestService } from '../memo-query/memo-search.service';
 import { MemoNotificationService } from '../memo-notification/memo-notification.service';
 import { STATUS, STATUS_CHANGED_KEY, setCurrentStatusTx } from './memo-status.helpers';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 @Injectable()
 export class MemoRecallService {
@@ -162,7 +163,7 @@ export class MemoRecallService {
       const result = await this.prisma.$transaction(async (tx) => {
         const prev = await tx.memoStatusPivot.findFirst({
           where: { memoId, userId: owner.userId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           select: { statusId: true },
         });
         const prevStatusId = prev?.statusId ?? 0;
@@ -250,7 +251,7 @@ export class MemoRecallService {
         });
         const cur = await tx.memoStatusPivot.findFirst({
           where: { memoId, userId: loaUserId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           select: { id: true },
         });
         if (cur) {
@@ -276,7 +277,7 @@ export class MemoRecallService {
   private async assertRecallable(memoId: number, userId: number, op: string) {
     const current = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       select: { statusId: true },
     });
     const currentStatusId = current?.statusId ?? 0;

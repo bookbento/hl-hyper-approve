@@ -3,6 +3,7 @@
  * Ported from backend memoStatus.controller / memoApproveAction / memoRecall.
  */
 import { Prisma } from '@prisma/client';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 /** MemoStatusPivot / Status ids (mirrors the DB seed). */
 export const STATUS = {
@@ -45,7 +46,7 @@ export async function setCurrentStatusTx(
 ) {
   const cur = await tx.memoStatusPivot.findFirst({
     where: { memoId, userId: actorUserId },
-    orderBy: { createdAt: 'desc' },
+    orderBy: LATEST_STATUS_ORDER,
     select: { id: true, statusId: true },
   });
 

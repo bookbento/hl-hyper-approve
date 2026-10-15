@@ -22,6 +22,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AdminLogService } from '../../common/admin-log/admin-log.service';
 import { JwtPayload } from '../../common/guards/jwt.guard';
 import { ApprovalSlotType, ApprovalRequirement, Prisma } from '@prisma/client';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 // ---------------------------------------------------------------------------
 // Types mirrored from Express
@@ -479,7 +480,7 @@ export class ApprovalLineService {
             user: { select: { id: true, name: true, lastname: true, nickname: true } },
             statuses: {
               take: 1,
-              orderBy: { createdAt: 'desc' },
+              orderBy: LATEST_STATUS_ORDER,
               select: { status: { select: { name: true } } },
             },
           },
@@ -566,7 +567,7 @@ export class ApprovalLineService {
                 user: { select: { id: true, name: true, lastname: true, nickname: true } },
                 statuses: {
                   take: 1,
-                  orderBy: { createdAt: 'desc' },
+                  orderBy: LATEST_STATUS_ORDER,
                   select: { status: { select: { name: true } } },
                 },
               },

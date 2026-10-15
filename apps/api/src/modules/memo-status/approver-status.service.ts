@@ -12,6 +12,7 @@ import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/com
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { toDisplayName } from '../memo-query/search/display-name';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 const SNAPSHOT_SELECT = {
   memoId: true,
@@ -86,7 +87,7 @@ export class ApproverStatusService {
         id: true,
         userId: true,
         approvalLineId: true,
-        statuses: { include: { status: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+        statuses: { include: { status: true }, orderBy: LATEST_STATUS_ORDER, take: 1 },
       },
     });
     return memos.filter((m) => {

@@ -20,6 +20,7 @@ import { ActionType } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { PDFDocument } from 'pdf-lib';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 // Resolve uploads dir — mirrors Express UPLOADS_DIR
 const UPLOADS_DIR = process.env['UPLOADS_DIR'] ?? path.join(process.cwd(), '..', '..', 'uploads');
@@ -173,7 +174,7 @@ export class MemoQueryService {
         memoType: { select: { name: true } },
         statuses: {
           include: { status: true },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           take: 1,
         },
         approverActions: {
@@ -437,7 +438,7 @@ export class MemoQueryService {
             status: { select: { id: true, name: true } },
             user: { select: { id: true, name: true, lastname: true, nickname: true } },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
         },
         history: {
           orderBy: [{ timestamp: 'asc' }, { id: 'asc' }],
@@ -628,7 +629,7 @@ export class MemoQueryService {
     const memoIds = result.map((r) => r.id);
     const statuses = await this.prisma.memoStatusPivot.findMany({
       where: { memoId: { in: memoIds } },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       distinct: ['memoId'],
       include: { status: { select: { id: true, name: true } } },
     });
@@ -662,7 +663,7 @@ export class MemoQueryService {
         userId: true,
         statuses: {
           include: { status: true },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           take: 1,
         },
       },

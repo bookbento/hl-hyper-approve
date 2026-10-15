@@ -26,6 +26,7 @@ import {
   buildExtraHtml,
   buildExtraPlain,
 } from './extra-approval.templates';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 type NameBits = { name?: string | null; lastname?: string | null; nickname?: string | null };
 
@@ -470,7 +471,7 @@ export class ExtraApprovalService {
       });
       const ownerPivot = await this.prisma.memoStatusPivot.findFirst({
         where: { memoId, userId: ownerId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: LATEST_STATUS_ORDER,
         select: { id: true },
       });
       if (ownerPivot) {
@@ -608,7 +609,7 @@ export class ExtraApprovalService {
       select: {
         id: true,
         userId: true,
-        statuses: { include: { status: true }, orderBy: { createdAt: 'desc' }, take: 1 },
+        statuses: { include: { status: true }, orderBy: LATEST_STATUS_ORDER, take: 1 },
       },
     });
     const allowedIds = visibleMemos
@@ -980,7 +981,7 @@ export class ExtraApprovalService {
   private async assertProcessing(memoId: number, actorId: number, op: string): Promise<void> {
     const current = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       select: { statusId: true },
     });
     const currentStatusId = current?.statusId ?? 0;

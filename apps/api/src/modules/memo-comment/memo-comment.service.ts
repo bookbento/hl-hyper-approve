@@ -36,6 +36,7 @@ import {
   buildDeleteCommentPlain,
   buildDeleteCommentSubject,
 } from './comment-email.templates';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 // Draft (1) / Recalled (6): comments are recorded but nobody is notified.
 const SILENT_STATUS_IDS = new Set([1, 6]);
@@ -189,7 +190,7 @@ export class MemoCommentService {
       // 1) latest status decides whether anyone gets notified
       const latestPivot = await this.prisma.memoStatusPivot.findFirst({
         where: { memoId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: LATEST_STATUS_ORDER,
         include: { status: { select: { id: true, name: true } } },
       });
       const currentStatusId = latestPivot?.status?.id ?? null;

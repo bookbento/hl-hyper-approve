@@ -27,6 +27,7 @@ import {
   resolveSafeUploadPath,
   coerceToRelative,
 } from '../../common/upload/upload.config';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 export interface ServeResult {
   absPath: string;
@@ -270,7 +271,7 @@ export class FileServingService {
     const DRAFT_STATUS_IDS = [1];
     const last = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       select: { statusId: true },
     });
     return !last || DRAFT_STATUS_IDS.includes(last.statusId);

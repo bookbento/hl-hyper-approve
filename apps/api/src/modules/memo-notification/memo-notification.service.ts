@@ -796,7 +796,7 @@ export class MemoNotificationService {
     const latestVer = await this.getLatestVersion(memoId);
     const rows = await this.prisma.memoApproverAction.findMany({
       where: { memoId, version: latestVer },
-      orderBy: [{ loaUser: { level: 'asc' } }],
+      orderBy: [{ loaUser: { level: 'asc' } }, { loaUserId: 'asc' }],
       distinct: ['loaUserId'],
       select: {
         loaUser: {
@@ -926,7 +926,7 @@ export class MemoNotificationService {
   async getApproverLineStatus(memoId: number, ver?: number): Promise<ApproverStatus[]> {
     const actions = await this.prisma.memoApproverAction.findMany({
       where: ver !== undefined ? { memoId, version: ver } : { memoId },
-      orderBy: [{ loaUser: { level: 'asc' } }, { version: 'desc' }],
+      orderBy: [{ loaUser: { level: 'asc' } }, { version: 'desc' }, { loaUserId: 'asc' }],
       distinct: ['loaUserId'],
       select: {
         status: { select: { code: true } },

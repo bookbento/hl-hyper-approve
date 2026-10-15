@@ -19,6 +19,7 @@ import { EmailPreferenceService } from '../../common/mail/email-preference.servi
 import { MemoSearchNestService } from '../memo-query/memo-search.service';
 import { daysLeftTH, getExpiryStateTH, ymdTH } from './memo-expiry.time';
 import { buildExpiryHtml, buildExpiryPlain, inDaysPhrase } from './memo-expiry.templates';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 // Latest status ids/names that mean "finished" — never flipped to Expired.
 const FINAL_STATUS_IDS = [3, 7, 9]; // Approved, Terminated, Deleted
@@ -168,7 +169,7 @@ export class MemoExpiryService {
     return this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
       include: { status: true },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
     });
   }
 

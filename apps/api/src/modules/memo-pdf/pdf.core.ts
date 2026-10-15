@@ -20,6 +20,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { prisma } from '@hl/database';
 import { UPLOADS_DIR } from '../../common/upload/upload.config';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const fontkit = require('fontkit');
 // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -625,7 +626,7 @@ export async function renderPdfWithSignatures(options: RenderOptions): Promise<P
   /* ===== 5) Recall ล่าสุด ===== */
   const lastRecall = await prisma.memoStatusPivot.findFirst({
     where: { memoId, statusId: { in: [6] } },
-    orderBy: { createdAt: 'desc' },
+    orderBy: LATEST_STATUS_ORDER,
     select: { createdAt: true },
   });
   const recalledAt = lastRecall?.createdAt ?? null;

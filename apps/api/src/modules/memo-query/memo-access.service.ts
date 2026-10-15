@@ -11,6 +11,7 @@
  */
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 @Injectable()
 export class MemoAccessService {
@@ -46,7 +47,7 @@ export class MemoAccessService {
 
     const latestStatus = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       include: { status: { select: { name: true } } },
     });
     if ((latestStatus?.status?.name || '').toLowerCase() === 'draft') {
@@ -110,7 +111,7 @@ export class MemoAccessService {
 
     const latestStatus = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       include: { status: { select: { name: true } } },
     });
     if ((latestStatus?.status?.name || '').toLowerCase() === 'draft') {

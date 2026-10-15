@@ -29,6 +29,7 @@ import * as fs from 'fs';
 import { ActionType, ExtraStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UPLOADS_DIR, decodeFilename, toPublicUploadPath } from '../../common/upload/upload.config';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 // ── Type aliases ─────────────────────────────────────────────────────────────
 
@@ -675,7 +676,7 @@ export class MemoLifecycleService {
     // Check status: Allow update only if Draft(1), Rejected(4), Recalled(6)
     const currentStatus = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId: id },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       select: { statusId: true },
     });
     const currentStatusId = currentStatus?.statusId ?? 0;
@@ -1284,7 +1285,7 @@ export class MemoLifecycleService {
     const latestPivot = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
       include: { status: { select: { name: true } } },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
     });
     const latestStatusName = (latestPivot?.status?.name ?? '').toLowerCase();
     if (!['processing', 'expired', 'draft'].includes(latestStatusName)) {

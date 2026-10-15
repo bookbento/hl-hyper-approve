@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../../prisma/prisma.service';
 import { JwtPayload } from '../../common/guards/jwt.guard';
 import { ReplaceCcDto } from './dto/replace-cc.dto';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 /**
  * MemoCcService
@@ -200,7 +201,7 @@ export class MemoCcService {
         memoType: { select: { id: true, name: true } },
         statuses: {
           include: { status: true },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           take: 1,
         },
       },

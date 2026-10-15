@@ -35,6 +35,7 @@ import {
   TERMINATE_CHANGED_KEY,
   setCurrentStatusTx,
 } from './memo-status.helpers';
+import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 const ACTION_TYPE_BY_CODE: Record<string, ActionType> = {
   approved: ActionType.APPROVE,
@@ -255,7 +256,7 @@ export class MemoStatusService {
       (
         await this.prisma.memoStatusPivot.findFirst({
           where: { memoId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           select: { statusId: true },
         })
       )?.statusId ?? 0;
@@ -379,7 +380,7 @@ export class MemoStatusService {
       case STATUS.DRAFT: {
         const prevStatus = await this.prisma.memoStatusPivot.findFirst({
           where: { memoId, userId },
-          orderBy: { createdAt: 'desc' },
+          orderBy: LATEST_STATUS_ORDER,
           select: { statusId: true },
         });
         await this.setStatus(memoId, ownerId, STATUS.DRAFT);
@@ -443,7 +444,7 @@ export class MemoStatusService {
   ): Promise<[number, { message: string }]> {
     const latest = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       select: { statusId: true },
     });
     if (latest?.statusId !== STATUS.PROCESSING) {
@@ -631,7 +632,7 @@ export class MemoStatusService {
   private async assertProcessing(memoId: number, actorId: number, code: string, op: string) {
     const current = await this.prisma.memoStatusPivot.findFirst({
       where: { memoId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: LATEST_STATUS_ORDER,
       include: { status: { select: { id: true, name: true } } },
     });
     const currentStatusId = current?.status?.id ?? null;
