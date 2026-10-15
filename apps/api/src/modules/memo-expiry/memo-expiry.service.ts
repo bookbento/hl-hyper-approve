@@ -53,10 +53,7 @@ export class MemoExpiryService {
   }
 
   async sweepOnce(now = new Date()): Promise<void> {
-    const memos = await this.prisma.masterMemo.findMany({
-      where: { expiresAt: { not: null } },
-      select: { id: true, userId: true, subject: true, memonumber: true, expiresAt: true },
-    });
+    const memos = await this.candidates(now);
 
     let ids: SweepIds | null = null;
     for (const m of memos) {
@@ -122,8 +119,9 @@ export class MemoExpiryService {
     await this.markExpiredStatus(m.id, m.userId, ids.expired);
     if (!wasProcessing) return;
 
-    // No "[expiry:expired]" row is ever written (the Expired history row above
-    // is the record), so in practice the Expired pivot is what stops repeats.
+    // Normally the Expired pivot stops repeats (the memo is no longer Processing).
+    // Without an "Expired" Status row nothing changes the status, and Express
+    // re-sent the expired email every minute — hence the marker written below.
     if (await this.wasNotified(m.id, 'expired', expiresAt)) return;
 
     const toIds = await this.recipients(m.id, ids, true);
@@ -145,10 +143,61 @@ export class MemoExpiryService {
       `Memo "${m.subject || `#${m.id}`}" has expired.`,
       'status-expired',
     );
-    if (sent > 0 || noti > 0) this.logger.log(`Notified for memo ${m.id} (expired)`);
+    if (sent > 0 || noti > 0) {
+      // wasNotified('expired') only counts markers newer than expiresAt, so a
+      // renewed memo that expires again is notified again.
+      await this.markNotified(m.id, m.userId, 'expired', 'Notification: memo has expired');
+      this.logger.log(`Notified for memo ${m.id} (expired)`);
+    }
   }
 
   // ── DB helpers ────────────────────────────────────────────────────────────
+
+  /**
+   * Memos the sweep could act on. Express loaded every memo with an expiresAt
+   * each minute (thousands on real data, ~25s per sweep); this drops, in SQL,
+   * the ones the handlers would skip anyway:
+   *   - expiring more than 5 days out (the "3d" window is at most 3 Thai days + the time of day)
+   *   - latest status final (Approved/Terminated/Deleted) or already Expired —
+   *     isProcessing() is false and markExpiredStatus() returns early for them
+   *   - expired and already notified (an "[expiry:expired]" marker newer than
+   *     expiresAt). Matters when there is no "Expired" status: those memos stay
+   *     Processing forever and would otherwise be re-checked every minute.
+   */
+  private candidates(now: Date): Promise<SweepMemo[]> {
+    const horizon = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000);
+    return this.prisma.$queryRaw<SweepMemo[]>`
+      SELECT m."id", m."userId", m."subject", m."memonumber", m."expiresAt"
+      FROM "MasterMemo" m
+      LEFT JOIN LATERAL (
+        SELECT p."statusId", s."name"
+        FROM "MemoStatusPivot" p
+        JOIN "Status" s ON s."id" = p."statusId"
+        WHERE p."memoId" = m."id"
+        ORDER BY p."createdAt" DESC, p."id" DESC
+        LIMIT 1
+      ) latest ON TRUE
+      WHERE m."expiresAt" IS NOT NULL
+        AND m."expiresAt" <= ${horizon}
+        AND (
+          latest."statusId" IS NULL
+          OR (
+            latest."statusId" <> ALL(${FINAL_STATUS_IDS})
+            AND lower(latest."name") <> ALL(${[...FINAL_STATUS_NAMES, 'expired']})
+          )
+        )
+        AND NOT (
+          m."expiresAt" <= ${now}
+          AND EXISTS (
+            SELECT 1 FROM "MemoHistory" h
+            WHERE h."memoId" = m."id"
+              AND h."action" LIKE '%[expiry:expired]%'
+              AND h."timestamp" >= m."expiresAt"
+          )
+        )
+      ORDER BY m."id"
+    `;
+  }
 
   private async lookupIds(): Promise<SweepIds> {
     const [waiting, expired] = await Promise.all([

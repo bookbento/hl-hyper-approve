@@ -263,6 +263,9 @@ model MemoHistory {
   memo       MasterMemo  @relation("MemoToHistory", fields: [memoId], references: [id])
   status     Status?     @relation(fields: [statusId], references: [id])
   user       User        @relation(fields: [userId], references: [id])
+
+  // history tab + expiry-sweep marker lookups filter by memoId (no FK index otherwise)
+  @@index([memoId])
 }
 
 model User {

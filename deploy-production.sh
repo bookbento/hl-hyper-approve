@@ -22,8 +22,8 @@
 # and lists everything missing otherwise.
 #
 # Migrations: the DB used to be managed with `prisma db push`. On the first run the
-# script compares the live DB with schema.prisma; if the only difference is the
-# MemoStatusPivot latest-status index it marks 0_init as applied and runs
+# script compares the live DB with schema.prisma; if the only differences are the
+# indexes added by later migrations (MemoStatusPivot latest-status, MemoHistory.memoId) it marks 0_init as applied and runs
 # `migrate deploy`. Any other difference stops the deploy and prints the SQL.
 #
 # Rollback
@@ -174,12 +174,12 @@ if ! has_baseline; then
   echo "No baseline yet (DB was managed with db push) — checking drift against schema.prisma…"
   DRIFT_SQL="$($PRISMA migrate diff \
     --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script)"
-  # Everything except comments, blank lines and the B1 index that the next migration adds.
+  # Everything except comments, blank lines and the indexes that the later migrations add.
   UNEXPECTED="$(echo "$DRIFT_SQL" | grep -v '^--' | grep -v '^[[:space:]]*$' \
-    | grep -v 'MemoStatusPivot_memoId_createdAt_id_idx' || true)"
+    | grep -v -E 'MemoStatusPivot_memoId_createdAt_id_idx|MemoHistory_memoId_idx' || true)"
   if [ -n "$UNEXPECTED" ]; then
     echo "$DRIFT_SQL"
-    die "Live DB differs from schema.prisma beyond the expected index. Review the SQL above, fix the DB, then re-run."
+    die "Live DB differs from schema.prisma beyond the expected indexes. Review the SQL above, fix the DB, then re-run."
   fi
   $PRISMA migrate resolve --applied 0_init
   echo "✅ Baselined 0_init"

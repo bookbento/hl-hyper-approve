@@ -7,7 +7,8 @@ const WAITING = 1;
 
 function makePrisma() {
   const p: any = {
-    masterMemo: { findMany: jest.fn(), findUnique: jest.fn().mockResolvedValue({ userId: 1 }) },
+    masterMemo: { findUnique: jest.fn().mockResolvedValue({ userId: 1 }) },
+    $queryRaw: jest.fn(),
     memoStatusPivot: {
       // latest-status lookups; the (memo, user, Expired) existence check inside the tx finds nothing
       findFirst: jest.fn(({ where }: any) =>
@@ -68,7 +69,7 @@ describe('MemoExpiryService', () => {
   });
 
   it('does nothing (and skips status lookups) when no memo is due', async () => {
-    prisma.masterMemo.findMany.mockResolvedValue([memo(th('2026-12-01T10:00:00'))]);
+    prisma.$queryRaw.mockResolvedValue([memo(th('2026-12-01T10:00:00'))]);
     await service.sweepOnce(th('2026-10-15T10:00:00'));
     expect(prisma.status.findFirst).not.toHaveBeenCalled();
     expect(mail.sendEmail).not.toHaveBeenCalled();
@@ -76,7 +77,7 @@ describe('MemoExpiryService', () => {
 
   describe('3-day reminder', () => {
     const now = th('2026-10-18T10:00:00');
-    beforeEach(() => prisma.masterMemo.findMany.mockResolvedValue([memo(th('2026-10-20T10:00:00'))]));
+    beforeEach(() => prisma.$queryRaw.mockResolvedValue([memo(th('2026-10-20T10:00:00'))]));
 
     it('emails owner + lowest waiting level, notifies and records the daily key', async () => {
       await service.sweepOnce(now);
@@ -143,7 +144,7 @@ describe('MemoExpiryService', () => {
 
   describe('expired', () => {
     const now = th('2026-10-20T10:05:00');
-    beforeEach(() => prisma.masterMemo.findMany.mockResolvedValue([memo(th('2026-10-20T10:00:00'))]));
+    beforeEach(() => prisma.$queryRaw.mockResolvedValue([memo(th('2026-10-20T10:00:00'))]));
 
     it('adds the Expired pivot + history, then emails owner, approvers and CC', async () => {
       await service.sweepOnce(now);
@@ -158,8 +159,29 @@ describe('MemoExpiryService', () => {
       expect(sentTo()).toEqual(['u1@x.test', 'u20@x.test', 'u21@x.test', 'u40@x.test']);
       expect(mail.sendEmail.mock.calls[0][1]).toBe('[Memo Expired] MN-1');
       expect(prefs.filterUsersForEmail).toHaveBeenCalledWith([1, 20, 21, 40], 'status-expired');
-      // no "[expiry:expired]" marker is written
-      expect(prisma.memoHistory.create).toHaveBeenCalledTimes(1);
+      expect(prisma.memoHistory.create).toHaveBeenCalledTimes(2);
+      expect(prisma.memoHistory.create).toHaveBeenLastCalledWith({
+        data: expect.objectContaining({ action: '[expiry:expired] Notification: memo has expired' }),
+      });
+    });
+
+    it('without an "Expired" status, notifies once instead of every minute', async () => {
+      prisma.status.findFirst.mockResolvedValue(null);
+      await service.sweepOnce(now);
+      expect(mail.sendEmail).toHaveBeenCalled();
+      expect(prisma.memoStatusPivot.create).not.toHaveBeenCalled();
+
+      // next tick sees the marker (newer than expiresAt) and stays quiet
+      mail.sendEmail.mockClear();
+      prisma.memoHistory.findFirst.mockResolvedValue({ id: 1, timestamp: new Date(now) });
+      await service.sweepOnce(new Date(now.getTime() + 60000));
+      expect(mail.sendEmail).not.toHaveBeenCalled();
+    });
+
+    it('notifies again after a renewal (marker older than the new expiresAt)', async () => {
+      prisma.memoHistory.findFirst.mockResolvedValue({ id: 1, timestamp: th('2026-10-01T00:00:00') });
+      await service.sweepOnce(now);
+      expect(mail.sendEmail).toHaveBeenCalled();
     });
 
     it('expires a non-Processing memo silently', async () => {
@@ -202,7 +224,7 @@ describe('MemoExpiryService', () => {
   });
 
   it('keeps going when one memo throws', async () => {
-    prisma.masterMemo.findMany.mockResolvedValue([
+    prisma.$queryRaw.mockResolvedValue([
       memo(th('2026-10-20T10:00:00'), { id: 1 }),
       memo(th('2026-10-20T10:00:00'), { id: 2 }),
     ]);
