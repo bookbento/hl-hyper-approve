@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
 import { api, BASE_URL } from "../../lib/api";
+import { getUserBasicInfo } from "../../lib/userBasicInfo";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiAlertTriangle } from "react-icons/fi";
 import { SlArrowDown } from "react-icons/sl";
@@ -782,13 +783,7 @@ const useUserDisplayName = (
     let cancelled = false;
     (async () => {
       try {
-        const { data } = await api.get(`/api/users/basic-info`, {
-          params: { ids: id },
-          withCredentials: true,
-        });
-        const u = Array.isArray(data)
-          ? data.find((x: any) => x.id === id)
-          : data;
+        const u = await getUserBasicInfo(id);
         const s = formatFullName(u) || (seed?.name ?? "");
         if (!cancelled) {
           cacheRef.current.set(id, s);

@@ -2,6 +2,7 @@
 import axios from "axios";
 import type { AxiosError, AxiosResponse } from "axios";
 import { broadcastMemoDashboardRefresh } from "./memoDashboardEvents";
+import { installHttpCache } from "./httpCache";
 
 export const BASE_URL =
   import.meta.env.VITE_BACKEND_API_URL ||
@@ -11,6 +12,10 @@ export const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
 });
+
+// /api/me, business units, departments, basic-info: de-duplicated + briefly cached
+installHttpCache(axios);
+installHttpCache(api);
 
 export function isAuthError(err: unknown): boolean {
   const axErr = err as AxiosError | undefined;

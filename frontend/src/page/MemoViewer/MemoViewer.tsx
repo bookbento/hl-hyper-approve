@@ -1027,27 +1027,12 @@ export default function MemoViewer() {
             ? memoData.attachedFiles.length
             : 0,
         );
-        // 2) ตั้ง URL PDF — pre-check ก่อนส่งให้ react-pdf
+        // 2) ตั้ง URL PDF — react-pdf โหลดเองครั้งเดียว (404 → onLoadError ตั้ง pdfMissing)
+        // เดิมยิง HEAD เช็กก่อน แต่ server สร้าง PDF ทั้งไฟล์ให้ HEAD ด้วย = สร้างสองรอบ
         if (refreshPdf) {
           const ver = memoRes.data?.mainFiles?.[0]?.id ?? 0;
-          const url = makePdfUrl(id!, ver);
           setPdfMissing(false);
-          try {
-            const resp = await fetch(url, {
-              credentials: "include",
-              method: "HEAD",
-            });
-            if (resp.ok) {
-              setPdfUrl(url);
-            } else if (resp.status === 404) {
-              setPdfMissing(true);
-              setPdfLoading(false);
-            } else {
-              setPdfUrl(url); // let react-pdf handle other errors
-            }
-          } catch {
-            setPdfUrl(url); // network error — let react-pdf handle it
-          }
+          setPdfUrl(makePdfUrl(id!, ver));
         }
       } catch (err: any) {
         if (mountedRef.current) {
@@ -2460,6 +2445,9 @@ export default function MemoViewer() {
                     onLoadError={(e) => {
                       setPdfLoading(false);
                       setPdfMissing(true);
+                      // 404 = no PDF: the "missing" panel says so already (as with the old HEAD check)
+                      const status = (e as { status?: number } | undefined)?.status;
+                      if (status === 404) return;
                       toast.error(
                         t("error.pdfMissing", "ไม่พบไฟล์ PDF") +
                           " / " +
