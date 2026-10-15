@@ -90,7 +90,10 @@ describe('MemoCommentService', () => {
       await expect(service.addComment({ ...base, files: [file] })).rejects.toBeInstanceOf(ForbiddenException);
       expect(mockAccess.canViewMemo).toHaveBeenCalledWith(2, 9);
       expect(mockPrisma.comment.create).not.toHaveBeenCalled();
-      await new Promise((r) => setTimeout(r, 50));
+      // The unlink is fire-and-forget; poll instead of a fixed 50ms (flaky under load).
+      for (let i = 0; i < 100 && require('fs').existsSync(tmp); i++) {
+        await new Promise((r) => setTimeout(r, 20));
+      }
       expect(require('fs').existsSync(tmp)).toBe(false);
     });
 
