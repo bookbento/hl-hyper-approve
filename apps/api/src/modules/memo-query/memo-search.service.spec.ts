@@ -28,7 +28,7 @@ const mockPrisma = {
 // SQL fingerprints (unique substrings of each raw query)
 const HIDDEN = `"statusName" = 'Deleted'`;
 const BY_STATUS = `WHERE "statusName" = ANY(`;
-const CURRENT_APPROVER = `WHERE wr."userId" = ANY(`;
+const CURRENT_APPROVER = `AND "userId" = ANY(`;
 const LATEST_ACTION = 'latest_main AS';
 const STATUS_COUNTS = `COUNT(*)::int AS count`;
 

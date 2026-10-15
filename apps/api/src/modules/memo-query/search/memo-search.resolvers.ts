@@ -72,52 +72,49 @@ export async function resolveMemoIdsByCurrentApprover(
   userIds: number[],
 ): Promise<number[]> {
   if (!userIds.length) return [];
+  // Window functions instead of CTE self-joins: Postgres estimated those CTEs
+  // at ~1 row (really ~25k on 19k memos) and re-ran the min-level aggregate per
+  // waiting row in a nested loop — 1.9s per call. Same result, one pass, ~70ms
+  // (checked against the old query for every user on the demo data).
   const rows = await db.$queryRaw<{ memoId: number }[]>`
-    WITH latest_version AS (
-      SELECT "memoId", MAX("version") AS v
-      FROM "MemoApproverAction"
-      GROUP BY "memoId"
-    ),
-    latest_rows AS (
+    WITH rows_all AS (
       SELECT
         a."memoId" AS "memoId",
+        a."version" AS "version",
         lou."level" AS "level",
         lou."userId" AS "userId",
         lou."approvalRequirement" AS "approvalRequirement",
-        s."code" AS "code"
+        s."code" AS "code",
+        MAX(a."version") OVER (PARTITION BY a."memoId") AS "latestVersion"
       FROM "MemoApproverAction" a
-      JOIN latest_version lv
-        ON a."memoId" = lv."memoId" AND a."version" = lv.v
       JOIN "ApprovalActionStatus" s ON a."statusId" = s."id"
       JOIN "LineOfApprovalUserPivotForUse" lou ON a."loaUserId" = lou."id"
     ),
-    level_state AS (
+    level_rows AS (
       SELECT
         "memoId",
         "level",
-        BOOL_OR("approvalRequirement" = 'ANY') AS "isAny",
-        BOOL_OR("code" = 'approved') AS "hasApproved"
-      FROM latest_rows
-      GROUP BY "memoId", "level"
+        "userId",
+        "code",
+        BOOL_OR("approvalRequirement" = 'ANY') OVER (PARTITION BY "memoId", "level") AS "isAny",
+        BOOL_OR("code" = 'approved') OVER (PARTITION BY "memoId", "level") AS "hasApproved"
+      FROM rows_all
+      WHERE "version" = "latestVersion"
     ),
     waiting_rows AS (
-      SELECT lr."memoId", lr."level", lr."userId"
-      FROM latest_rows lr
-      JOIN level_state ls
-        ON lr."memoId" = ls."memoId" AND lr."level" = ls."level"
-      WHERE lr."code" = 'waiting'
-        AND NOT (ls."isAny" AND ls."hasApproved")
-    ),
-    min_level AS (
-      SELECT "memoId", MIN("level") AS "minLevel"
-      FROM waiting_rows
-      GROUP BY "memoId"
+      SELECT
+        "memoId",
+        "level",
+        "userId",
+        MIN("level") OVER (PARTITION BY "memoId") AS "minLevel"
+      FROM level_rows
+      WHERE "code" = 'waiting'
+        AND NOT ("isAny" AND "hasApproved")
     )
-    SELECT DISTINCT wr."memoId"
-    FROM waiting_rows wr
-    JOIN min_level ml
-      ON wr."memoId" = ml."memoId" AND wr."level" = ml."minLevel"
-    WHERE wr."userId" = ANY(${userIds})
+    SELECT DISTINCT "memoId"
+    FROM waiting_rows
+    WHERE "level" = "minLevel"
+      AND "userId" = ANY(${userIds})
   `;
   return rows.map((r) => r.memoId);
 }

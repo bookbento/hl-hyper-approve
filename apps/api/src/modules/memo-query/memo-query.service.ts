@@ -577,43 +577,30 @@ export class MemoQueryService {
 
     const result: { id: number; subject: string; createdBy: string; latestStatus: string }[] = [];
 
+    // It is my turn when every action at a lower level in the same version is
+    // approved. Load those actions once for all memos (was 1–3 queries per
+    // waiting memo, run one after another: ~1.5s on the demo data).
+    const sameVersionActions = myWaitingActions.length
+      ? await this.prisma.memoApproverAction.findMany({
+          where: { memoId: { in: myWaitingActions.map((a) => a.memoId) } },
+          select: { memoId: true, version: true, statusId: true, loaUser: { select: { level: true } } },
+        })
+      : [];
+    const actionsByMemoVersion = new Map<string, typeof sameVersionActions>();
+    for (const a of sameVersionActions) {
+      const key = `${a.memoId}:${a.version}`;
+      const list = actionsByMemoVersion.get(key) ?? [];
+      list.push(a);
+      actionsByMemoVersion.set(key, list);
+    }
+
     for (const action of myWaitingActions) {
       const { memoId, version, loaUser } = action;
-      const myLevel = loaUser.level;
+      const prev = (actionsByMemoVersion.get(`${memoId}:${version}`) ?? []).filter(
+        (a) => a.loaUser.level < loaUser.level,
+      );
 
-      const prevActions = await this.prisma.memoApproverAction.findMany({
-        where: { memoId, version, loaUser: { level: { lt: myLevel } } },
-        select: { loaUserId: true },
-      });
-
-      const prevIds = prevActions.map((a) => a.loaUserId);
-      if (prevIds.length === 0) {
-        result.push({
-          id: memoId,
-          subject: action.memo.subject,
-          createdBy: action.memo.user.name,
-          latestStatus: 'Processing',
-        });
-        continue;
-      }
-
-      const latestVersions = await this.prisma.memoApproverAction.groupBy({
-        by: ['loaUserId'],
-        where: { memoId, version, loaUserId: { in: prevIds } },
-        _max: { id: true },
-      });
-      const prevLatest = await this.prisma.memoApproverAction.findMany({
-        where: {
-          memoId,
-          version,
-          OR: latestVersions.map((v) => ({ loaUserId: v.loaUserId })),
-        },
-        select: { statusId: true },
-      });
-
-      const allPrevApproved =
-        prevLatest.length === prevIds.length &&
-        prevLatest.every((a) => a.statusId === approvedStatus);
+      const allPrevApproved = prev.every((a) => a.statusId === approvedStatus);
       if (allPrevApproved) {
         result.push({
           id: memoId,
@@ -676,30 +663,30 @@ export class MemoQueryService {
 
     if (!visibleMemoIds.length) return [];
 
-    const latestVersions = await this.prisma.memoApproverAction.groupBy({
-      by: ['memoId'],
+    // Actions of each memo's latest version. One plain query + filtering here:
+    // the previous OR over thousands of (memoId, version) pairs made a huge SQL
+    // statement that took most of the ~0.9s.
+    const allActions = await this.prisma.memoApproverAction.findMany({
       where: { memoId: { in: visibleMemoIds } },
-      _max: { version: true },
-    });
-
-    const pairs = latestVersions.map((v) => ({
-      memoId: v.memoId,
-      version: v._max.version ?? 1,
-    }));
-
-    const latestActions = await this.prisma.memoApproverAction.findMany({
-      where: { OR: pairs.map((p) => ({ memoId: p.memoId, version: p.version })) },
-      include: {
+      select: {
+        memoId: true,
+        version: true,
         loaUser: {
-          include: {
+          select: {
             user: {
               select: { id: true, name: true, lastname: true, nickname: true },
             },
           },
         },
       },
-      orderBy: [{ loaUser: { user: { name: 'asc' } } }],
     });
+    const latestVersion = new Map<number, number>();
+    for (const a of allActions) {
+      latestVersion.set(a.memoId, Math.max(latestVersion.get(a.memoId) ?? a.version, a.version));
+    }
+    const latestActions = allActions
+      .filter((a) => a.version === latestVersion.get(a.memoId))
+      .sort((a, b) => (a.loaUser?.user?.name ?? '').localeCompare(b.loaUser?.user?.name ?? ''));
 
     const latestExtraLines = await this.prisma.extraApprovalLine.groupBy({
       by: ['memoId'],

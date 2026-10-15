@@ -146,46 +146,43 @@ export async function computeFacets(db: PrismaService, userId: number): Promise<
     await Promise.all([
       // currentApprovers: distinct users who are CURRENTLY waiting at the
       // lowest waiting level of the latest version
+      // Window functions, not CTE self-joins — same reason as
+      // resolveMemoIdsByCurrentApprover (row misestimate → nested loop, ~1.4s).
       db.$queryRaw<FacetUserRow[]>`
-        WITH latest_version AS (
-          SELECT "memoId", MAX("version") AS v
-          FROM "MemoApproverAction"
-          WHERE "memoId" = ANY(${visibleIds})
-          GROUP BY "memoId"
-        ),
-        latest_rows AS (
+        WITH rows_all AS (
           SELECT
             a."memoId" AS "memoId",
+            a."version" AS "version",
             lou."level" AS "level",
             lou."userId" AS "userId",
             lou."approvalRequirement" AS "approvalRequirement",
-            s."code" AS "code"
+            s."code" AS "code",
+            MAX(a."version") OVER (PARTITION BY a."memoId") AS "latestVersion"
           FROM "MemoApproverAction" a
-          JOIN latest_version lv
-            ON a."memoId" = lv."memoId" AND a."version" = lv.v
           JOIN "ApprovalActionStatus" s ON a."statusId" = s."id"
           JOIN "LineOfApprovalUserPivotForUse" lou ON a."loaUserId" = lou."id"
+          WHERE a."memoId" = ANY(${visibleIds})
         ),
-        level_state AS (
+        level_rows AS (
           SELECT
             "memoId",
             "level",
-            BOOL_OR("approvalRequirement" = 'ANY') AS "isAny",
-            BOOL_OR("code" = 'approved') AS "hasApproved"
-          FROM latest_rows
-          GROUP BY "memoId", "level"
+            "userId",
+            "code",
+            BOOL_OR("approvalRequirement" = 'ANY') OVER (PARTITION BY "memoId", "level") AS "isAny",
+            BOOL_OR("code" = 'approved') OVER (PARTITION BY "memoId", "level") AS "hasApproved"
+          FROM rows_all
+          WHERE "version" = "latestVersion"
         ),
         waiting_rows AS (
-          SELECT lr."memoId", lr."level", lr."userId"
-          FROM latest_rows lr
-          JOIN level_state ls
-            ON lr."memoId" = ls."memoId" AND lr."level" = ls."level"
-          WHERE lr."code" = 'waiting'
-            AND NOT (ls."isAny" AND ls."hasApproved")
-        ),
-        min_level AS (
-          SELECT "memoId", MIN("level") AS "minLevel"
-          FROM waiting_rows GROUP BY "memoId"
+          SELECT
+            "memoId",
+            "level",
+            "userId",
+            MIN("level") OVER (PARTITION BY "memoId") AS "minLevel"
+          FROM level_rows
+          WHERE "code" = 'waiting'
+            AND NOT ("isAny" AND "hasApproved")
         )
         SELECT DISTINCT
           u."id"        AS "id",
@@ -193,10 +190,9 @@ export async function computeFacets(db: PrismaService, userId: number): Promise<
           u."lastname"  AS "lastname",
           u."nickname"  AS "nickname"
         FROM waiting_rows wr
-        JOIN min_level ml
-          ON wr."memoId" = ml."memoId" AND wr."level" = ml."minLevel"
         JOIN "User" u ON u."id" = wr."userId"
-        WHERE u."deletedAt" IS NULL
+        WHERE wr."level" = wr."minLevel"
+          AND u."deletedAt" IS NULL
       `,
 
       // extraApprovers: distinct users in any extra line of visible memos
