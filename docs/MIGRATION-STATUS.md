@@ -69,6 +69,19 @@ Nest ฟังที่ 3001 ซึ่งเป็น port เดิมของ
 - **`/api/dev/expiry/*`:** เดิมไม่มี auth เลยและเปิดใน production ด้วย ตอนนี้ต้องเป็น admin และไม่ register เมื่อ `NODE_ENV=production` (ได้ 404)
 - **ของเดิมที่คงไว้:** การแจ้งเตือนในระบบก็กรองด้วย email preference (`near-expiry`/`status-expired`) เหมือน Express, ไม่มีการเขียน `[expiry:expired]` จริง สิ่งที่กันอีเมลซ้ำคือ pivot Expired
 
+### ทดสอบกับข้อมูล demo (test-eapp, 2026-10-15)
+
+dump จาก hl-server (`43.210.109.106`, `/var/www/test-eapp`, DB `test-myapp`, memo 19,025 / user 19) restore ลง Postgres ชั่วคราว
+dump อยู่นอก repo (scratchpad ของ session) ห้ามเอาเข้า git เพราะมีอีเมลผู้ใช้จริง
+
+- **schema ตรงกับ `schema.prisma`** ต่างแค่ index ที่ migration เพิ่ม → baseline + `migrate deploy` ผ่าน (1.7 วินาที)
+- **endpoint หลักตอบปกติ:** search 1.3–1.6s ตอน cache ว่าง / 0.07s หลังจากนั้น, stats 0.01s, awaiting-approval 1.5s (ควรดูต่อใน A5)
+- **Status ใน DB นี้:** `1 Draft, 3 Approved, 4 Rejected, 5 Processing, 6 Recalled, 7 Terminated, 8 Deleted` — **ไม่มี `Expired`** และ 8 = Deleted
+  (`extra-approval` map 8 → `EXPIRED` และ `FINAL_STATUS_IDS` ใช้ 9 = Deleted ตามตัวเดิม แต่ทั้งคู่เช็กชื่อด้วย จึงยังถูก) ต้องเทียบกับ production อีกที
+- **บั๊กที่เจอและแก้แล้ว (`4f7f0f5`):** ไม่มี status Expired → memo หมดอายุยังเป็น Processing → Express/Nest ส่งอีเมล "หมดอายุ" ซ้ำทุกนาที ตอนนี้เขียน marker `[expiry:expired]` หลังแจ้ง (ต่ออายุแล้วหมดอีกรอบยังแจ้งได้)
+- **sweep เร็วขึ้น:** เดิมรอบละ ~23s (ดึงทุก memo ที่มี expiresAt 4,751 ฉบับ) → ~0.8s (กรองใน SQL + index `MemoHistory(memoId)`) เทียบกับแบบดึงทั้งหมดบนสำเนา demo 12 checks ต่างกัน 0
+- ⚠️ **รอบแรกหลังเปิด cron บนข้อมูลนี้จะส่งอีเมลหมดอายุ ~11,000 ฉบับในครั้งเดียว** (memo ที่หมดอายุค้างไว้ตอน Express ไม่ได้รัน) — รอตัดสินใจว่าจะจำกัดให้แจ้งเฉพาะที่เพิ่งหมดอายุหรือไม่ ก่อนชี้ไปที่ SMTP จริง
+
 ### หมายเหตุ 10 (ถอด Express)
 
 - **ของที่ Express ทำอยู่หน้าทุก route และย้ายมาแล้ว:** CORS allow-list (`CORS_ORIGIN`, `FRONTEND_URL`, `APP_BASE_URL`, `FRONT_BASE_URL`, `https://e-approval.hylifeconnect.com` + localhost นอก production) ตอบ 403 `CORS_NOT_ALLOWED` กับ origin อื่น และตัวกรอง production ที่ปฏิเสธ request ที่ไม่มี Origin (ยกเว้น same-origin/same-site, referer ที่อนุญาต, `/api/health`, ลิงก์อีเมล) — `common/http/origin-policy.ts`, JSON body limit 5mb
