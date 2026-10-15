@@ -7,10 +7,6 @@ import React, {
   useState,
 } from "react";
 import axios from "axios";
-import { pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
-import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 import { useNavigate } from "react-router-dom";
 import { HashLoader } from "react-spinners";
 import { useTranslation } from "react-i18next";
@@ -42,7 +38,6 @@ import { subscribeMemoDashboardRefresh } from "../../lib/memoDashboardEvents";
 
 const DASHBOARD_STAT_COUNTS_CACHE_KEY = "dashboard:statCounts:v1";
 
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 axios.defaults.baseURL = (import.meta.env.VITE_BACKEND_API_URL || "").replace(
   /\/+$/,
   ""

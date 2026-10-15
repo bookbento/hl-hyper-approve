@@ -7,10 +7,10 @@ import React, {
 } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { api, isAuthError } from "../../lib/api";
-import { Document, Page, pdfjs } from "react-pdf";
+import { Document, Page } from "react-pdf";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
-import pdfWorkerSrc from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+import "../../lib/pdfWorker";
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import LoadingScreen from "../../components/Mhan";
@@ -35,7 +35,6 @@ import {
   faSpinner,
   faArrowRight,
 } from "@fortawesome/free-solid-svg-icons";
-pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerSrc;
 
 interface ApprovalLineResponse {
   id: number;

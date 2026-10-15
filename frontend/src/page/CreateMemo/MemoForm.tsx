@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import axios, { type AxiosProgressEvent, type AxiosRequestConfig } from "axios";
 import { Document, Page, pdfjs } from "react-pdf";
+import "../../lib/pdfWorker";
 import "react-pdf/dist/Page/AnnotationLayer.css";
 import "react-pdf/dist/Page/TextLayer.css";
 import { Marker } from "./Marker";

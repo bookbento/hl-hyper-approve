@@ -20,6 +20,12 @@ target: "http://localhost:3001",
     sourcemap: false,
     rollupOptions: {
       output: {
+        // React + router change far less often than app code: own chunk = stays cached across deploys.
+        manualChunks(id) {
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+            return 'react-vendor';
+          }
+        },
         // Ensure the worker file is built as a normal JS file, not an ES module
         assetFileNames: (assetInfo) => {
           if (assetInfo.name && assetInfo.name.includes('pdf.worker')) {

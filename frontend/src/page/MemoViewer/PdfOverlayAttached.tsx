@@ -1,6 +1,7 @@
 // ./PdfOverlayAttached.tsx
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Document, Page } from "react-pdf";
+import "../../lib/pdfWorker";
 import { api } from "../../lib/api";
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";

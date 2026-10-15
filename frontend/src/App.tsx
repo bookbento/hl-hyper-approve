@@ -6,30 +6,45 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import Navigation from "./components/Navigation";
-import Dashboard from "./page/Dashboard/dashboard";
-import CreateMemo from "./page/CreateMemo/CreateMemo";
-import ShowUsers from "./page/CreateUser/ShowUser";
-import CreateDepartment from "./page/CreateDepartment/CreateDepartment";
-import ProfilePage from "./page/ProfilePage/ProfilePage";
-import MemoViewer from "./page/MemoViewer/MemoViewer";
-import EditMemo from "./page/CreateMemo/EditMemo";
 import { Toaster } from "react-hot-toast";
 import "./App.css";
-import ShowAppover from "./page/ShowAppover/Showappover";
-import MemoTypeManager from "./page/MemoTypeManager/MemoTypeManager";
-import MemoTypeDisplay from "./page/MemoTypeDisplay";
-import MemoTypeDetail from "./page/MemoTypeDetail/MemoTypeDetail";
-import CreateBusinessUnit from "./page/CreatebusinessUnit/CreatebusinessUnit";
-import "./i18n";  
-import Login from "./page/Login/Login";
-import FirstTimePasswordChange from "./page/FirstTimePasswordChange/FirstTimePasswordChange";
-import ComplexIcon from "./components/Mran";
-import LoadingScreen from "./components/Mhan";
+import "./i18n";
 import RequireAuth from "./components/RequireAuth";
 import RequireAdmin from "./components/RequireAdmin";
-import CcGroups from "./page/CcGroups/CcGroups";
-import LoaManagementPage from "./page/LOAManagementPage/LOAManagementPage";
+
+// Each page is its own chunk: opening the dashboard no longer downloads the
+// memo editor, the PDF viewer, admin pages, etc. (was one 2.7 MB bundle).
+const Dashboard = lazy(() => import("./page/Dashboard/dashboard"));
+const CreateMemo = lazy(() => import("./page/CreateMemo/CreateMemo"));
+const ShowUsers = lazy(() => import("./page/CreateUser/ShowUser"));
+const CreateDepartment = lazy(() => import("./page/CreateDepartment/CreateDepartment"));
+const ProfilePage = lazy(() => import("./page/ProfilePage/ProfilePage"));
+const MemoViewer = lazy(() => import("./page/MemoViewer/MemoViewer"));
+const EditMemo = lazy(() => import("./page/CreateMemo/EditMemo"));
+const ShowAppover = lazy(() => import("./page/ShowAppover/Showappover"));
+const MemoTypeManager = lazy(() => import("./page/MemoTypeManager/MemoTypeManager"));
+const MemoTypeDisplay = lazy(() => import("./page/MemoTypeDisplay"));
+const MemoTypeDetail = lazy(() => import("./page/MemoTypeDetail/MemoTypeDetail"));
+const CreateBusinessUnit = lazy(() => import("./page/CreatebusinessUnit/CreatebusinessUnit"));
+const Login = lazy(() => import("./page/Login/Login"));
+const FirstTimePasswordChange = lazy(
+  () => import("./page/FirstTimePasswordChange/FirstTimePasswordChange")
+);
+const ComplexIcon = lazy(() => import("./components/Mran"));
+const LoadingScreen = lazy(() => import("./components/Mhan"));
+const CcGroups = lazy(() => import("./page/CcGroups/CcGroups"));
+const LoaManagementPage = lazy(() => import("./page/LOAManagementPage/LOAManagementPage"));
+
+function PageFallback() {
+  return (
+    <div className="flex h-full min-h-[50vh] items-center justify-center" aria-busy="true">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#183e33]" />
+    </div>
+  );
+}
+
 function PrivateLayout() {
   return (
     <div className="flex flex-col h-screen">
@@ -40,7 +55,9 @@ function PrivateLayout() {
 
       {/* เอา id ให้ main สำหรับฟัง scroll */}
       <main id="scroll-container" className="pt-16 flex-1 overflow-y-auto">
-        <Outlet />
+        <Suspense fallback={<PageFallback />}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   );
@@ -51,8 +68,22 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         {/* public */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/change-password" element={<FirstTimePasswordChange />} />
+        <Route
+          path="/login"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <Login />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/change-password"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <FirstTimePasswordChange />
+            </Suspense>
+          }
+        />
 
         {/* private (auth required) */}
         <Route element={<RequireAuth />}>
