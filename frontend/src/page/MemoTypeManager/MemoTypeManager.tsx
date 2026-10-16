@@ -2245,7 +2245,7 @@ const MemoTypeManager: React.FC = () => {
                           }
                           setCurrentPage(1);
                         }}
-                        className="cursor-pointer select-none relative py-2 px-3 hover:bg-blue-100 hover:text-blue-900 text-gray-900"
+                        className="cursor-pointer select-none relative py-2 px-3 hover:bg-brand-50 hover:text-brand-800 text-gray-900"
                       >
                         <div className="flex items-center gap-2">
                           <input
@@ -2584,7 +2584,7 @@ const MemoTypeManager: React.FC = () => {
                         <div className="p-2 border-b border-gray-100">
                           <button
                             onClick={() => handleSort("name", "asc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -2593,7 +2593,7 @@ const MemoTypeManager: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleSort("name", "desc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -2667,7 +2667,7 @@ const MemoTypeManager: React.FC = () => {
                         <div className="p-2 border-b border-gray-100">
                           <button
                             onClick={() => handleSort("businessUnit", "asc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -2676,7 +2676,7 @@ const MemoTypeManager: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleSort("businessUnit", "desc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -2770,7 +2770,7 @@ const MemoTypeManager: React.FC = () => {
                         <div className="p-2 border-b border-gray-100">
                           <button
                             onClick={() => handleSort("department", "asc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -2779,7 +2779,7 @@ const MemoTypeManager: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleSort("department", "desc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -2907,7 +2907,7 @@ const MemoTypeManager: React.FC = () => {
                         <div className="p-2 border-b border-gray-100">
                           <button
                             onClick={() => handleSort("status", "asc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "status" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "status" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -2916,7 +2916,7 @@ const MemoTypeManager: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleSort("status", "desc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "status" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "status" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -3008,7 +3008,7 @@ const MemoTypeManager: React.FC = () => {
                         <div className="p-2 border-b border-gray-100">
                           <button
                             onClick={() => handleSort("approvers", "asc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -3017,7 +3017,7 @@ const MemoTypeManager: React.FC = () => {
                           </button>
                           <button
                             onClick={() => handleSort("approvers", "desc")}
-                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                            className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />

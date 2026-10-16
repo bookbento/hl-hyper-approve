@@ -1613,7 +1613,7 @@ const LoaManagementPage: React.FC = () => {
                       <div className="p-2 border-b border-gray-100">
                         <button
                           onClick={() => handleSort("lineName", "asc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "lineName" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "lineName" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -1622,7 +1622,7 @@ const LoaManagementPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleSort("lineName", "desc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "lineName" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "lineName" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -1696,7 +1696,7 @@ const LoaManagementPage: React.FC = () => {
                       <div className="p-2 border-b border-gray-100">
                         <button
                           onClick={() => handleSort("businessUnitName", "asc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnitName" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnitName" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -1705,7 +1705,7 @@ const LoaManagementPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleSort("businessUnitName", "desc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnitName" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnitName" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -1807,7 +1807,7 @@ const LoaManagementPage: React.FC = () => {
                       <div className="p-2 border-b border-gray-100">
                         <button
                           onClick={() => handleSort("departmentName", "asc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "departmentName" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "departmentName" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -1816,7 +1816,7 @@ const LoaManagementPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleSort("departmentName", "desc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "departmentName" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "departmentName" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -1926,7 +1926,7 @@ const LoaManagementPage: React.FC = () => {
                       <div className="p-2 border-b border-gray-100">
                         <button
                           onClick={() => handleSort("memoTypeName", "asc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "memoTypeName" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "memoTypeName" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -1935,7 +1935,7 @@ const LoaManagementPage: React.FC = () => {
                         </button>
                         <button
                           onClick={() => handleSort("memoTypeName", "desc")}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "memoTypeName" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "memoTypeName" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -2048,7 +2048,7 @@ const LoaManagementPage: React.FC = () => {
                             setSortColumn("levelCount");
                             setSortDirection("asc");
                           }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "levelCount" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "levelCount" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -2060,7 +2060,7 @@ const LoaManagementPage: React.FC = () => {
                             setSortColumn("levelCount");
                             setSortDirection("desc");
                           }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "levelCount" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                          className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "levelCount" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />

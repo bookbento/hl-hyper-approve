@@ -2,6 +2,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import PageHeader from "../../components/ui/PageHeader";
+import SegmentTabs from "../../components/ui/SegmentTabs";
+import SearchInput from "../../components/ui/SearchInput";
+import { btn } from "../../components/ui/button";
+import { ClipboardCheck, RefreshCw } from "lucide-react";
 
 /* ---------- types ที่ match กับ /api/approval-requests/my ---------- */
 type Owner = { id: number; name: string; lastname?: string | null; nickname: string | null };
@@ -66,7 +71,7 @@ const ExpiryBadge: React.FC<{ iso?: string | null }> = ({ iso }) => {
       ? "bg-red-50 text-red-700 border border-red-200"
       : state === "soon"
       ? "bg-amber-50 text-amber-700 border border-amber-200"
-      : "bg-emerald-50 text-emerald-700 border border-emerald-200";
+      : "bg-brand-50 text-brand-700 border border-brand-200";
 
   const label =
     state === "expired"
@@ -210,7 +215,7 @@ const ExpiryPills: React.FC<{ iso?: string | null }> = ({ iso }) => {
       ? "bg-red-100 text-red-700 border border-red-200"
       : state === "soon"
       ? "bg-amber-100 text-amber-700 border border-amber-200"
-      : "bg-emerald-100 text-emerald-700 border border-emerald-200";
+      : "bg-brand-50 text-brand-700 border border-brand-200";
 
   const label =
     state === "expired"
@@ -411,148 +416,68 @@ export default function ShowAppover() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center justify-center gap-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-emerald-600"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                clipRule="evenodd"
-              />
-            </svg>
-            {t("title")}
-          </h1>
-        </div>
-
-        {/* Stats Card */}
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl shadow-lg p-6 mb-8 text-white">
-          <div className="flex flex-wrap items-center justify-between">
-            <div className="flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-10 w-10 mr-3"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <div>
-                <h3 className="text-lg font-medium">{t("title")}</h3>
-              </div>
-            </div>
-            <button
-              onClick={() => fetchData()}
-              className="mt-4 sm:mt-0 flex items-center text-green-800 bg-white bg-opacity-20 hover:bg-opacity-30 transition px-4 py-2 rounded-lg"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 mr-1"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
-                  clipRule="evenodd"
-                />
-              </svg>
+    <div className="w-full p-4 sm:p-6">
+      <div className="mx-auto max-w-6xl">
+        <PageHeader
+          icon={<ClipboardCheck />}
+          title={t("title")}
+          description={t("subtitle", { defaultValue: "Memos waiting for your approval" })}
+          actions={
+            <button onClick={() => fetchData()} className={btn("secondary")}>
+              <RefreshCw className="h-4 w-4" />
               {t("refresh")}
             </button>
+          }
+        >
+          <div className="ui-panel flex flex-col gap-3 p-3">
+            <SearchInput
+              wrapperClassName="sm:max-w-none"
+              placeholder={t("searchPlaceholder")}
+              value={searchTerm}
+              onChange={(e) => {
+                setPage(1);
+                setSearchTerm(e.target.value);
+              }}
+            />
+            <div className="flex flex-col gap-3 overflow-x-auto lg:flex-row lg:items-center lg:justify-between">
+              <SegmentTabs
+                ariaLabel="Request type"
+                value={filterType}
+                onChange={(v) => {
+                  setPage(1);
+                  setFilterType(v as FilterType);
+                }}
+                tabs={[
+                  { value: "all", label: t("filter.type.all", "ทั้งหมด") },
+                  { value: "main", label: t("filter.type.main", "Main") },
+                  { value: "extra", label: t("filter.type.extra", "Extra") },
+                ]}
+              />
+              <SegmentTabs
+                ariaLabel="Expiry"
+                value={expiryFilter}
+                onChange={(v) => {
+                  setPage(1);
+                  setExpiryFilter(v as ExpiryFilter);
+                }}
+                tabs={[
+                  { value: "all", label: t("filter.expiry.all", "หมดอายุทั้งหมด") },
+                  { value: "expired", label: t("filter.expiry.expired", "หมดอายุแล้ว") },
+                  { value: "soon", label: t("filter.expiry.soon", "ใกล้หมดอายุ (≤3วัน)") },
+                  { value: "active", label: t("filter.expiry.active", "ยังไม่หมดอายุ") },
+                  { value: "none", label: t("filter.expiry.none", "ไม่มีวันหมดอายุ") },
+                ]}
+              />
+            </div>
           </div>
-        </div>
-
-{/* Search */}
-<div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-gray-300">
-  <div className="relative max-w-4xl mx-auto">
-    {/* กล่องค้นหา */}
-    <div className="relative">
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-        </svg>
-      </div>
-      <input
-        type="text"
-        placeholder={t("searchPlaceholder")}
-        className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-        value={searchTerm}
-        onChange={(e) => {
-          setPage(1);
-          setSearchTerm(e.target.value);
-        }}
-      />
-    </div>
-
-    {/* แถบฟิลเตอร์ */}
-    <div className="mt-4 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 justify-between">
-      {/* Type filter */}
-      <div className="inline-flex rounded-lg overflow-hidden border border-gray-300">
-        {([
-          { key: "all",  label: t("filter.type.all", "ทั้งหมด") },
-          { key: "main", label: t("filter.type.main", "Main") },
-          { key: "extra",label: t("filter.type.extra", "Extra") },
-        ] as const).map((opt) => (
-          <button
-            key={opt.key}
-            onClick={() => { setPage(1); setFilterType(opt.key); }}
-            className={[
-              "px-3 py-1.5 text-sm",
-              filterType === opt.key ? "bg-emerald-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50",
-              "focus:outline-none"
-            ].join(" ")}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Expiry filter */}
-      <div className="inline-flex rounded-lg overflow-hidden border border-gray-300">
-        {([
-          { key: "all",    label: t("filter.expiry.all", "หมดอายุทั้งหมด") },
-          { key: "expired",label: t("filter.expiry.expired", "หมดอายุแล้ว") },
-          { key: "soon",   label: t("filter.expiry.soon", "ใกล้หมดอายุ (≤3วัน)") },
-          { key: "active", label: t("filter.expiry.active", "ยังไม่หมดอายุ") },
-          { key: "none",   label: t("filter.expiry.none", "ไม่มีวันหมดอายุ") },
-        ] as const).map((opt) => (
-          <button
-            key={opt.key}
-            onClick={() => { setPage(1); setExpiryFilter(opt.key as ExpiryFilter); }}
-            className={[
-              "px-3 py-1.5 text-sm",
-              expiryFilter === opt.key ? "bg-teal-600 text-white" : "bg-white text-gray-700 hover:bg-gray-50",
-              "focus:outline-none"
-            ].join(" ")}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  </div>
-</div>
-
+        </PageHeader>
 
         {/* Content */}
-        <div className="bg-white rounded-2xl shadow-md overflow-hidden border border-gray-300">
+        <div className="ui-panel overflow-hidden">
           {/* Loading */}
           {loading && (
             <div className="py-12 flex flex-col items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mb-4"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-600 mb-4"></div>
               <p className="text-gray-600">{t("loading")}</p>
             </div>
           )}
@@ -591,15 +516,15 @@ export default function ShowAppover() {
                   key={`${it.requestType}-${it.memoId}-${
                     "level" in it ? it.level : (it as RequestItemExtra).extraId
                   }`}
-                  className="p-5 hover:bg-gray-50 transition duration-150 border border-gray-300"
+                  className="border-b border-gray-100 p-5 transition-colors duration-150 last:border-b-0 hover:bg-brand-50/50"
                 >
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start gap-3">
-                        <div className="bg-emerald-100 p-2 rounded-lg">
+                        <div className="rounded-xl bg-brand-50 p-2 ring-1 ring-inset ring-brand-100">
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
-                            className="h-6 w-6 text-emerald-600"
+                            className="h-6 w-6 text-brand-700"
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -613,7 +538,7 @@ export default function ShowAppover() {
                           </svg>
                         </div>
                         <div className="min-w-0">
-                          <h2 className="font-semibold text-gray-800 truncate text-lg">
+                          <h2 className="truncate text-base font-semibold text-gray-900">
                             {it.subject}
                           </h2>
 
@@ -634,11 +559,11 @@ export default function ShowAppover() {
 
                             {/* ประเภทงาน */}
                             {it.requestType === "extra" ? (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-200">
                                 Extra
                               </span>
                             ) : (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-200">
                                 Main{" "}
                                 {"level" in it
                                   ? `(L${(it as RequestItemMain).level + 1})`
@@ -658,7 +583,7 @@ export default function ShowAppover() {
 
                     <button
                       onClick={() => navigate(`/memo/${it.memoId}`)}
-                      className="flex items-center justify-center gap-1 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white px-5 py-2.5 rounded-xl transition-all shadow-sm hover:shadow-md"
+                      className={btn("primary")}
                     >
                       {t("goApprove")}
                       <svg
@@ -688,7 +613,7 @@ export default function ShowAppover() {
                   {t("footer.show")}
                 </span>
                 <select
-                  className="mx-2 border-gray-300 rounded-lg text-sm focus:border-emerald-500 focus:ring-emerald-500"
+                  className="mx-2 border-gray-300 rounded-lg text-sm focus:border-brand-500 focus:ring-brand-500"
                   value={limit}
                   onChange={(e) => {
                     setPage(1);

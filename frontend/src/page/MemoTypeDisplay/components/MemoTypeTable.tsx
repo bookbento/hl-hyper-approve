@@ -571,7 +571,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
 
   if (loading) {
     return (
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden -mx-6 sm:mx-0">
+      <div className="ui-panel -mx-4 overflow-hidden sm:mx-0">
         <div className="flex items-center justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#183e33]"></div>
           <span className="ml-3 text-gray-600">
@@ -583,22 +583,22 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
   }
 
   return (
-    <div className="bg-white shadow-xl rounded-2xl overflow-hidden -mx-6 sm:mx-0">
+    <div className="ui-panel -mx-4 overflow-hidden sm:mx-0">
       {/* Search Bar, Business Unit Filter, and Approver Filter */}
-      <div className="px-6 py-4 border-b border-gray-200">
+      <div className="border-b border-gray-100 p-3 sm:px-4">
         <div className="flex flex-wrap items-center gap-4">
           {/* Global Search */}
           <div className="relative flex-1 min-w-[200px] max-w-md">
             <input
               type="text"
               placeholder={t("searchPlaceholder", "Search document types...")}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#183e33]"
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
               value={tableState.searchTerm}
               onChange={(e) => onSearch(e.target.value)}
               aria-label={t("searchAriaLabel", "Search document types")}
             />
             <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -634,7 +634,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                     </span>
                     <div className="flex items-center gap-2">
                       {dynamicBUFilterIds.length > 0 && (
-                        <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                        <span className="bg-brand-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                           {dynamicBUFilterIds.length}
                         </span>
                       )}
@@ -654,7 +654,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                               setDynamicBUFilterIds([...dynamicBUFilterIds, bu.id]);
                             }
                           }}
-                          className="cursor-pointer select-none relative py-2 px-3 hover:bg-blue-100 hover:text-blue-900 text-gray-900"
+                          className="cursor-pointer select-none relative py-2 px-3 hover:bg-brand-50 hover:text-brand-800 text-gray-900"
                         >
                           <div className="flex items-center gap-2">
                             <input
@@ -786,11 +786,11 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
       {/* Table */}
       <div className="overflow-x-auto w-full">
         <table
-          className="w-full table-fixed divide-y divide-gray-200"
+          className="ui-table w-full table-fixed"
           role="table"
           aria-label={t("tableAriaLabel", "Memo types table")}
         >
-          <thead className="bg-gray-50">
+          <thead>
             <tr>
               {/* Name Column with Excel Filter */}
               <th className="w-80 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider relative">
@@ -798,7 +798,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                   <span className="flex items-center gap-1">
                     {t("columns.name", "Name")}
                     {(columnFilters.name || sortColumn === "name") && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     )}
                   </span>
                   <button
@@ -823,7 +823,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                     <div className="p-2 border-b border-gray-100">
                       <button
                         onClick={() => handleSort("name", "asc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -832,7 +832,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                       </button>
                       <button
                         onClick={() => handleSort("name", "desc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "name" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -882,7 +882,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                   <span className="flex items-center gap-1">
                     {t("columns.abbreviation", "Abbreviation")}
                     {(columnFilters.abbreviation || sortColumn === "abbreviation") && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     )}
                   </span>
                   <button
@@ -906,7 +906,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                     <div className="p-2 border-b border-gray-100">
                       <button
                         onClick={() => handleSort("abbreviation", "asc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "abbreviation" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "abbreviation" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -915,7 +915,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                       </button>
                       <button
                         onClick={() => handleSort("abbreviation", "desc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "abbreviation" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "abbreviation" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -965,7 +965,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                   <span className="flex items-center gap-1">
                     {t("columns.businessUnit", "Business Unit")}
                     {(dynamicBUFilterIds.length > 0 || sortColumn === "businessUnit") && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     )}
                   </span>
                   <button
@@ -989,7 +989,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                     <div className="p-2 border-b border-gray-100">
                       <button
                         onClick={() => handleSort("businessUnit", "asc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -998,7 +998,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                       </button>
                       <button
                         onClick={() => handleSort("businessUnit", "desc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "businessUnit" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -1068,7 +1068,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                   <span className="flex items-center gap-1">
                     {t("columns.department", "Department")}
                     {(dynamicDeptFilterIds.length > 0 || sortColumn === "department") && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     )}
                   </span>
                   <button
@@ -1092,7 +1092,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                     <div className="p-2 border-b border-gray-100">
                       <button
                         onClick={() => handleSort("department", "asc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -1101,7 +1101,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                       </button>
                       <button
                         onClick={() => handleSort("department", "desc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "department" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
@@ -1190,7 +1190,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                   <span className="flex items-center gap-1">
                     Approvers
                     {(columnFilters.approvers || sortColumn === "approvers") && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                     )}
                   </span>
                   <div className="flex items-center gap-2">
@@ -1229,7 +1229,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                     <div className="p-2 border-b border-gray-100">
                       <button
                         onClick={() => handleSort("approvers", "asc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "asc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "asc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
@@ -1238,7 +1238,7 @@ const MemoTypeTable: React.FC<MemoTypeTableProps> = ({
                       </button>
                       <button
                         onClick={() => handleSort("approvers", "desc")}
-                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "desc" ? "bg-blue-50 text-blue-700" : ""}`}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left rounded hover:bg-gray-100 ${sortColumn === "approvers" && sortDirection === "desc" ? "bg-brand-50 text-brand-700" : ""}`}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
