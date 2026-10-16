@@ -9,6 +9,10 @@ import { BiSolidChevronUp, BiSolidChevronDown } from "react-icons/bi";
 import toast from "react-hot-toast";
 import AdminLogModal from "../../components/AdminLogModal";
 import HoldToConfirm from "../../components/ui/HoldToConfirm";
+import PageHeader from "../../components/ui/PageHeader";
+import SearchInput from "../../components/ui/SearchInput";
+import { btn } from "../../components/ui/button";
+import { Building2, Plus, ScrollText } from "lucide-react";
 interface BusinessUnit {
   id: number;
   name: string;
@@ -156,76 +160,49 @@ const CreateBusinessUnit: React.FC = () => {
     return <p className="text-center mt-10 text-gray-500">Loading...</p>;
 
   return (
-    <div className="p-6 w-full max-w-none min-h-screen text-[#183e33]">
-      {/* ─── header ─── */}
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-
-          <div className="relative w-full md:w-1/2 lg:w-1/3">
-            <input
-              type="text"
+    <div className="w-full p-4 sm:p-6">
+      <PageHeader
+        icon={<Building2 />}
+        title={t("title")}
+        description={t("subtitle", { defaultValue: "Companies in the group and their codes" })}
+        actions={
+          <>
+            <button onClick={() => setShowLogModal(true)} className={btn("secondary")}>
+              <ScrollText className="h-4 w-4" />
+              {t("viewLog")}
+            </button>
+            <button onClick={() => openModal("create")} className={btn("primary")}>
+                <Plus className="h-4 w-4" />
+                {String(t("button.create")).replace(/^\+\s*/, "")}
+              </button>
+          </>
+        }
+      >
+        <div className="ui-panel flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 items-center gap-3">
+            <SearchInput
               placeholder={t("searchPlaceholder")}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-[15px] focus:outline-none focus:ring-2 focus:ring-[#183e33]"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // รีเซ็ตหน้าเมื่อค้นหา
+                setCurrentPage(1);
               }}
             />
-            <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
+            <PageSizeSelect
+              pageSize={pageSize}
+              setPageSize={(n) => {
+                setPageSize(n);
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </div>
+      </PageHeader>
 
-        <hr className="border-t border-gray-300" />
-
-<div className="flex items-center justify-between">
-  {/* Left */}
-  <PageSizeSelect
-    pageSize={pageSize}
-    setPageSize={(n) => {
-      setPageSize(n);
-      setCurrentPage(1);
-    }}
-  />
-
-  {/* Right */}
-  <div className="flex items-center gap-3">
-    <button
-      onClick={() => openModal("create")}
-      className="bg-[#183e33] text-white px-4 py-2 rounded-[15px] hover:bg-[#141716]"
-    >
-      {t("button.create")}
-    </button>
-
-    <button
-      onClick={() => setShowLogModal(true)}
-      className="bg-gray-600 text-white px-4 py-2 rounded-[15px] hover:bg-gray-700"
-    >
-      {t("viewLog")}
-    </button>
-  </div>
-</div>
-
-      </div>
-
-      {/* ─── table ─── */}
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden -mx-6 sm:mx-0">
+      <div className="ui-panel -mx-4 overflow-hidden sm:mx-0">
         <div className="overflow-x-auto w-full">
-          <table className="min-w-full w-full table-auto divide-y divide-[#8A8787]">
-            <thead className="bg-gradient-to-r text-left from-white font-extrabold">
+          <table className="ui-table w-full table-auto text-left">
+            <thead>
               <tr>
                 <th className="px-6 py-3 text-l uppercase tracking-wider">
                   {t("table.id")}
@@ -258,11 +235,11 @@ const CreateBusinessUnit: React.FC = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200 text-sm">
+            <tbody className="text-sm text-gray-800">
               {sortedUnits
                 .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                 .map((u, i) => (
-                  <tr key={u.id} className="hover:bg-gray-50 transition">
+                  <tr key={u.id}>
                     <td className="px-6 py-4 whitespace-nowrap">{u.id}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{u.name}</td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -294,10 +271,10 @@ const CreateBusinessUnit: React.FC = () => {
         {Array.from({ length: totalPages }, (_, i) => (
           <button
             key={i}
-            className={`px-3 py-1 rounded border text-sm font-medium ${
+            className={`h-8 min-w-8 rounded-lg px-2.5 text-sm font-medium transition-colors ${
               currentPage === i + 1
-                ? "bg-[#183e33] text-white"
-                : "bg-white text-green-900 border-gray-300 hover:bg-gray-100"
+                ? "bg-brand-700 text-white"
+                : "bg-white text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-brand-50"
             }`}
             onClick={() => setCurrentPage(i + 1)}
           >

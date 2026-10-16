@@ -23,6 +23,9 @@ import { useNavigate } from "react-router-dom";
 import AdminLogModal from "../../components/AdminLogModal";
 import UnauthorizedAccess from "../../components/UnauthorizedAccess";
 import HoldToConfirm from "../../components/ui/HoldToConfirm";
+import PageHeader from "../../components/ui/PageHeader";
+import { btn } from "../../components/ui/button";
+import { ScrollText } from "lucide-react";
 
 /* ---------------- Types ---------------- */
 type IdName = { id: number; name: string };
@@ -1006,36 +1009,47 @@ const CcGroups: React.FC = () => {
   }
 
   return (
-    <div className="p-6 w-full">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold text-[#183e33] flex items-center gap-2">
-          <FiUsers /> {t("title", { defaultValue: "CC Groups" })}
-        </h1>
-
-        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+    <div className="w-full p-4 sm:p-6">
+      <PageHeader
+        icon={<FiUsers />}
+        title={t("title", { defaultValue: "CC Groups" })}
+        description={t("subtitle", { defaultValue: "People who get a copy of memos, grouped for reuse" })}
+        actions={
+          <>
+            <button onClick={() => setShowLogModal(true)} className={btn("secondary")}>
+              <ScrollText className="h-4 w-4" />
+              {t("viewLog")}
+            </button>
+            <button onClick={openCreateModal} className={btn("primary")}>
+              <FiPlus className="h-4 w-4" /> {t("createNew", { defaultValue: "Create" })}
+            </button>
+          </>
+        }
+      >
+      <div className="ui-panel flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-1 flex-col gap-3 md:flex-row">
           {/* Search Groups */}
-          <div className="relative w-full md:w-72">
+          <div className="relative w-full md:max-w-xs">
             <input
               type="text"
               placeholder={t("searchGroupPlaceholder", {
                 defaultValue: "Search groups...",
               })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 [border-radius:15px] focus:outline-none focus:ring-2 focus:ring-[#183e33]"
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
-            <FiSearch className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           </div>
 
           {/* Search Members */}
-          <div className="relative w-full md:w-72" ref={memberSearchRef}>
+          <div className="relative w-full md:max-w-xs" ref={memberSearchRef}>
             <input
               type="text"
               placeholder={t("searchMemberPlaceholder", {
                 defaultValue: "Search members...",
               })}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 [border-radius:15px] focus:outline-none focus:ring-2 focus:ring-[#183e33]"
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
               value={memberSearchTerm}
               onChange={(e) => {
                 setMemberSearchTerm(e.target.value);
@@ -1043,7 +1057,7 @@ const CcGroups: React.FC = () => {
               }}
               onFocus={() => setShowMemberDropdown(true)}
             />
-            <FiUsers className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            <FiUsers className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
 
             {/* Dropdown รายชื่อ */}
             {showMemberDropdown && memberSearchTerm.trim() && matchedUsers.length > 0 && (
@@ -1063,11 +1077,11 @@ const CcGroups: React.FC = () => {
           </div>
 
           {/* Search User for Bulk Update */}
-          <div className="relative w-full md:w-72" ref={fromUserSearchRef}>
+          <div className="relative w-full md:max-w-xs" ref={fromUserSearchRef}>
             <input
               type="text"
               placeholder="Select user to bulk update..."
-              className="w-full pl-10 pr-8 py-2 border border-gray-300 [border-radius:15px] focus:outline-none focus:ring-2 focus:ring-[#183e33]"
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-8 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
               value={fromUserSearchTerm}
               onChange={(e) => {
                 setFromUserSearchTerm(e.target.value);
@@ -1076,7 +1090,7 @@ const CcGroups: React.FC = () => {
               }}
               onFocus={() => setShowFromUserDropdown(true)}
             />
-            <FiUsers className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+            <FiUsers className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             {selectedFromUser && (
               <button
                 onClick={() => {
@@ -1110,29 +1124,16 @@ const CcGroups: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <PageSizeSelect
-            pageSize={pageSize}
-            setPageSize={(n) => {
-              setPageSize(n);
-              setCurrentPage(1);
-            }}
-            isSearching={isSearching}
-          />
-          <button
-            onClick={openCreateModal}
-            className="bg-[#183e33] text-white px-4 py-2 [border-radius:15px] hover:bg-[#141716] inline-flex items-center gap-2"
-          >
-            <FiPlus /> {t("createNew", { defaultValue: "Create" })}
-          </button>
-          <button
-            onClick={() => setShowLogModal(true)}
-            className="bg-gray-600 text-white px-4 py-2 [border-radius:15px] hover:bg-gray-700"
-          >
-            {t("viewLog")}
-          </button>
-        </div>
+        <PageSizeSelect
+          pageSize={pageSize}
+          setPageSize={(n) => {
+            setPageSize(n);
+            setCurrentPage(1);
+          }}
+          isSearching={isSearching}
+        />
       </div>
+      </PageHeader>
 
       {/* Action Row - Bulk Actions & Show Edited */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
@@ -1146,7 +1147,7 @@ const CcGroups: React.FC = () => {
               <button
                 onClick={() => setIsBulkUpdateModalOpen(true)}
                 disabled={selectedGroupIds.size === 0}
-                className="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-[15px] hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className={btn("primary", "sm")}
               >
                 Bulk Update Members
               </button>
@@ -1156,10 +1157,10 @@ const CcGroups: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden -mx-6 sm:mx-0">
+      <div className="ui-panel -mx-4 overflow-hidden sm:mx-0">
         <div className="overflow-x-auto w-full">
-          <table className="min-w-full w-full table-auto divide-y divide-[#8A8787]">
-            <thead className="bg-gradient-to-r from-white text-[#000000] font-extrabold">
+          <table className="ui-table w-full table-auto">
+            <thead>
               <tr>
                 {selectedFromUser && (
                   <th className="px-6 py-3 text-left w-12">
@@ -1292,7 +1293,7 @@ const CcGroups: React.FC = () => {
                       </button>
                       <button
                         onClick={() => openEditModal(g.id)}
-                        className="text-blue-600 hover:text-blue-900 inline-flex items-center gap-1"
+                        className="inline-flex items-center gap-1 text-brand-700 hover:text-brand-500"
                       >
                         <FiEdit2 /> {t("edit", { defaultValue: "Edit" })}
                       </button>
@@ -1428,7 +1429,7 @@ const CcGroups: React.FC = () => {
                       })}
                       className="w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 border-[#183e33] focus:ring-green-500"
                     />
-                    <FiSearch className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                    <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                   </div>
 
                   <div className="max-h-[360px] overflow-auto divide-y">
@@ -1583,7 +1584,7 @@ const CcGroups: React.FC = () => {
                 })}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#183e33]"
               />
-              <FiSearch className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+              <FiSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
             </div>
 
             {/* User List with Checkboxes */}
@@ -1870,7 +1871,7 @@ const CcGroups: React.FC = () => {
               <button
                 onClick={performBulkUpdate}
                 disabled={isBulkUpdating || (bulkUpdateAction === "replace" && !selectedNewUser)}
-                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md disabled:opacity-50 transition-colors flex items-center justify-center"
+                className={btn("primary", "md", "flex-1")}
               >
                 {isBulkUpdating ? (
                   <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>

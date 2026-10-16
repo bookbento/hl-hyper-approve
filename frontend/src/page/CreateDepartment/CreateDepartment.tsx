@@ -12,6 +12,11 @@ import toast from "react-hot-toast";
 import { api } from "../../lib/api"; // ← ปรับ path ตามโปรเจกต์ของคุณ
 import AdminLogModal from "../../components/AdminLogModal";
 import HoldToConfirm from "../../components/ui/HoldToConfirm";
+import PageHeader from "../../components/ui/PageHeader";
+import SegmentTabs from "../../components/ui/SegmentTabs";
+import SearchInput from "../../components/ui/SearchInput";
+import { btn } from "../../components/ui/button";
+import { Network, Plus, ScrollText } from "lucide-react";
 
 /* ───────── types ───────── */
 interface BusinessUnit {
@@ -214,105 +219,63 @@ const CreateDepartment: React.FC = () => {
   if (loading) return <p className="text-center mt-10 text-gray-500">Loading...</p>;
 
   return (
-    <div className="p-6 w-full min-h-screen text-[#183e33]">
-      {/* ─── Header + Search + Create ─── */}
-      <div className="flex flex-col gap-4 mb-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-          <h1 className="text-2xl font-bold">{t("title")}</h1>
-          <div className="relative w-full md:w-1/2 lg:w-1/3">
-            <input
+    <div className="w-full p-4 sm:p-6">
+      <PageHeader
+        icon={<Network />}
+        title={t("title")}
+        description={t("subtitle", { defaultValue: "Departments used for users, approval lines and memo routing" })}
+        actions={
+          <>
+            <button onClick={() => setShowLogModal(true)} className={btn("secondary")}>
+              <ScrollText className="h-4 w-4" />
+              {t("viewLog")}
+            </button>
+            {activeTab === "active" && (
+              <button onClick={() => openModal("create")} className={btn("primary")}>
+                <Plus className="h-4 w-4" />
+                {t("button.create")}
+              </button>
+            )}
+          </>
+        }
+      >
+        <div className="ui-panel flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between">
+          <SegmentTabs
+            value={activeTab}
+            onChange={(v) => {
+              setActiveTab(v as "active" | "archived");
+              setCurrentPage(1);
+              setSearchTerm("");
+            }}
+            tabs={[
+              { value: "active", label: "Active", count: departments.length },
+              { value: "archived", label: "Archived", count: archivedDepartments.length },
+            ]}
+          />
+          <div className="flex flex-1 items-center gap-3 sm:justify-end">
+            <SearchInput
               placeholder={t("searchPlaceholder")}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-[15px] focus:outline-none focus:ring-2 focus:ring-[#183e33]"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // reset page on search
+                setCurrentPage(1);
               }}
             />
-            <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+            <PageSizeSelect
+              pageSize={pageSize}
+              setPageSize={(n) => {
+                setPageSize(n);
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </div>
+      </PageHeader>
 
-        <hr className="border-t border-gray-300" />
-
-<div className="flex items-center justify-between">
-  {/* Left */}
-  <PageSizeSelect
-    pageSize={pageSize}
-    setPageSize={(n) => {
-      setPageSize(n);
-      setCurrentPage(1); // reset page on pageSize change
-    }}
-  />
-
-  {/* Right */}
-  <div className="flex items-center gap-3">
-    {activeTab === "active" && (
-      <button
-        onClick={() => openModal("create")}
-        className="bg-[#183e33] text-white px-4 py-2 rounded-[15px] hover:bg-[#141716]"
-      >
-        {t("button.create")}
-      </button>
-    )}
-
-    <button
-      onClick={() => setShowLogModal(true)}
-      className="bg-gray-600 text-white px-4 py-2 rounded-[15px] hover:bg-gray-700"
-    >
-      {t("viewLog")}
-    </button>
-  </div>
-</div>
-
-      </div>
-
-      {/* ─── Tabs ─── */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => {
-              setActiveTab("active");
-              setCurrentPage(1);
-              setSearchTerm("");
-            }}
-            className={`${
-              activeTab === "active"
-                ? "border-[#183e33] text-[#183e33]"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            Active ({departments.length})
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("archived");
-              setCurrentPage(1);
-              setSearchTerm("");
-            }}
-            className={`${
-              activeTab === "archived"
-                ? "border-[#183e33] text-[#183e33]"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            Archived ({archivedDepartments.length})
-          </button>
-        </nav>
-      </div>
-
-      {/* ─── Table ─── */}
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden -mx-6 sm:mx-0">
+      <div className="ui-panel -mx-4 overflow-hidden sm:mx-0">
         <div className="overflow-x-auto w-full">
-          <table className="min-w-full w-full table-auto divide-y divide-[#8A8787]">
-            <thead className="bg-gradient-to-r from-white font-extrabold text-left">
+          <table className="ui-table w-full table-auto text-left">
+            <thead>
               <tr>
                 <th className="px-6 py-3 uppercase tracking-wider">{t("table.id")}</th>
                 <th className="px-6 py-3 uppercase tracking-wider">
@@ -334,16 +297,16 @@ const CreateDepartment: React.FC = () => {
                 <th className="px-6 py-3 uppercase tracking-wider">{t("table.actions")}</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200 text-sm">
+            <tbody className="text-sm text-gray-800">
               {sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((d) => (
-                <tr key={d.id} className="hover:bg-gray-50 transition">
+                <tr key={d.id}>
                   <td className="px-6 py-4 whitespace-nowrap">{d.id}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{d.name}</td>
                   <td className="px-6 py-4 whitespace-nowrap">{d.abbreviation}</td>
                   <td className="px-6 py-4 whitespace-nowrap space-x-2">
                     {activeTab === "active" ? (
                       <>
-                        <button onClick={() => openModal("edit", d)} className="px-2 py-1 hover:bg-gray-200 rounded">
+                        <button onClick={() => openModal("edit", d)} className="rounded-lg px-2 py-1 hover:bg-brand-50" title="Edit">
                           <FontAwesomeIcon icon={faPenToSquare} style={{ color: "#183e33", fontSize: 20 }} />
                         </button>
                         <HoldToConfirm compact tone="warning" label="Archive" onConfirm={() => handleDelete(d.id)}>
@@ -353,7 +316,7 @@ const CreateDepartment: React.FC = () => {
                     ) : (
                       <button 
                         onClick={() => handleRestore(d.id)} 
-                        className="px-4 py-1.5 bg-[#183e33] text-white rounded-[10px] hover:bg-[#141716] text-sm font-medium"
+                        className={btn("secondary", "sm")}
                       >
                         Restore
                       </button>
@@ -371,8 +334,8 @@ const CreateDepartment: React.FC = () => {
         {Array.from({ length: totalPages }, (_, i) => (
           <button
             key={i}
-            className={`px-3 py-1 rounded border text-sm font-medium ${
-              currentPage === i + 1 ? "bg-[#183e33] text-white" : "bg-white text-green-900 border-gray-300 hover:bg-gray-100"
+            className={`h-8 min-w-8 rounded-lg px-2.5 text-sm font-medium transition-colors ${
+              currentPage === i + 1 ? "bg-brand-700 text-white" : "bg-white text-gray-600 ring-1 ring-inset ring-gray-200 hover:bg-brand-50"
             }`}
             onClick={() => setCurrentPage(i + 1)}
           >
