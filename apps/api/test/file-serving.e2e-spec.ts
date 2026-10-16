@@ -21,6 +21,9 @@ import { JwtService } from '@nestjs/jwt';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AdminLogService } from '../src/common/admin-log/admin-log.service';
+import { UPLOADS_DIR } from '../src/common/upload/upload.config';
+import * as fs from 'fs';
+import * as path from 'path';
 
 // JWT token generation via JwtService (retrieved from app after init)
 let jwtService: JwtService;
@@ -141,6 +144,44 @@ describe('FileServing e2e (AppModule with mocked Prisma)', () => {
         .set('Authorization', authHeader(user));
 
       expect(res.status).toBe(404);
+    });
+  });
+
+  // ── Successful downloads (none of the cases above ever served a file) ──────
+  describe('serving files', () => {
+    const typesDir = path.join(UPLOADS_DIR, 'types');
+    const thaiName = '1777000000000_0_ใบลาออก ทดสอบ.doc';
+    const pdfName = '1777000000001-แบบฟอร์ม.pdf';
+
+    beforeAll(() => {
+      fs.mkdirSync(typesDir, { recursive: true });
+      fs.writeFileSync(path.join(typesDir, thaiName), 'doc-bytes');
+      fs.writeFileSync(path.join(typesDir, pdfName), '%PDF-1.4');
+    });
+    afterAll(() => {
+      for (const f of [thaiName, pdfName]) fs.rmSync(path.join(typesDir, f), { force: true });
+    });
+
+    it('serves a template under types/ with its Thai name and no storage prefix', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/secure-uploads/types/${encodeURIComponent(thaiName)}`)
+        .set('Authorization', authHeader(user));
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-disposition']).toBe(
+        `attachment; filename="??????? ?????.doc"; filename*=UTF-8''${encodeURIComponent('ใบลาออก ทดสอบ.doc')}`,
+      );
+    });
+
+    it('serves PDFs inline', async () => {
+      const res = await request(app.getHttpServer())
+        .get(`/api/secure-uploads/uploads/types/${encodeURIComponent(pdfName)}`)
+        .set('Authorization', authHeader(user));
+
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('application/pdf');
+      expect(res.headers['content-disposition']).toMatch(/^inline; .*filename\*=UTF-8''/);
+      expect(res.headers['content-disposition']).toContain(encodeURIComponent('แบบฟอร์ม.pdf'));
     });
   });
 

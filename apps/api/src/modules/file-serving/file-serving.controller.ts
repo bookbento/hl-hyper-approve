@@ -22,6 +22,16 @@ import {
 } from '@nestjs/common';
 import { lookup as mimeLookup } from 'mime-types';
 import * as path from 'path';
+import contentDisposition = require('content-disposition');
+
+/**
+ * Drop the storage prefixes added on upload so downloads keep the user's name:
+ *   "1712345678901-name.pdf"       (memo / comment files)
+ *   "1712345678901_0_name.doc"     (memo type templates: `${Date.now()}_${idx}_`)
+ */
+export function stripStoragePrefix(fileName: string): string {
+  return fileName.replace(/^\d{10,}(?:-|_\d+_)/, '');
+}
 import { Request, Response } from 'express';
 import { FileServingService } from './file-serving.service';
 import { JwtAuthGuard, JwtPayload } from '../../common/guards/jwt.guard';
@@ -48,9 +58,10 @@ export class FileServingController {
       return;
     }
 
-    // Strip the controller prefix from the full path
-    // req.path = "/some/file/path" relative to this controller's mount
-    const rawTail = req.path.replace(/^\/+/, '');
+    // In Nest req.path is the FULL path ("/api/secure-uploads/types/x.doc"), not
+    // relative to the controller as in an Express sub-router — strip the prefix.
+    // (Before this every file under /api/secure-uploads answered 404.)
+    const rawTail = req.path.replace(/^\/+/, '').replace(/^api\/secure-uploads\/?/i, '');
 
     let absPath: string;
     try {
@@ -70,21 +81,21 @@ export class FileServingController {
   private sendFile(absPath: string, res: Response): void {
     const mime = String(mimeLookup(absPath) || 'application/octet-stream');
     const fileName = path.basename(absPath);
-    // Strip timestamp prefix (e.g. "1234567890-original.pdf" → "original.pdf")
-    const originalFileName = fileName.replace(/^\d+-/, '');
+    const originalFileName = stripStoragePrefix(fileName);
 
     res.setHeader('Content-Type', mime);
     res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
 
+    // content-disposition builds an ASCII fallback + RFC 5987 filename*; a raw
+    // Thai name inside filename="…" is not valid header content (and was what
+    // users then re-uploaded as mojibake).
     if (mime === 'application/pdf') {
-      const disposition = `inline; filename="${originalFileName}"; filename*=UTF-8''${encodeURIComponent(originalFileName)}`;
-      res.setHeader('Content-Disposition', disposition);
+      res.setHeader('Content-Disposition', contentDisposition(originalFileName, { type: 'inline' }));
       res.setHeader('Cache-Control', 'private, no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
     } else {
-      const disposition = `attachment; filename="${originalFileName}"; filename*=UTF-8''${encodeURIComponent(originalFileName)}`;
-      res.setHeader('Content-Disposition', disposition);
+      res.setHeader('Content-Disposition', contentDisposition(originalFileName, { type: 'attachment' }));
       res.setHeader('Cache-Control', 'private, max-age=60');
     }
 
