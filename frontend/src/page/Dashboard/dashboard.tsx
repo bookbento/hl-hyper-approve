@@ -35,7 +35,7 @@ import type {
   Facets as ServerFacets,
 } from "../../lib/api/memoSearch.types";
 import { subscribeMemoDashboardRefresh } from "../../lib/memoDashboardEvents";
-import { AnimatedContent, BlurText } from "../../components/motion";
+import { BlurText } from "../../components/motion";
 import StatCard from "./StatCard";
 import SpringCheck from "../../components/reactbits/SpringCheck/SpringCheck";
 import GlideSelect from "../../components/reactbits/GlideSelect/GlideSelect";
@@ -3343,9 +3343,6 @@ const Dashboard: React.FC = () => {
               text={t("title")}
               className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900"
             />
-            <AnimatedContent delay={0.15} distance={6}>
-              <p className="text-gray-500 text-sm sm:text-base">{t("subtitle")}</p>
-            </AnimatedContent>
           </div>
         </div>
 
