@@ -641,12 +641,12 @@ export const FilterMenu: React.FC<{
           aria-expanded={open}
           aria-haspopup="dialog"
           aria-label={t("filters.toggle")}
-          className={`h-10 inline-flex items-center gap-2 rounded-lg px-4 border transition-all duration-200 font-medium shadow-sm hover:shadow-md
+          className={`h-10 inline-flex items-center gap-2 rounded-xl px-4 border transition-all duration-200 font-medium shadow-sm
     ${open
-              ? "bg-gray-200 text-gray-600 border-gray-300 shadow-md"
+              ? "bg-brand-50 text-brand-700 border-brand-300 shadow-sm"
               : activeFilterCount > 0
-                ? "bg-gray-200 text-gray-600 border-gray-300 hover:bg-gray-100"
-                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                ? "bg-brand-50 text-brand-700 border-brand-300 hover:bg-brand-100/60"
+                : "bg-white text-gray-700 border-gray-200 hover:border-brand-200 hover:bg-brand-50/60"
             }`}
         >
           {/* ไอคอนฟิลเตอร์ที่ทันสมัยกว่า */}
@@ -1293,10 +1293,10 @@ const ColumnVisibilityToggle: React.FC<{
               ref={toggleRef}
               type="button"
               onClick={() => setOpen(!open)}
-              className={`h-10 inline-flex items-center gap-2 rounded-lg px-4 border transition-all duration-200 font-medium shadow-sm hover:shadow-md ${
+              className={`h-10 inline-flex items-center gap-2 rounded-xl px-4 border transition-all duration-200 font-medium shadow-sm ${
                 hiddenCount > 0
-                  ? "bg-gray-200 text-gray-600 border-gray-300"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                  ? "bg-brand-50 text-brand-700 border-brand-300"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-brand-200 hover:bg-brand-50/60"
               }`}
               title={t("columnVisibility.toggle")}
             >
@@ -2974,7 +2974,7 @@ const Dashboard: React.FC = () => {
           type="button"
           onClick={() => setPage((p) => Math.max(1, p - 1))}
           disabled={page <= 1}
-          className="px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-gray-50  rounded-md border border-gray-300 shadow-sm"
+          className="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 text-sm text-gray-600 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50 disabled:opacity-40 disabled:hover:bg-transparent"
           title={t("pager.titlePrev")}
           aria-label={t("pager.prev")}
         >
@@ -3001,7 +3001,7 @@ const Dashboard: React.FC = () => {
           type="button"
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={page >= totalPages}
-          className="px-3 py-1.5 text-sm disabled:opacity-40 hover:bg-gray-50  rounded-md border border-gray-300 shadow-sm"
+          className="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 text-sm text-gray-600 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50 disabled:opacity-40 disabled:hover:bg-transparent"
           title={t("pager.titleNext")}
           aria-label={t("pager.next")}
         >
@@ -3296,21 +3296,24 @@ const Dashboard: React.FC = () => {
   // แคชผลเรียก API ต่อ memoId
 
   const StatusBadge: React.FC<{ status: Status }> = ({ status }) => {
-    const baseClass =
-      "inline-block px-3 py-1 text-sm font-semibold rounded-full";
-    const colorMap: Record<Status, string> = {
-      Draft: "bg-gray-100 text-gray-800",
-      Published: "bg-yellow-100 text-yellow-800",
-      Approved: "bg-green-100 text-green-800",
-      Rejected: "bg-orange-100 text-orange-800",
-      Terminated: "bg-red-900 text-gray-100",
-      Processing: "bg-yellow-100 text-yellow-700",
-      Recalled: "bg-sky-100    text-sky-700",
-      Expired: "bg-purple-100 text-purple-800",
+    // soft pill + dot (brand UI); same colour family per status as before
+    const styles: Record<Status, { pill: string; dot: string }> = {
+      Draft: { pill: "bg-gray-100 text-gray-700 ring-gray-200", dot: "bg-gray-400" },
+      Published: { pill: "bg-yellow-50 text-yellow-800 ring-yellow-200", dot: "bg-yellow-500" },
+      Approved: { pill: "bg-green-50 text-green-700 ring-green-200", dot: "bg-green-500" },
+      Rejected: { pill: "bg-orange-50 text-orange-700 ring-orange-200", dot: "bg-orange-500" },
+      Terminated: { pill: "bg-red-50 text-red-700 ring-red-200", dot: "bg-red-600" },
+      Processing: { pill: "bg-amber-50 text-amber-700 ring-amber-200", dot: "bg-amber-500 animate-pulse" },
+      Recalled: { pill: "bg-sky-50 text-sky-700 ring-sky-200", dot: "bg-sky-500" },
+      Expired: { pill: "bg-purple-50 text-purple-700 ring-purple-200", dot: "bg-purple-500" },
     };
-    const colorClass = colorMap[status] ?? "bg-gray-100 text-gray-800";
-
-    return <span className={`${baseClass} ${colorClass}`}>{status}</span>;
+    const st = styles[status] ?? styles.Draft;
+    return (
+      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${st.pill}`}>
+        <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} aria-hidden="true" />
+        {status}
+      </span>
+    );
   };
 
 
@@ -3479,7 +3482,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Search, Filter and Pagination Controls */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-3 py-3 bg-white rounded-lg mb-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 px-3 py-3 bg-white rounded-card border border-gray-100 shadow-card mb-4">
           {/* Left side: Search and Filters */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
             {/* Search box */}
@@ -3487,7 +3490,7 @@ const Dashboard: React.FC = () => {
               <input
                 type="text"
                 placeholder={t("searchPlaceholder")}
-                className="h-10 w-full px-4 pr-10 border rounded-lg border-gray-300 hover:bg-gray-50 bg-white text-gray-800 shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent placeholder-gray-500"
+                className="h-10 w-full px-4 pr-10 border rounded-xl border-gray-200 bg-white text-gray-800 shadow-sm transition-[border-color,box-shadow] hover:border-gray-300 focus:outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 placeholder-gray-400"
                 value={searchTerm}
                 onChange={handleSearch}
               />
@@ -3533,10 +3536,10 @@ const Dashboard: React.FC = () => {
             <button
               type="button"
               onClick={() => setSortByLatestAction(!sortByLatestAction)}
-              className={`h-10 inline-flex items-center gap-2 rounded-lg px-4 border  font-medium transition-colors ${
+              className={`h-10 inline-flex items-center gap-2 rounded-xl px-4 border  font-medium transition-colors ${
                 sortByLatestAction
-                  ? "bg-gray-200 border-gray-300 text-gray-600 shadow-sm"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 shadow-sm hover:shadow-md"
+                  ? "bg-brand-50 border-brand-300 text-brand-700 shadow-sm"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-brand-200 hover:bg-brand-50/60 shadow-sm"
               }`}
               title={t("filters.sortByLatestAction", "Sort by Latest Action")}
             >
@@ -3547,10 +3550,10 @@ const Dashboard: React.FC = () => {
             <button
               type="button"
               onClick={() => resetFilters({ keepMyApproval: false })}
-              className={`h-10 inline-flex items-center gap-2 rounded-lg px-4 border font-medium transition-colors ${
+              className={`h-10 inline-flex items-center gap-2 rounded-xl px-4 border font-medium transition-colors ${
                 hasActiveFilters
                   ? "bg-red-50 border-red-100 text-red-400 shadow-sm hover:bg-red-100"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 shadow-sm hover:shadow-md"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-brand-200 hover:bg-brand-50/60 shadow-sm"
               }`}
               title={t("filters.clearAll")}
             >
@@ -3787,24 +3790,24 @@ const Dashboard: React.FC = () => {
 
 
         {/* 💻 Table layout for desktop */}
-        <div className="hidden md:block bg-white rounded-xl shadow-sm border border-white overflow-visible">
+        <div className="hidden md:block bg-white rounded-card shadow-card border border-gray-100 overflow-visible">
           {/* NEW: top-right page size control */}
 
           <div className="overflow-x-auto">
             {" "}
             <div className="overflow-x-auto">
-              <table className="min-w-[900px] w-full  text-sm">
+              <table className="min-w-[900px] w-full text-sm [&_thead_th:first-child]:rounded-tl-card [&_thead_th:last-child]:rounded-tr-card">
                 <thead>
-                  <tr className="text-gray-700 bg-gradient-to-r from-emerald-500 to-emerald-600">
+                  <tr className="text-gray-700 bg-brand-700">
                     {/* Order Number Column */}
-                    <th className="px-2 py-3 text-center w-16 text-emerald-50">
+                    <th className="px-2 py-3 text-center w-16 text-white/90">
                       <div className="inline-flex items-center justify-center gap-1">
                         #
                       </div>
                     </th>
                     {/* เลขเอกสาร + ฟิลเตอร์/เรียง */}
                     {visibleColumns.number && (
-                      <th className="px-2 py-3 text-center w-32 text-emerald-50">
+                      <th className="px-2 py-3 text-center w-32 text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           {t("table.number")}
                           <HeaderFilter
@@ -3829,7 +3832,7 @@ const Dashboard: React.FC = () => {
                       </th>
                     )}
                     {visibleColumns.status && (
-                      <th className="px-2 py-3 text-center text-emerald-50">
+                      <th className="px-2 py-3 text-center text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           {t("table.status")}
                           <HeaderFilter
@@ -3852,7 +3855,7 @@ const Dashboard: React.FC = () => {
                     )}
                     {/* หัวข้อ + ฟิลเตอร์/เรียง - Updated for wider and 2 lines */}
                     {visibleColumns.subject && (
-                      <th className="px-2 py-3 text-center text-emerald-50 min-w-[20rem]">
+                      <th className="px-2 py-3 text-center text-white/90 min-w-[20rem]">
                         <div className="inline-flex items-center justify-center gap-1">
                           {t("table.subject")}
 
@@ -3878,7 +3881,7 @@ const Dashboard: React.FC = () => {
 
                     {/* วันหมดอายุ */}
                     {visibleColumns.expires && (
-                      <th className="px-2 py-3 text-center text-emerald-50">
+                      <th className="px-2 py-3 text-center text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           <div className="leading-tight">{t("table.expires")}</div>
                           <HeaderFilter
@@ -3902,7 +3905,7 @@ const Dashboard: React.FC = () => {
 
                     {/* ผู้เขียน + ฟิลเตอร์/เรียงแบบลิสต์ */}
                     {visibleColumns.author && (
-                      <th className="px-2 py-3 text-center text-emerald-50">
+                      <th className="px-2 py-3 text-center text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           <div className="leading-tight">{t("table.author")}</div>
                           <HeaderFilter
@@ -3926,7 +3929,7 @@ const Dashboard: React.FC = () => {
 
                     {/* วันที่สร้าง */}
                     {visibleColumns.createdAt && (
-                      <th className="px-2 py-3 text-center text-emerald-50">
+                      <th className="px-2 py-3 text-center text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           <div className="leading-tight">{t("table.createdAt")}</div>
                           <HeaderFilter
@@ -3949,7 +3952,7 @@ const Dashboard: React.FC = () => {
 
                     {/* Current Approver + ฟิลเตอร์/เรียง */}
                     {visibleColumns.currentApprover && (
-                      <th className="px-2 py-3 text-center text-emerald-50">
+                      <th className="px-2 py-3 text-center text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           {t("table.currentApprover")}
                           <HeaderFilter
@@ -3973,7 +3976,7 @@ const Dashboard: React.FC = () => {
 
                     {/* Extra Approver + ฟิลเตอร์/เรียง */}
                     {visibleColumns.extraApprover && (
-                      <th className="px-2 py-3 text-center text-emerald-50">
+                      <th className="px-2 py-3 text-center text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           {t("table.extraApprover")}
                           <HeaderFilter
@@ -3997,7 +4000,7 @@ const Dashboard: React.FC = () => {
 
                     {/* Latest Comment + ฟิลเตอร์/เรียง */}
                     {visibleColumns.latestComment && (
-                      <th className="px-2 py-3 text-center text-emerald-50 w-48">
+                      <th className="px-2 py-3 text-center text-white/90 w-48">
                         <div className="inline-flex items-center justify-center gap-1">
                           {t("table.latestComment")}
                           <HeaderFilter
@@ -4021,7 +4024,7 @@ const Dashboard: React.FC = () => {
 
                     {/* CC Status + ฟิลเตอร์เท่านั้น (ไม่มี sort) */}
                     {visibleColumns.ccStatus && (
-                      <th className="px-2 py-3 text-center text-emerald-50">
+                      <th className="px-2 py-3 text-center text-white/90">
                         <div className="inline-flex items-center justify-center gap-1">
                           {t("table.ccStatus")}
                           <HeaderFilter
