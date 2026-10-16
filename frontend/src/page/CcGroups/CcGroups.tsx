@@ -22,6 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import AdminLogModal from "../../components/AdminLogModal";
 import UnauthorizedAccess from "../../components/UnauthorizedAccess";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 /* ---------------- Types ---------------- */
 type IdName = { id: number; name: string };
@@ -786,9 +787,8 @@ const CcGroups: React.FC = () => {
     }
   };
 
+  // confirmed by holding the button (HoldToConfirm) instead of confirm()
   const onDelete = async (id: number) => {
-    if (!confirm(t("confirmDelete", { defaultValue: "Delete this group?" })))
-      return;
     try {
       await api.delete(`/api/cc-groups/${id}`);
       setGroups((prev) => prev.filter((g) => g.id !== id));
@@ -1296,12 +1296,14 @@ const CcGroups: React.FC = () => {
                       >
                         <FiEdit2 /> {t("edit", { defaultValue: "Edit" })}
                       </button>
-                      <button
-                        onClick={() => onDelete(g.id)}
-                        className="text-red-600 hover:text-red-900 inline-flex items-center gap-1"
+                      <HoldToConfirm
+                        tapHint={t("holdToDelete", { defaultValue: "Press and hold to delete" })}
+                        onConfirm={() => onDelete(g.id)}
                       >
-                        <FiTrash2 /> {t("delete", { defaultValue: "Delete" })}
-                      </button>
+                        <span className="inline-flex items-center gap-1">
+                          <FiTrash2 /> {t("delete", { defaultValue: "Delete" })}
+                        </span>
+                      </HoldToConfirm>
                     </td>
                   </tr>
                 ))

@@ -7,7 +7,7 @@ import {
   Outlet,
 } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import { Toaster } from "react-hot-toast";
+import AppToaster from "./components/ui/AppToaster";
 import "./App.css";
 import "./i18n";
 import RequireAuth from "./components/RequireAuth";
@@ -51,7 +51,7 @@ function PageFallback() {
 function PrivateLayout() {
   return (
     <div className="flex flex-col h-screen">
-      <Toaster position="top-right" />
+      <AppToaster />
 
       {/* เอา Navigation ขึ้นมาบนสุด */}
       <Suspense fallback={<div className="fixed inset-x-0 top-0 z-50 h-16 bg-[#183e33]/95" />}>

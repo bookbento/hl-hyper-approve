@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { api, BASE_URL } from "../../lib/api";
 import toast from "react-hot-toast";
+import ClickSpark from "../../components/reactbits/ClickSpark/ClickSpark";
 
 // Use the same interface as used in other files
 export interface UserSignature {
@@ -361,18 +362,28 @@ const ApproveModal: React.FC<ApproveModalProps> = ({
                 : t("approvers.btnClose", "ปิด")}
             </button>
 
-            <button
-              onClick={handleConfirm}
+            {/* React Bits ClickSpark: a burst of sparks on the sign / approve press */}
+            <ClickSpark
+              sparkColor={["#7ef0c2", "#23805f", "#facc15"]}
+              sparkCount={10}
+              sparkRadius={26}
               disabled={approving}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg
+              className="inline-flex"
+              style={{ width: "auto", height: "auto" }}
+            >
+              <button
+                onClick={handleConfirm}
+                disabled={approving}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-lg
          text-white transition-colors font-medium text-sm
          disabled:opacity-60
-         bg-blue-500 hover:bg-blue-600"
-            >
-              {approving
-                ? t("approvers.processing", "กำลังประมวลผล...")
-                : t("approvers.signconfirm", "ยืนยันการลงนาม")}
-            </button>
+         bg-brand-700 hover:bg-brand-600"
+              >
+                {approving
+                  ? t("approvers.processing", "กำลังประมวลผล...")
+                  : t("approvers.signconfirm", "ยืนยันการลงนาม")}
+              </button>
+            </ClickSpark>
           </div>
         </div>
       </div>

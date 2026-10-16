@@ -39,6 +39,7 @@ import { BlurText } from "../../components/motion";
 import StatCard from "./StatCard";
 import SpringCheck from "../../components/reactbits/SpringCheck/SpringCheck";
 import GlideSelect from "../../components/reactbits/GlideSelect/GlideSelect";
+import StatusMark from "../../components/reactbits/StatusMark/StatusMark";
 
 const DASHBOARD_STAT_COUNTS_CACHE_KEY = "dashboard:statCounts:v1";
 
@@ -3265,11 +3266,29 @@ const Dashboard: React.FC = () => {
       cls = "bg-gray-200 text-gray-700 border-gray-200";
       label = "Waiting";
     }
+    // React Bits StatusMark: dashed ring while waiting, the tick draws in on approval,
+    // a cross for rejected / terminated.
+    const mark =
+      code === "approved" || code === "not_required"
+        ? "done"
+        : code === "rejected"
+          ? "failed"
+          : code === "terminated"
+            ? "cancelled"
+            : "pending";
     return (
-      <span
-        className={`inline-block text-xs px-2 py-0.5 rounded-full border ${cls}`}
-      >
-        {label}
+      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 ${cls}`}>
+        <StatusMark
+          status={mark}
+          label={label}
+          size={13}
+          strokeWidth={2}
+          fontSize={12}
+          color="currentColor"
+          doneColor="#15803d"
+          errorColor={code === "rejected" ? "#c2410c" : "#b91c1c"}
+          strike={false}
+        />
       </span>
     );
   };

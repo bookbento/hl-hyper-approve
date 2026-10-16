@@ -30,6 +30,7 @@ import TerminateReasonModal from "./TerminateReasonModal";
 import { RejectReasonModal } from "./RejectReasonModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import RubberSegment from "../../components/reactbits/RubberSegment/RubberSegment";
+import WarmTooltip, { WarmTooltipGroup } from "../../components/reactbits/WarmTooltip/WarmTooltip";
 import {
   faCircleCheck,
   faCircleInfo,
@@ -2191,40 +2192,46 @@ export default function MemoViewer() {
                     className="hidden sm:block h-8 w-px bg-gray-300 mx-1"
                     aria-hidden="true"
                   ></div>
+                  {/* React Bits WarmTooltip: once one tooltip is showing, its neighbours open instantly */}
+                  <WarmTooltipGroup>
                   <div className="flex items-center gap-1">
+                    <WarmTooltip content="Zoom out" shortcut="Ctrl + Scroll ↓" side="bottom" surfaceColor="#0b1f1b" inkColor="#f5f5f5">
                     <button
                       onClick={handleZoomOut}
                       disabled={zoomLevel <= ZOOM_MIN}
                       className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed group"
                       aria-label="Zoom out"
-                      title="Zoom out (Ctrl + Scroll down)"
                     >
                       <svg className="w-4 h-4 text-gray-600 group-hover:text-green-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4" />
                       </svg>
                     </button>
+                    </WarmTooltip>
+                    <WarmTooltip content="Reset zoom to fit" side="bottom" surfaceColor="#0b1f1b" inkColor="#f5f5f5">
                     <button
                       onClick={handleZoomReset}
                       className="h-9 px-2 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 group min-w-[3.5rem]"
                       aria-label="Reset zoom"
-                      title="Reset zoom to fit"
                     >
                       <span className="text-xs font-medium text-gray-600 group-hover:text-green-800 transition-colors tabular-nums">
                         {Math.round(zoomLevel * 100)}%
                       </span>
                     </button>
+                    </WarmTooltip>
+                    <WarmTooltip content="Zoom in" shortcut="Ctrl + Scroll ↑" side="bottom" surfaceColor="#0b1f1b" inkColor="#f5f5f5">
                     <button
                       onClick={handleZoomIn}
                       disabled={zoomLevel >= ZOOM_MAX}
                       className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 shadow-sm hover:shadow-md flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed group"
                       aria-label="Zoom in"
-                      title="Zoom in (Ctrl + Scroll up)"
                     >
                       <svg className="w-4 h-4 text-gray-600 group-hover:text-green-800 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
                       </svg>
                     </button>
+                    </WarmTooltip>
                   </div>
+                  </WarmTooltipGroup>
                 </>
               )}
 
@@ -2235,6 +2242,7 @@ export default function MemoViewer() {
               ></div>
 
               {/* Refresh */}
+              <WarmTooltip content={t("btnRefresh") || "Refresh"} side="bottom" surfaceColor="#0b1f1b" inkColor="#f5f5f5">
               <button
                 onClick={() => {
                   setPdfUrl(null); // unmount ก่อน
@@ -2242,7 +2250,6 @@ export default function MemoViewer() {
                 }}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-full shadow-md transition-all"
                 aria-label={t("btnRefresh") || "Refresh"}
-                title={t("btnRefresh") || "Refresh"}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2259,6 +2266,7 @@ export default function MemoViewer() {
                   />
                 </svg>
               </button>
+              </WarmTooltip>
 
               {/* Delete */}
               {canDelete && !isReferenceMode && (

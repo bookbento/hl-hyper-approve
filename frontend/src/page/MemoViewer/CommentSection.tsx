@@ -15,6 +15,7 @@ import PdfOverlay from "./PdfOverlay";
 import { ExtraApprovalCard } from "./ExtraApprovalCard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowsRotate } from "@fortawesome/free-solid-svg-icons";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 type Attachment = {
   id: number;
@@ -2015,11 +2016,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                             >
                               {t("extra.approve", "Approve")}
                             </button>
-                            <button
-                              onClick={async () => {
-                                if (hideExtraButton || !memoId || !extra)
-                                  return;
-                                if (!confirm("Are you sure?")) return;
+                            <HoldToConfirm
+                              tone="warning"
+                              disabled={hideExtraButton}
+                              tapHint={t("extra.holdToReject", "Press and hold to reject")}
+                              onConfirm={async () => {
+                                if (hideExtraButton || !memoId || !extra) return;
                                 try {
                                   await actExtra(memoId, extra.id, "rejected");
                                   await refreshExtraLines();
@@ -2028,11 +2030,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                                   toast.error("Failed");
                                 }
                               }}
-                              disabled={hideExtraButton}
-                              className="px-4 py-1.5 bg-amber-600 text-white text-sm font-bold rounded-lg hover:bg-amber-700 transition-all"
                             >
                               {t("extra.reject", "Reject")}
-                            </button>
+                            </HoldToConfirm>
                           </div>
                         )}
                         {extra.status === "PENDING" &&
@@ -3444,32 +3444,23 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                                     >
                                       {t("extra.approve", "Approve")}
                                     </button>
-                                    <button
-                                      onClick={async () => {
-                                        if (
-                                          hideExtraButton ||
-                                          !memoId ||
-                                          !extra
-                                        )
-                                          return;
-                                        if (!confirm("Are you sure?")) return;
+                                    <HoldToConfirm
+                                      tone="warning"
+                                      disabled={hideExtraButton}
+                                      tapHint={t("extra.holdToReject", "Press and hold to reject")}
+                                      onConfirm={async () => {
+                                        if (hideExtraButton || !memoId || !extra) return;
                                         try {
-                                          await actExtra(
-                                            memoId,
-                                            extra.id,
-                                            "rejected",
-                                          );
+                                          await actExtra(memoId, extra.id, "rejected");
                                           await refreshExtraLines();
                                           toast.success("ปฏิเสธ (Extra) แล้ว");
                                         } catch {
                                           toast.error("Failed");
                                         }
                                       }}
-                                      disabled={hideExtraButton}
-                                      className="px-4 py-1.5 bg-amber-600 text-white text-sm font-bold rounded-lg hover:bg-amber-700 transition-all"
                                     >
                                       {t("extra.reject", "Reject")}
-                                    </button>
+                                    </HoldToConfirm>
                                   </div>
                                 )}
                                 {extra.status === "PENDING" &&
