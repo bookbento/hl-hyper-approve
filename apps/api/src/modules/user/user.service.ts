@@ -614,12 +614,29 @@ export class UserService {
       });
     }
 
-    const preferences = await this.prisma.userNotificationPreference.findMany({
-      where: { userId },
-      include: { notificationType: { select: { id: true, name: true, slug: true } } },
-    });
+    const [types, rows] = await Promise.all([
+      this.prisma.notificationType.findMany({ orderBy: { id: 'asc' } }),
+      this.prisma.userNotificationPreference.findMany({
+        where: { userId },
+        select: { notificationTypeId: true, emailEnabled: true },
+      }),
+    ]);
+    const enabled = new Map(rows.map((r) => [r.notificationTypeId, r.emailEnabled]));
 
-    return { preferences };
+    // Same flat shape as Express getUserNotificationPreferences (the profile page
+    // reads notificationTypeName / notificationTypeSlug); returning the raw rows
+    // left the "Notifications" profile tab empty. 'status-update' is deprecated.
+    return {
+      preferences: types
+        .filter((t) => t.slug !== 'status-update')
+        .map((t) => ({
+          notificationTypeId: t.id,
+          notificationTypeName: t.name,
+          notificationTypeSlug: t.slug,
+          notificationTypeDescription: t.description,
+          emailEnabled: enabled.get(t.id) ?? true,
+        })),
+    };
   }
 
   async updateNotificationPreference(userId: number, notificationTypeId: number, emailEnabled: boolean) {
