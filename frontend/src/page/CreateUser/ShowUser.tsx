@@ -16,6 +16,10 @@ import { BiDownload } from "react-icons/bi";
 import { saveAs } from "file-saver";
 import AdminLogModal from "../../components/AdminLogModal";
 import HoldToConfirm from "../../components/ui/HoldToConfirm";
+import PageHeader from "../../components/ui/PageHeader";
+import SegmentTabs from "../../components/ui/SegmentTabs";
+import { btn } from "../../components/ui/button";
+import { Plus, ScrollText, Search, Users, X } from "lucide-react";
 
 /* ---------- Types ---------- */
 interface User {
@@ -704,163 +708,110 @@ const ShowUsers: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-600"></div>
       </div>
     );
   }
 
   /* ---------- Render ---------- */
   return (
-    <div className="p-6 w-full">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold text-[#183e33]">{t("title")}</h1>
-
-        <div className="relative w-full md:w-1/2 lg:w-1/3">
-          <input
-            type="text"
-            placeholder={t("searchPlaceholder")}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 [border-radius:15px] focus:outline-none focus:ring-2 focus:ring-[#183e33]"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <svg
-            className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth="2"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            ></path>
-          </svg>
-        </div>
-
-        <hr className="border-t border-gray-300" />
-
-        <div className="flex items-center gap-3">
-          <PageSizeSelect
-            pageSize={pageSize}
-            setPageSize={(n) => {
-              setPageSize(n);
+    <div className="w-full p-4 sm:p-6">
+      <PageHeader
+        icon={<Users />}
+        title={t("title")}
+        description={t("subtitle", { defaultValue: "Accounts, roles and access to business units" })}
+        actions={
+          <>
+            <button onClick={exportToExcel} className={btn("secondary")}>
+              <BiDownload className="h-4 w-4" />
+              <span className="hidden sm:inline">{t("downloadExcel")}</span>
+            </button>
+            <button onClick={() => setShowLogModal(true)} className={btn("secondary")}>
+              <ScrollText className="h-4 w-4" />
+              {t("viewLog")}
+            </button>
+            {activeTab === "active" && (
+              <button
+                onClick={() => {
+                  setNewUserForm(initialFormState);
+                  setSelectedImage(null);
+                  setImagePreviewUrl(null);
+                  setEditUserId(null);
+                  setIsModalOpen(true);
+                }}
+                className={btn("primary")}
+              >
+                <Plus className="h-4 w-4" />
+                {t("createNew")}
+              </button>
+            )}
+          </>
+        }
+      >
+        <div className="ui-panel flex flex-col gap-3 p-3 lg:flex-row lg:items-center lg:justify-between">
+          <SegmentTabs
+            value={activeTab}
+            onChange={(v) => {
+              setActiveTab(v as "active" | "archived");
               setCurrentPage(1);
+              setSearchTerm("");
             }}
-            isSearching={isSearching}
+            tabs={[
+              { value: "active", label: t("tabs.active"), count: users.length },
+              { value: "archived", label: t("tabs.archived"), count: archivedUsers.length },
+            ]}
           />
-
-          {activeTab === "active" && (
-            <button
-              onClick={() => {
-                setNewUserForm(initialFormState);
-                setSelectedImage(null);
-                setImagePreviewUrl(null);
-                setEditUserId(null);
-                setIsModalOpen(true);
+          <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center lg:justify-end">
+            <div className="relative w-full sm:max-w-sm">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder={t("searchPlaceholder")}
+                className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <PageSizeSelect
+              pageSize={pageSize}
+              setPageSize={(n) => {
+                setPageSize(n);
+                setCurrentPage(1);
               }}
-              className="bg-[#183e33] text-white px-4 py-2 [border-radius:15px] hover:bg-[#141716] cursor-pointer"
-            >
-              + {t("createNew")}
-            </button>
-          )}
-
-          <button
-            onClick={() => setShowLogModal(true)}
-            className="bg-gray-600 text-white px-4 py-2 [border-radius:15px] hover:bg-gray-700 cursor-pointer"
-          >
-            {t("viewLog")}
-          </button>
+              isSearching={isSearching}
+            />
+          </div>
         </div>
+      </PageHeader>
+
+      {/* Role counts + clear filters */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2 text-xs">
+          {[
+            ["Admin", roleCount["admin"]],
+            ["Manager", roleCount["manager"]],
+            ["User", roleCount["user"]],
+            ["SuperUser", roleCount["superuser"]],
+            ["DCC", roleCount["dcc"]],
+          ].map(([label, n]) => (
+            <span key={label as string} className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 text-gray-600 ring-1 ring-inset ring-gray-200">
+              {label}
+              <b className="font-semibold text-gray-900 tabular-nums">{(n as number) || 0}</b>
+            </span>
+          ))}
+        </div>
+        {hasActiveFilters && (
+          <button onClick={clearAllFilters} className={btn("danger", "sm")}>
+            <X className="h-3.5 w-3.5" />
+            Clear Filters
+          </button>
+        )}
       </div>
 
-      {/* Tabs */}
-      <div className="mb-6 border-b border-gray-200">
-        <nav className="-mb-px flex space-x-8">
-          <button
-            onClick={() => {
-              setActiveTab("active");
-              setCurrentPage(1);
-              setSearchTerm("");
-            }}
-            className={`${
-              activeTab === "active"
-                ? "border-[#183e33] text-[#183e33]"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            {t("tabs.active")} ({users.length})
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab("archived");
-              setCurrentPage(1);
-              setSearchTerm("");
-            }}
-            className={`${
-              activeTab === "archived"
-                ? "border-[#183e33] text-[#183e33]"
-                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors`}
-          >
-            {t("tabs.archived")} ({archivedUsers.length})
-          </button>
-        </nav>
-      </div>
-
-      {/* Stats and CSV Download Row */}
-      <div className="flex justify-between items-center mb-4">
-        <div className="space-x-4 text-sm text-gray-600">
-          <span>
-            Admin: <b className="text-gray-900">{roleCount["admin"] || 0}</b>
-          </span>
-          <span>
-            Manager: <b className="text-gray-900">{roleCount["manager"] || 0}</b>
-          </span>
-          <span>
-            User: <b className="text-gray-900">{roleCount["user"] || 0}</b>
-          </span>
-          <span>
-            SuperUser: <b className="text-gray-900">{roleCount["superuser"] || 0}</b>
-          </span>
-          <span>
-            DCC: <b className="text-gray-900">{roleCount["dcc"] || 0}</b>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-3">
-          {/* Clear All Filters Button */}
-          {hasActiveFilters && (
-            <button
-              onClick={clearAllFilters}
-              className="bg-red-100 text-red-700 px-3 py-2 [border-radius:15px] hover:bg-red-200 cursor-pointer flex items-center gap-2 text-sm border border-red-300"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-              Clear Filters
-            </button>
-          )}
-
-          {/* Download CSV Button */}
-          <button
-            onClick={exportToExcel}
-            className="bg-green-600 text-white px-4 py-2 [border-radius:15px] hover:bg-green-700 cursor-pointer flex items-center gap-2 shadow-sm transition-all transform hover:-translate-y-0.5"
-          >
-            <BiDownload className="w-5 h-5" />
-            <span className="hidden sm:inline">{t("downloadExcel")}</span>
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden -mx-6 sm:mx-0">
+      <div className="ui-panel -mx-4 overflow-hidden sm:mx-0">
         <div className="overflow-x-auto w-full">
-          {sortedUsers.length > 0 && (
-            <div className="mt-4 text-sm text-gray-600 space-y-1"></div>
-          )}
-          <table className="w-full table-fixed divide-y divide-[#8A8787]">
-            <thead className="bg-gradient-to-r from-white text-[#000000] font-extrabold">
+          <table className="ui-table w-full table-fixed">
+            <thead>
               <tr>
                 <th className="w-1/4 px-3 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   <span className="inline-flex items-center">
@@ -1124,7 +1075,7 @@ const ShowUsers: React.FC = () => {
                     {t("col.archivedAt")}
                   </th>
                 )}
-                <th className="w-1/8 px-2 py-3 text-center text-xs font-medium uppercase tracking-wider">
+                <th className="w-[210px] px-2 py-3 text-center text-xs font-medium uppercase tracking-wider">
                   {t("col.actions")}
                 </th>
               </tr>
@@ -1140,7 +1091,7 @@ const ShowUsers: React.FC = () => {
                   >
                     <td className="px-3 py-3">
                       <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 rounded-full overflow-hidden border">
+                        <div className="flex-shrink-0 h-8 w-8 rounded-full overflow-hidden ring-1 ring-brand-100">
                           {(() => {
                             const url = getAvatarUrl(user);
                             return url ? (
@@ -1154,8 +1105,8 @@ const ShowUsers: React.FC = () => {
                                 }}
                               />
                             ) : (
-                              <div className="h-full w-full bg-blue-100 flex items-center justify-center">
-                                <span className="text-blue-600 font-medium text-xs">
+                              <div className="h-full w-full bg-brand-50 flex items-center justify-center">
+                                <span className="text-brand-700 font-semibold text-xs">
                                   {user.name.charAt(0).toUpperCase()}
                                 </span>
                               </div>
@@ -1191,14 +1142,14 @@ const ShowUsers: React.FC = () => {
                         const r = normalizeRole(user.role); // 🟢
                         const cls =
                           r === "admin"
-                            ? "bg-purple-100 text-purple-800"
+                            ? "bg-violet-50 text-violet-700 ring-1 ring-inset ring-violet-200"
                             : r === "manager"
-                            ? "bg-green-100 text-green-800"
+                            ? "bg-brand-50 text-brand-700 ring-1 ring-inset ring-brand-200"
                             : r === "dcc"
-                            ? "bg-amber-100 text-amber-800"
+                            ? "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200"
                             : r === "superuser"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-blue-100 text-blue-800";
+                            ? "bg-sky-50 text-sky-700 ring-1 ring-inset ring-sky-200"
+                            : "bg-gray-100 text-gray-700 ring-1 ring-inset ring-gray-200";
 
                         // แปลตาม i18n ถ้ามี key => roles.admin / roles.manager / ...
                         const label = t(`roles.${r}`, {
@@ -1292,7 +1243,7 @@ const ShowUsers: React.FC = () => {
                                   console.error("Failed to load user data:", err);
                                 }
                               }}
-                              className="text-blue-600 hover:text-blue-900 cursor-pointer text-xs px-2 py-1 rounded hover:bg-blue-50"
+                              className="rounded-lg px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
                               title={t("edit")}
                             >
                               Edit
@@ -1303,7 +1254,7 @@ const ShowUsers: React.FC = () => {
                                 setSelectedUserForLog(user.id);
                                 setShowLogModal(true);
                               }}
-                              className="text-gray-600 hover:text-gray-900 cursor-pointer text-xs px-2 py-1 rounded hover:bg-gray-50"
+                              className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                               title="View Log"
                             >
                               Log
@@ -1346,7 +1297,7 @@ const ShowUsers: React.FC = () => {
                                 setSelectedUserForLog(user.id);
                                 setShowLogModal(true);
                               }}
-                              className="text-gray-600 hover:text-gray-900 cursor-pointer text-xs px-2 py-1 rounded hover:bg-gray-50"
+                              className="rounded-lg px-2 py-1 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-900"
                               title="View Log"
                             >
                               Log
@@ -1381,7 +1332,7 @@ const ShowUsers: React.FC = () => {
                                   }
                                 }
                               }}
-                              className="text-green-600 hover:text-green-900 cursor-pointer text-xs px-2 py-1 rounded hover:bg-green-50"
+                              className="rounded-lg px-2 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50"
                               title={t("restore")}
                             >
                               {t("restore")}
