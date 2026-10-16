@@ -26,6 +26,8 @@ import { api } from "../../lib/api";
 import { ReferenceMemoSelector } from "../../components/ReferenceMemo";
 import type { ReferenceMemoSummary } from "../../components/ReferenceMemo";
 import "./CreateMemo.css";
+import StepHeader from "./StepHeader";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 const formatCC = (u: {
   name?: string;
@@ -3451,88 +3453,16 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
       className="min-h-screen w-full max-w-[100vw] overflow-x-hidden bg-white py-3 px-2 sm:px-3"
       data-fullpage
     >
-      <div className="mb-10 flex flex-col sm:flex-row gap-4">
-        {["stepUpload", "stepSign"].map((key, i) => {
-          const isActive = step === i + 1;
-          // Use proper completion check functions instead of just step > i + 1
-          const isCompleted = i === 0 ? isStep1Completed() : isStep2Completed();
-
-          return (
-            <button
-              key={key}
-              onClick={() => goToStep(i + 1)}
-              className={`relative flex-1 rounded-xl border-2 px-4 py-3 text-center text-sm font-medium transition-all duration-300 shadow-lg overflow-hidden
-    ${isActive
-                  ? "bg-gradient-to-r from-emerald-500 to-emerald-600 text-white border-emerald-600 shadow-emerald-200 scale-[1.02]"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:shadow-md hover:border-emerald-100"
-                }
-          ${isCompleted ? "border-emerald-100 shadow-emerald-50" : ""}`}
-            >
-              {/* Animated background for active state */}
-              {isActive && (
-                <div className="absolute inset-0 bg-[url('https://assets.codepen.io/1468070/wave.svg')] bg-[length:200%_100%] bg-no-repeat animate-wave opacity-30"></div>
-              )}
-
-              <span className="flex items-center justify-center gap-3">
-                <span
-                  className={`relative z-10 w-8 h-8 flex items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-300
-              ${isCompleted
-                      ? "bg-emerald-500 text-white border-emerald-500 shadow-inner"
-                      : isActive
-                        ? "bg-white text-emerald-600 border-emerald-600 shadow"
-                        : "bg-white text-gray-500 border-gray-300"
-                    }`}
-                >
-                  {isCompleted ? (
-                    <svg
-                      className="w-4 h-4"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M20 6L9 17l-5-5" />
-                    </svg>
-                  ) : (
-                    i + 1
-                  )}
-
-                  {/* Animated pulse for active step */}
-                  {isActive && (
-                    <span className="absolute -inset-1.5 rounded-full bg-emerald-400/40 animate-ping z-[-1]"></span>
-                  )}
-                </span>
-
-                <span
-                  className={`font-medium transition-all duration-300 
-            ${isActive ? "text-white font-semibold" : "text-gray-600"}`}
-                >
-                  {t(key)}
-                </span>
-              </span>
-
-              {/* Step status indicator */}
-              <div
-                className={`absolute top-2 right-2 text-xs font-medium px-2 py-0.5 rounded-full transition-all
-          ${isActive
-                    ? "bg-white/20 text-white/90"
-                    : isCompleted
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-              >
-                {isCompleted
-                  ? t("stepState.completed")
-                  : isActive
-                    ? t("stepState.active")
-                    : t("stepState.upcoming")}
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      <StepHeader
+        steps={[
+          { key: "stepUpload", label: t("stepUpload") },
+          { key: "stepSign", label: t("stepSign") },
+        ]}
+        current={step}
+        isCompleted={(i) => (i === 0 ? isStep1Completed() : isStep2Completed())}
+        onStepClick={goToStep}
+        stateLabel={(st) => t(`stepState.${st}`)}
+      />
 
       {/* ---------- MAIN GRID ---------- */}
       <div className="flex flex-col lg:flex-row w-full" style={{ minHeight: 'calc(100vh - 120px)' }}>
@@ -3546,7 +3476,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
             {/* ============== STEP 1 ============== */}
             {step === 1 && (
               <>
-                <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                   {t("titleLabel")}
                 </label>
                 <input
@@ -3556,11 +3486,11 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                   onChange={(e) => setSubject(e.target.value)}
                   placeholder="Enter the title of your request here..."
                   className={`w-full rounded-lg border p-3 shadow-sm focus:ring-2 ${hasTypeIdParam
-                    ? "title-input-emphasis text-gray-800 focus:ring-emerald-400/40"
+                    ? "title-input-emphasis text-gray-800 focus:ring-brand-500/30/40"
                     : "border-red-300 text-red-800 focus:ring-red-400/40"
                     }`}
                 />
-                <label className="inline-block text-base font-semibold text-gray-700 mt-4 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mt-4 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                   {t("typeLabel")}
                 </label>
                 <input
@@ -3731,7 +3661,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                   },
                 ].map(({ v, p, label }) => (
                   <div key={p} className="mb-4">
-                    <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                    <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                       {label}
                     </label>
                     <input
@@ -3745,7 +3675,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
                 {/* ===== MAIN FILE UPLOAD SECTION (moved from step 2) ===== */}
                 <div className="mt-6">
-                  <h4 className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <h4 className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("mainFilesLabel")}
                   </h4>
                   <label
@@ -3854,7 +3784,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
                 {/* ===== ATTACHMENTS SECTION (Files + URL Links) ===== */}
                 <div className="mt-6">
-                  <h4 className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <h4 className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("attachmentsLabel")}
                   </h4>
                   
@@ -4060,7 +3990,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
               <>
                 {/* --- CC selector (moved from step 1) --- */}
                 <div className="mt-2">
-                  <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("ccLabel")}
                   </label>
 
@@ -4247,7 +4177,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                           }
                         }}
                         placeholder={t("placeholder")}
-                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-colors"
                       />
                       {ccLoading && (
                         <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -4518,7 +4448,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                 </div>
 
                 {/* Expiration Date-Time (moved from step 1) */}
-                <label className="inline-block text-base font-semibold text-gray-700 mt-6 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mt-6 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                   {t("expiryLabel")}
                 </label>
                 <DateTimeInline
@@ -4530,7 +4460,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
                 {/* ---------- Add Document Number Section ---------- */}
                 <div className="mb-4 mt-6">
-                  <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("titlememonumber")}
                   </label>
                   <div className="relative">
@@ -4554,7 +4484,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
                 {/* ---------- Add Note/Comment Section ---------- */}
                 <div className="mb-4 mt-6">
-                  <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("noteText")}
                   </label>
                   <div className="relative">
@@ -4579,7 +4509,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                 {/* ---------- เลือก Approval Line ---------- */}
                 {/* Hidden: Approval line selection is now managed through memo type */}
                 <div className="mb-4 mt-6 hidden">
-                  <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("selectApproval")}
                   </label>
                   <div className="relative">
@@ -4904,7 +4834,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                 
                 {/* Approval Line Header */}
                 <div className="mb-4">
-                  <div className="inline-block text-base font-semibold text-gray-700 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <div className="inline-block text-sm font-semibold tracking-wide text-brand-700 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("selectApproval", { defaultValue: "Approval Line" })}
                   </div>
                 </div>
@@ -5276,11 +5206,12 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                                       
                                       {/* Approver Management Controls - Remove Approver */}
                                       <div className="flex items-center gap-1">
-                                        <button
-                                          type="button"
-                                          onClick={() => {
-                                            const approverName = ap.displayName || displayName(ap);
-                                            if (confirm(`${t("removeApprover", { defaultValue: "Remove approver" })} ${approverName}?`)) {
+                                        <HoldToConfirm
+                                          compact
+                                          label={t("removeApprover", { defaultValue: "Remove approver" })}
+                                          tapHint={`${t("removeApprover", { defaultValue: "Remove approver" })} ${ap.displayName || displayName(ap)} — press and hold`}
+                                          onConfirm={() => {
+                                            {
                                               // Build mapping from old index to new index
                                               const oldToNewIndexMap = new Map<number, number>();
                                               let newIdx = 0;
@@ -5341,11 +5272,9 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                                               setCanSaveLine(true);
                                             }
                                           }}
-                                          className="p-1.5 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                                          title={t("removeApprover", { defaultValue: "Remove approver" })}
                                         >
-                                          <X className="w-4 h-4" />
-                                        </button>
+                                          <X className="w-3.5 h-3.5" />
+                                        </HoldToConfirm>
                                       </div>
                                     </div>
 
@@ -5402,7 +5331,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                                           })
                                           : undefined
                                       }
-                                      className={`h-4 w-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-emerald-500 focus:ring-2 ${isUnassignedFlexible
+                                      className={`h-4 w-4 text-emerald-600 bg-gray-100 border-gray-300 rounded focus:ring-brand-500/30 focus:ring-2 ${isUnassignedFlexible
                                           ? "opacity-50 cursor-not-allowed"
                                           : ""
                                         }`}
@@ -6155,7 +6084,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("urlLabel")}
                   </label>
                   <input
@@ -6163,7 +6092,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                     value={urlInput}
                     onChange={(e) => setUrlInput(e.target.value)}
                     placeholder={t("urlPlaceholder")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                     autoFocus
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
@@ -6175,7 +6104,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                 </div>
 
                 <div>
-                  <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+                  <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                     {t("urlTitleLabel")}
                   </label>
                   <input
@@ -6183,7 +6112,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                     value={urlTitleInput}
                     onChange={(e) => setUrlTitleInput(e.target.value)}
                     placeholder={t("urlTitlePlaceholder")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -6228,7 +6157,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
             {/* Body */}
             <div className="px-6 py-4">
-              <label className="inline-block text-base font-semibold text-gray-700 mb-2 px-3 py-1 bg-emerald-50 border-l-4 border-emerald-500 rounded-r">
+              <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
                 {t("noteText") ?? "Note Text"}
               </label>
               <textarea
