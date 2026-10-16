@@ -9,6 +9,8 @@ import { IoColorPaletteSharp } from "react-icons/io5";
 import { FaPaintbrush } from "react-icons/fa6";
 import { toSecureUploadUrl, getAvatarUrlFromUser } from "../../lib/files";
 import BrandSwitch from "../../components/ui/BrandSwitch";
+import PageHeader from "../../components/ui/PageHeader";
+import { UserRound } from "lucide-react";
 
 interface User {
   id: number;
@@ -550,9 +552,9 @@ const ProfilePage: React.FC = () => {
     !imgFailed && user.profileImageUrl ? toSecureUploadUrl(user.profileImageUrl) : "/img/default-avatar.png";
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen w-full p-4 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-4xl font-extrabold text-gray-900 text-center mb-6">{t("myProfile")}</h2>
+        <PageHeader icon={<UserRound />} title={t("myProfile")} />
 
         {/* Tabs */}
         <div className="mb-10">
@@ -656,7 +658,7 @@ const ProfilePage: React.FC = () => {
             {/* Green Header */}
             <div className="bg-gradient-to-r from-[#183E33] to-[#145c4a] p-6 text-white">
               <h3 className="text-xl font-bold flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-emerald-200" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-3 text-brand-200" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
                 {t("myProfile") || "Personal Information"}
@@ -685,7 +687,7 @@ const ProfilePage: React.FC = () => {
                   {/* Edit Icon Overlay */}
                   <label 
                     htmlFor="profile-upload" 
-                    className="absolute bottom-2 right-2 bg-white text-emerald-700 p-2.5 rounded-full shadow-md cursor-pointer hover:bg-emerald-600 hover:text-white transition-all duration-200 transform hover:scale-110 border border-gray-100"
+                    className="absolute bottom-2 right-2 bg-white text-brand-700 p-2.5 rounded-full shadow-md cursor-pointer hover:bg-brand-600 hover:text-white transition-all duration-200 transform hover:scale-110 border border-gray-100"
                     title={t("uploadBtn") || "Change Profile Picture"}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -706,7 +708,7 @@ const ProfilePage: React.FC = () => {
                 </h1>
                 {user.nickname && <p className="text-gray-500 font-medium mt-1">({user.nickname})</p>}
                 
-                <div className="mt-4 px-4 py-1.5 bg-emerald-100 text-emerald-800 rounded-full text-sm font-semibold">
+                <div className="mt-4 px-4 py-1.5 bg-brand-100 text-brand-800 rounded-full text-sm font-semibold">
                   {user.role}
                 </div>
               </div>
@@ -1014,12 +1016,12 @@ const ProfilePage: React.FC = () => {
           <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="bg-gradient-to-r from-[#183E33] to-[#145c4a] p-6 text-white">
               <h3 className="text-xl font-bold flex items-center">
-                <svg className="w-6 h-6 mr-3 text-emerald-200" viewBox="0 0 24 24" fill="currentColor">
+                <svg className="w-6 h-6 mr-3 text-brand-200" viewBox="0 0 24 24" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z" clipRule="evenodd" />
                 </svg>
                 {t("delegationTitle") || "Approval Delegation"}
               </h3>
-              <p className="text-emerald-100 mt-2 text-sm">
+              <p className="text-brand-100 mt-2 text-sm">
                 {t("delegationSubtitle") || "Delegate your approval permissions to another user when you're unavailable"}
               </p>
             </div>
@@ -1075,7 +1077,7 @@ const ProfilePage: React.FC = () => {
                   </div>
                   
                   {delegatedToUserId && (
-                    <div className="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="mt-3 p-3 bg-brand-50 border border-brand-200 rounded-lg">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <div className="w-8 h-8 bg-gradient-to-r from-[#00ffaa] to-[#00cc88] rounded-full flex items-center justify-center text-sm font-bold text-gray-900">
@@ -1094,7 +1096,7 @@ const ProfilePage: React.FC = () => {
                             setDelegatedToUserName("");
                             setUserSearchQuery("");
                           }}
-                          className="text-emerald-600 hover:text-emerald-800"
+                          className="text-brand-600 hover:text-brand-800"
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1180,12 +1182,12 @@ const ProfilePage: React.FC = () => {
           <div className="max-w-5xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             <div className="bg-gradient-to-r from-[#183E33] to-[#145c4a] p-8 text-white">
               <h3 className="text-2xl font-bold flex items-center">
-                <svg className="w-7 h-7 mr-3 text-emerald-200" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="w-7 h-7 mr-3 text-brand-200" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
                 </svg>
                 {t("Email Notification Preferences") || "การตั้งค่าการแจ้งเตือนทางอีเมล"}
               </h3>
-              <p className="text-emerald-50 mt-2 text-sm max-w-2xl opacity-90">
+              <p className="text-brand-50 mt-2 text-sm max-w-2xl opacity-90">
                 {t("Choose which email notifications you want to receive") || "เลือกประเภทการแจ้งเตือนทางอีเมลที่คุณต้องการรับ"}
               </p>
             </div>
@@ -1341,7 +1343,7 @@ const ProfilePage: React.FC = () => {
   <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
     <div className="bg-gradient-to-r from-[#183E33] to-[#145c4a] p-6 text-white">
       <h3 className="text-xl font-bold flex items-center">
-        <svg className="w-6 h-6 mr-3 text-emerald-200" viewBox="0 0 24 24" fill="currentColor">
+        <svg className="w-6 h-6 mr-3 text-brand-200" viewBox="0 0 24 24" fill="currentColor">
           <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
         </svg>
         {t("tabSignature")}
@@ -1351,7 +1353,7 @@ const ProfilePage: React.FC = () => {
     {/* Default Signature Text Section */}
     <div className="p-6 border-b border-gray-200">
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-        <div className="px-4 py-3 bg-gray-600 flex justify-between items-center">
+        <div className="px-4 py-3 bg-brand-700 flex justify-between items-center">
           <h3 className="text-white font-semibold flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
@@ -1370,12 +1372,12 @@ const ProfilePage: React.FC = () => {
               value={defaultSignatureText}
               onChange={(e) => setDefaultSignatureText(e.target.value)}
               placeholder={t("defaultSignatureTextPlaceholder")}
-              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200"
+              className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 transition duration-200"
             />
             <button
               onClick={saveDefaultSignatureText}
               disabled={defaultSigTextSaving}
-              className="px-6 py-2.5 bg-gray-600 text-white font-medium rounded-lg hover:from-gray-700 hover:to-gray-600 transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
+              className="px-6 py-2.5 bg-brand-700 text-white font-medium rounded-lg hover:bg-brand-600 transition duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm hover:shadow-md"
             >
               {defaultSigTextSaving ? (
                 <>
@@ -1398,7 +1400,7 @@ const ProfilePage: React.FC = () => {
              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                {t("signaturePreview")}
              </label>
-             <div className="p-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 hover:border-emerald-200 hover:bg-emerald-50/10">
+             <div className="p-8 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 flex flex-col items-center justify-center min-h-[120px] transition-all duration-300 hover:border-brand-200 hover:bg-brand-50/10">
                <p 
                  className="text-5xl text-gray-800" 
                  style={{ fontFamily: "'Allura', cursive" }}
@@ -1414,7 +1416,7 @@ const ProfilePage: React.FC = () => {
     {/* Drawing Canvas Section */}
     <div className="p-6 border-b border-gray-200">
       <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-        <div className="px-4 py-3 bg-emerald-600  flex justify-between items-center">
+        <div className="px-4 py-3 bg-brand-700 flex justify-between items-center">
           <h3 className="text-white font-semibold flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -1503,9 +1505,9 @@ const ProfilePage: React.FC = () => {
                   max={10}
                   value={penWidth}
                   onChange={(e) => setPenWidth(Number(e.target.value))}
-                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
+                  className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
                 />
-                <div className="flex items-center justify-center h-8 w-8 rounded-md bg-emerald-50 border border-emerald-200 text-sm font-medium text-emerald-800">
+                <div className="flex items-center justify-center h-8 w-8 rounded-md bg-brand-50 border border-brand-200 text-sm font-medium text-brand-800">
                   {penWidth}
                 </div>
               </div>
@@ -1529,7 +1531,7 @@ const ProfilePage: React.FC = () => {
             </button>
             <button
               onClick={saveDrawn}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600  text-white rounded-lg hover:from-emerald-700 hover:to-teal-700 transition duration-200 shadow-sm hover:shadow"
+              className="flex items-center gap-2 px-5 py-2.5 bg-brand-700 text-white rounded-lg hover:bg-brand-600 transition duration-200 shadow-sm hover:shadow"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -1544,7 +1546,7 @@ const ProfilePage: React.FC = () => {
     {/* Upload Section */}
     <div className="hidden p-6 border-b border-gray-200">
       <h4 className="font-medium text-gray-700 mb-4 flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-brand-600" viewBox="0 0 20 20" fill="currentColor">
           <path
             fillRule="evenodd"
             d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
@@ -1556,7 +1558,7 @@ const ProfilePage: React.FC = () => {
 
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="flex-1">
-          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-emerald-500 hover:bg-emerald-50/50 transition duration-200 bg-gray-50">
+          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-brand-500 hover:bg-brand-50/50 transition duration-200 bg-gray-50">
             <div className="flex flex-col items-center justify-center pt-5 pb-6">
               {sigPreviewUrl ? (
                 <div className="relative w-full h-full flex items-center justify-center p-2">
@@ -1589,7 +1591,7 @@ const ProfilePage: React.FC = () => {
           disabled={!sigFile}
           onClick={handleSigUpload}
           className={`px-6 py-3 h-full rounded-lg font-medium transition w-full sm:w-auto ${
-            sigFile ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-sm hover:shadow" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+            sigFile ? "bg-brand-700 hover:bg-brand-600 text-white shadow-sm hover:shadow" : "bg-gray-200 text-gray-400 cursor-not-allowed"
           }`}
         >
           {t("sigSave") || "บันทึกลายเซ็น"}
@@ -1600,7 +1602,7 @@ const ProfilePage: React.FC = () => {
     {/* Gallery Section */}
     <div className="p-6">
       <h4 className="font-medium text-gray-700 mb-4 flex items-center">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-emerald-600" viewBox="0 0 20 20" fill="currentColor">
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-brand-600" viewBox="0 0 20 20" fill="currentColor">
           <path
             fillRule="evenodd"
             d="M4 2a2 2 0 00-2 2v11a3 3 0 106 0V4a2 2 0 00-2-2H4zm1 14a1 1 0 100-2 1 1 0 000 2zm5-1.757l4.9-4.9a2 2 0 000-2.828L13.485 5.1a2 2 0 00-2.828 0L10 5.757v8.486zM16 18H9.071l6-6H16a2 2 0 012 2v2a2 2 0 01-2 2z"
@@ -1629,7 +1631,7 @@ const ProfilePage: React.FC = () => {
             <div
               key={sig.id}
               className={`relative bg-white border rounded-xl overflow-hidden transition-all duration-200 ${
-                sig.id === defaultSigId ? "border-emerald-500 shadow-md" : "border-gray-200 hover:border-emerald-300 hover:shadow-md"
+                sig.id === defaultSigId ? "border-brand-500 shadow-md" : "border-gray-200 hover:border-emerald-300 hover:shadow-md"
               }`}
             >
               <div className="h-40 flex items-center justify-center bg-gray-50 p-4">
@@ -1637,7 +1639,7 @@ const ProfilePage: React.FC = () => {
               </div>
 
               <div className="p-3 bg-white border-t border-gray-100 flex justify-between items-center">
-                {sig.label && <span className="inline-block px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-800 rounded-full">{sig.label}</span>}
+                {sig.label && <span className="inline-block px-2 py-1 text-xs font-medium bg-brand-100 text-brand-800 rounded-full">{sig.label}</span>}
 
                 <div className="flex gap-2">
                   <button
@@ -1687,7 +1689,7 @@ const ProfilePage: React.FC = () => {
               </div>
 
               {sig.id === defaultSigId && (
-                <div className="absolute top-2 right-2 bg-emerald-500 text-white text-xs px-2 py-1 rounded-full flex items-center shadow">
+                <div className="absolute top-2 right-2 bg-brand-500 text-white text-xs px-2 py-1 rounded-full flex items-center shadow">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
@@ -1707,12 +1709,12 @@ const ProfilePage: React.FC = () => {
           <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden">
             <div className="bg-gradient-to-r from-[#183E33] to-[#145c4a] p-6 text-white">
               <h3 className="text-xl font-bold flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-3 text-emerald-200" viewBox="0 0 20 20" fill="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 mr-3 text-brand-200" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 {t("sessionsTitle") || "Login Session Records"}
               </h3>
-              <p className="text-emerald-100 mt-2 text-sm">
+              <p className="text-brand-100 mt-2 text-sm">
                 {t("sessionsSubtitle") || "Your recent login activities"}
               </p>
             </div>
