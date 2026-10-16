@@ -2977,8 +2977,9 @@ export default function MemoViewer() {
                     value: tab.key,
                     icon: <span className="flex-shrink-0 [&_svg]:h-4 [&_svg]:w-4">{tab.icon}</span>,
                     label: (
+                      // icon + count only: five labels do not fit the side panel (the panel header names the tab)
                       <span className="inline-flex items-center gap-1.5 whitespace-nowrap" title={tab.label}>
-                        {tab.label}
+                        <span className="sr-only">{tab.label}</span>
                         {typeof count === "number" && count > 0 && (
                           <span className="min-w-[18px] rounded-full bg-brand-700 px-1.5 text-center text-[10px] leading-[18px] text-white">
                             {formatCount(count)}

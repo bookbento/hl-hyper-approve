@@ -219,14 +219,14 @@ export default function NotificationDropdown({
 
   return (
     <div ref={dropdownRef} className={`relative ${bellClassName}`}>
-      {/* React Bits BellToggle: rings when opened, wobbles when the unread count rises,
-          and unfurls the "Notifications" label on desktop while the panel is open. */}
+      {/* React Bits BellToggle: rings when opened, wobbles when the unread count rises.
+          Icon-only: an unfurling label would reserve ~90px of dead, unclickable space in the navbar. */}
       <BellToggle
         size="sm"
         radius={18}
         label={t("title")}
         offLabel=""
-        onLabel={mobile ? "" : t("title")}
+        onLabel=""
         pressed={show}
         onChange={(open) => {
           setShow(open);

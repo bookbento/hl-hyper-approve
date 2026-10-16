@@ -2957,8 +2957,10 @@ const Dashboard: React.FC = () => {
       return arr;
     }, []);
 
+    // div, not label: a <label> forwards clicks to its first button (the disabled ‹),
+    // which fought with the GlideSelect trigger.
     return (
-      <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+      <div className="inline-flex items-center gap-2 text-sm text-gray-700">
         {pageSize !== "All" && (
           <>
             <span className="text-sm text-gray-600">
@@ -3004,7 +3006,7 @@ const Dashboard: React.FC = () => {
         >
           ›
         </button>
-      </label>
+      </div>
     );
   };
 
