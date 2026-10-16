@@ -12,6 +12,7 @@ import TerminateReasonModal from "./TerminateReasonModal";
 import { DatePicker, Modal, Select } from "antd";
 import dayjs from "dayjs";
 import { ExtraApprovalCard } from "./ExtraApprovalCard";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 
 // ===== types =====
@@ -1008,9 +1009,7 @@ const MemoAndApproval: React.FC<Props> = ({
 
   const handleExtraReject = React.useCallback(async (lineId: number) => {
     if (!memoId) return;
-    if (!confirm(t("extra.confirmReject", "Are you sure you want to reject?"))) {
-      return;
-    }
+    // confirmed by holding the Reject button in ExtraApprovalCard (HoldToConfirm)
     try {
       await api.post(
         `/api/memos/${memoId}/extra-approval-lines/${lineId}/action`,

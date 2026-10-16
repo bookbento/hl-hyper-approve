@@ -8,6 +8,7 @@ import { BiChevronDown } from "react-icons/bi";
 import { BiSolidChevronUp, BiSolidChevronDown } from "react-icons/bi";
 import toast from "react-hot-toast";
 import AdminLogModal from "../../components/AdminLogModal";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 interface BusinessUnit {
   id: number;
   name: string;
@@ -137,8 +138,8 @@ const CreateBusinessUnit: React.FC = () => {
   };
 
   /** ───────── delete ───────── */
+  // confirmed by holding the button (HoldToConfirm) instead of confirm()
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Delete this business unit?")) return;
     try {
       await axios.delete(`${API}/${id}`, { withCredentials: true });
       setUnits((prev) => prev.filter((u) => u.id !== id));
@@ -277,15 +278,9 @@ const CreateBusinessUnit: React.FC = () => {
                           style={{ color: "#183e33", fontSize: 20 }}
                         />
                       </button>
-                      <button
-                        onClick={() => handleDelete(u.id)}
-                        className="px-2 py-1 hover:bg-gray-200 rounded"
-                      >
-                        <FontAwesomeIcon
-                          icon={faTrash}
-                          style={{ color: "#183e33", fontSize: 20 }}
-                        />
-                      </button>
+                      <HoldToConfirm compact label="Delete" onConfirm={() => handleDelete(u.id)}>
+                        <FontAwesomeIcon icon={faTrash} style={{ fontSize: 15 }} />
+                      </HoldToConfirm>
                     </td>
                   </tr>
                 ))}

@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 // ✅ ใช้ axios instance ที่ตั้งค่า withCredentials ไว้แล้ว
 import { api } from "../../lib/api"; // ← ปรับ path ตามโปรเจกต์ของคุณ
 import AdminLogModal from "../../components/AdminLogModal";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 /* ───────── types ───────── */
 interface BusinessUnit {
@@ -176,8 +177,8 @@ const CreateDepartment: React.FC = () => {
   };
 
   /* delete (archive) */
+  // confirmed by holding the button (HoldToConfirm) instead of confirm()
   const handleDelete = async (id: number) => {
-    if (!window.confirm(t("confirm.delete") || "เก็บบันทึก (Archive) แผนกนี้หรือไม่?")) return;
     try {
       await api.delete(`${API}/${id}`);
       toast.success(t("toast.deleted") || "เก็บบันทึกแผนกสำเร็จ");
@@ -345,9 +346,9 @@ const CreateDepartment: React.FC = () => {
                         <button onClick={() => openModal("edit", d)} className="px-2 py-1 hover:bg-gray-200 rounded">
                           <FontAwesomeIcon icon={faPenToSquare} style={{ color: "#183e33", fontSize: 20 }} />
                         </button>
-                        <button onClick={() => handleDelete(d.id)} className="px-2 py-1 hover:bg-gray-200 rounded" title="Archive">
-                          <FontAwesomeIcon icon={faTrash} style={{ color: "#183e33", fontSize: 20 }} />
-                        </button>
+                        <HoldToConfirm compact tone="warning" label="Archive" onConfirm={() => handleDelete(d.id)}>
+                          <FontAwesomeIcon icon={faTrash} style={{ fontSize: 15 }} />
+                        </HoldToConfirm>
                       </>
                     ) : (
                       <button 

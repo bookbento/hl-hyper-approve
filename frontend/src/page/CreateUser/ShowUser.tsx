@@ -15,6 +15,7 @@ import { FaEye, FaEyeSlash } from "react-icons/fa6";
 import { BiDownload } from "react-icons/bi";
 import { saveAs } from "file-saver";
 import AdminLogModal from "../../components/AdminLogModal";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 /* ---------- Types ---------- */
 interface User {
@@ -1308,11 +1309,11 @@ const ShowUsers: React.FC = () => {
                               Log
                             </button>
 
-                            <button
-                              onClick={async () => {
-                                if (
-                                  confirm(t("confirmDelete", { name: user.name }))
-                                ) {
+                            <HoldToConfirm
+                              tone="warning"
+                              tapHint={t("confirmDelete", { name: user.name })}
+                              onConfirm={async () => {
+                                {
                                   try {
                                     await api.delete(`/api/users/${user.id}`);
                                     const updated = users.filter(
@@ -1334,11 +1335,9 @@ const ShowUsers: React.FC = () => {
                                   }
                                 }
                               }}
-                              className="text-amber-600 hover:text-amber-900 cursor-pointer text-xs px-2 py-1 rounded hover:bg-amber-50"
-                              title={t("delete")}
                             >
                               {t("delete")}
-                            </button>
+                            </HoldToConfirm>
                           </>
                         ) : (
                           <>

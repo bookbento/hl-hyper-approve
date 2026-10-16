@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 import toast from "react-hot-toast";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 import {
   FiArrowLeft,
   FiEdit,
@@ -103,12 +104,7 @@ const MemoTypeDetail: React.FC = () => {
 
   const handleDelete = async () => {
     if (!memoType) return;
-
-    const confirmed = window.confirm(
-      t("confirmDelete", { name: memoType.name })
-    );
-
-    if (!confirmed) return;
+    // confirmed by holding the button (HoldToConfirm) instead of confirm()
 
     try {
       await axios.delete(`/api/memotypes/${memoType.id}`, {
@@ -230,13 +226,12 @@ const MemoTypeDetail: React.FC = () => {
             <FiEdit className="w-4 h-4 mr-2" />
             {t("edit")}
           </button>
-          <button
-            onClick={handleDelete}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
-          >
-            <FiTrash2 className="w-4 h-4 mr-2" />
-            {t("delete")}
-          </button>
+          <HoldToConfirm size="md" onConfirm={handleDelete} tapHint={t("confirmDelete", { name: memoType?.name ?? "" })}>
+            <span className="flex items-center">
+              <FiTrash2 className="w-4 h-4 mr-2" />
+              {t("delete")}
+            </span>
+          </HoldToConfirm>
         </div>
       </div>
 

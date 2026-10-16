@@ -16,6 +16,7 @@ import {
 import toast from "react-hot-toast";
 import { useTranslation } from "react-i18next";
 import AdminLogModal from "../../components/AdminLogModal";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 interface Team {
   id: number;
@@ -282,8 +283,8 @@ const checkAdmin = (me: Me): boolean => {
   };
 
   /* ------------- delete ------------- */
+  // confirmed by holding the button (HoldToConfirm) instead of confirm()
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this approval line?")) return;
     try {
       await axios.delete(`/api/approval-lines/${id}`, {
         withCredentials: true,
@@ -657,13 +658,9 @@ const checkAdmin = (me: Me): boolean => {
                     >
                       <Pencil size={18} />
                     </button>
-                    <button
-                      onClick={() => handleDelete(l.id)}
-                      className="rounded-lg p-2 text-red-500 hover:bg-red-50 transition-colors"
-                      title={t("list.delete")}
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    <HoldToConfirm compact label={t("list.delete")} onConfirm={() => handleDelete(l.id)}>
+                      <Trash2 size={16} />
+                    </HoldToConfirm>
                   </div>
                 </div>
               </div>

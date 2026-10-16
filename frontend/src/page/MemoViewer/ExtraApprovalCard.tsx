@@ -3,6 +3,7 @@ import React from "react";
 import { useTranslation } from "react-i18next";
 import { FiClock } from "react-icons/fi";
 import { toSecureUploadUrl } from "../../lib/files";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 type ExtraApproverDTO = {
   id: number;
@@ -231,16 +232,17 @@ export const ExtraApprovalCard: React.FC<ExtraApprovalCardProps> = ({
                 >
                   {t("extra.approve", "Approve")}
                 </button>
-                <button
-                  onClick={async () => {
+                <HoldToConfirm
+                  tone="warning"
+                  tapHint={t("extra.confirmReject", "Press and hold to reject")}
+                  onConfirm={async () => {
                     if (onReject) {
                       await onReject(extraLine.id);
                     }
                   }}
-                  className="px-4 py-1.5 bg-amber-600 text-white text-sm font-bold rounded-lg hover:bg-amber-700 transition-all"
                 >
                   {t("extra.reject", "Reject")}
-                </button>
+                </HoldToConfirm>
               </div>
             )}
             

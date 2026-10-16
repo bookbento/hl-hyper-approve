@@ -23,6 +23,7 @@ import PDFViewer from "../../components/PDFViewer";
 import UnauthorizedAccess from "../../components/UnauthorizedAccess";
 import AdminLogModal from "../../components/AdminLogModal";
 import BrandSwitch from "../../components/ui/BrandSwitch";
+import HoldToConfirm from "../../components/ui/HoldToConfirm";
 
 // Type for manageable business units
 interface ManageableBU {
@@ -1021,8 +1022,8 @@ const MemoTypeManager: React.FC = () => {
     };
   }, []);
 
+  // confirmed by holding the button (HoldToConfirm) instead of confirm()
   const handleDeleteExistingFile = async (typeId: number, fileId: number) => {
-    if (!confirm(t("confirm.deleteFile"))) return;
     try {
       await axios.delete(`/api/memotypes/${typeId}/files/${fileId}`, {
         withCredentials: true,
@@ -1686,8 +1687,9 @@ const MemoTypeManager: React.FC = () => {
     }
   };
 
+  // confirmed by holding the button (HoldToConfirm) instead of confirm()
   const handleDelete = async (id: number) => {
-    if (window.confirm(t("confirm.delete"))) {
+    {
       try {
         await axios.delete(`/api/memotypes/${id}`, { withCredentials: true });
         setTypes((p) => p.filter((x) => x.id !== id));
@@ -3514,13 +3516,9 @@ const MemoTypeManager: React.FC = () => {
                       >
                         <FontAwesomeIcon icon={faPenToSquare} className="w-4 h-4" />
                       </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="flex items-center justify-center w-8 h-8 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
-                        title="Delete"
-                      >
-                        <FontAwesomeIcon icon={faTrash} className="w-4 h-4" />
-                      </button>
+                      <HoldToConfirm compact label="Delete" onConfirm={() => handleDelete(item.id)}>
+                        <FontAwesomeIcon icon={faTrash} className="w-3.5 h-3.5" />
+                      </HoldToConfirm>
                     </div>
                   </div>
                 </div>
@@ -4372,20 +4370,20 @@ const MemoTypeManager: React.FC = () => {
                               </button>
                             )}
                             {modalMode !== "duplicate" && (
-                              <button
-                                type="button"
-                                onClick={() => {
+                              <HoldToConfirm
+                                tapHint={t("confirm.deleteFile")}
+                                onConfirm={() => {
                                   handleDeleteExistingFile(form.id!, f.id);
                                   setDefaultChoice((prev) =>
                                     prev === `id:${f.id}` ? null : prev
                                   );
                                 }}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded border text-xs hover:bg-red-50 hover:border-red-300 text-red-600"
-                                title={t("files.remove")}
                               >
-                                <FaTrashAlt className="w-3.5 h-3.5" />
-                                <span>{t("files.remove")}</span>
-                              </button>
+                                <span className="inline-flex items-center gap-1 text-xs">
+                                  <FaTrashAlt className="w-3.5 h-3.5" />
+                                  {t("files.remove")}
+                                </span>
+                              </HoldToConfirm>
                             )}
                           </div>
                         </li>

@@ -13,6 +13,9 @@ type Props = {
   disabled?: boolean;
   /** shown when the button is only tapped */
   tapHint?: string;
+  /** icon-only button (table rows); `label` becomes its accessible name */
+  compact?: boolean;
+  label?: string;
 };
 
 const TONES = {
@@ -33,23 +36,35 @@ export default function HoldToConfirm({
   holdTime = 1200,
   disabled,
   tapHint = "Press and hold to confirm",
+  compact = false,
+  label,
 }: Props) {
   const c = TONES[tone];
+  const content = compact ? (
+    <span className="inline-flex items-center" title={label}>
+      <span aria-hidden="true" className="inline-flex">{children}</span>
+      {label ? <span className="sr-only">{label}</span> : null}
+    </span>
+  ) : (
+    children
+  );
   return (
-    <HoldButton
-      size={size}
-      holdTime={holdTime}
-      disabled={disabled}
-      backgroundColor={c.bg}
-      fillColor={c.fill}
-      textColor={c.text}
-      fillTextColor="#ffffff"
-      doneLabel={doneLabel ?? children}
-      radius={10}
-      onHold={() => void onConfirm()}
-      onTap={() => toast(tapHint, { duration: 2500 })}
-    >
-      {children}
-    </HoldButton>
+    <span className={compact ? "inline-flex [&_button]:!px-2.5" : "inline-flex"}>
+      <HoldButton
+        size={size}
+        holdTime={holdTime}
+        disabled={disabled}
+        backgroundColor={c.bg}
+        fillColor={c.fill}
+        textColor={c.text}
+        fillTextColor="#ffffff"
+        doneLabel={doneLabel ?? content}
+        radius={10}
+        onHold={() => void onConfirm()}
+        onTap={() => toast(tapHint, { duration: 2500 })}
+      >
+        {content}
+      </HoldButton>
+    </span>
   );
 }
