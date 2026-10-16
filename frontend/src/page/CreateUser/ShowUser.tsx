@@ -842,7 +842,7 @@ const ShowUsers: React.FC = () => {
                     <span className="flex items-center gap-1">
                       {t("col.role")}
                       {roleFilterIds.length > 0 && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <button
@@ -913,7 +913,7 @@ const ShowUsers: React.FC = () => {
                     <span className="flex items-center gap-1">
                       {t("col.businessUnit")}
                       {businessUnitFilterIds.length > 0 && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <button
@@ -984,7 +984,7 @@ const ShowUsers: React.FC = () => {
                     <span className="flex items-center gap-1">
                       {t("col.department")}
                       {departmentFilterIds.length > 0 && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <button

@@ -25,6 +25,10 @@ import AdminLogModal from "../../components/AdminLogModal";
 import BrandSwitch from "../../components/ui/BrandSwitch";
 import HoldToConfirm from "../../components/ui/HoldToConfirm";
 import { displayFileName } from "../../lib/fileName";
+import PageHeader from "../../components/ui/PageHeader";
+import SegmentTabs from "../../components/ui/SegmentTabs";
+import { btn } from "../../components/ui/button";
+import { FileStack, Plus, ScrollText } from "lucide-react";
 
 // Type for manageable business units
 interface ManageableBU {
@@ -2137,47 +2141,47 @@ const MemoTypeManager: React.FC = () => {
   }
 
   return (
-    <div className="p-6 w-full">
-      {/* header */}
+    <div className="w-full p-4 sm:p-6">
+      <PageHeader
+        icon={<FileStack />}
+        title={t("title")}
+        description={t("subtitle", { defaultValue: "Document types, their templates and approval lines" })}
+        actions={
+          <>
+            <button onClick={() => setShowLogModal(true)} className={btn("secondary")}>
+              <ScrollText className="h-4 w-4" />
+              {t("viewLog")}
+            </button>
+            <button onClick={() => ready && openModal("create")} disabled={!ready} className={btn("primary")}>
+              <Plus className="h-4 w-4" />
+              {String(t("btnCreate")).replace(/^\+\s*/, "")}
+            </button>
+          </>
+        }
+      />
       <div className="flex flex-col gap-4 mb-6">
-        {/* + NEW: Tabs */}
-        <div className="flex space-x-4 border-b border-gray-200">
-          <button
-            className={`py-2 px-4 font-medium border-b-2 transition-colors ${
-              activeTab === "active"
-                ? "border-[#183e33] text-[#183e33]"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => {
-              setActiveTab("active");
-              setCurrentPage(1);
-            }}
-          >
-            {t("tab.all", { count: countActiveTab })}
-          </button>
-          <button
-            className={`py-2 px-4 font-medium border-b-2 transition-colors ${
-              activeTab === "hidden"
-                ? "border-[#183e33] text-[#183e33]"
-                : "border-transparent text-gray-500 hover:text-gray-700"
-            }`}
-            onClick={() => {
-              setActiveTab("hidden");
-              setCurrentPage(1);
-            }}
-          >
-            {t("tab.deleted", { count: countHiddenTab })}
-          </button>
+        <div className="self-start">
+        <SegmentTabs
+          value={activeTab}
+          onChange={(v) => {
+            setActiveTab(v as typeof activeTab);
+            setCurrentPage(1);
+          }}
+          tabs={[
+            { value: "active", label: String(t("tab.all", { count: countActiveTab })).replace(/\s*\(\d+\)\s*$/, ""), count: countActiveTab },
+            { value: "hidden", label: String(t("tab.deleted", { count: countHiddenTab })).replace(/\s*\(\d+\)\s*$/, ""), count: countHiddenTab },
+          ]}
+        />
         </div>
 
         {/* Filter Row - Single line layout */}
-        <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
+        <div className="ui-panel flex flex-wrap items-center gap-3 p-3">
           {/* Search Document Types */}
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <input
               type="text"
               placeholder={t("searchPlaceholder", "Search document types...")}
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#183e33]"
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -2185,7 +2189,7 @@ const MemoTypeManager: React.FC = () => {
               }}
             />
             <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -2211,7 +2215,7 @@ const MemoTypeManager: React.FC = () => {
               <div className="relative min-w-[400px] max-sm:min-w-full max-sm:w-full" ref={buDropdownRef}>
                 <button
                   onClick={() => setIsBUDropdownOpen(!isBUDropdownOpen)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#183e33] bg-white flex items-center justify-between"
+                  className="w-full px-3 py-2 h-10 border border-gray-200 rounded-xl text-sm outline-none hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 bg-white flex items-center justify-between"
                 >
                   <span className={dynamicBUFilterIds.length > 0 ? "text-gray-900" : "text-gray-500"}>
                     {dynamicBUFilterIds.length > 0
@@ -2220,7 +2224,7 @@ const MemoTypeManager: React.FC = () => {
                   </span>
                   <div className="flex items-center gap-2">
                     {dynamicBUFilterIds.length > 0 && (
-                      <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      <span className="bg-brand-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
                         {dynamicBUFilterIds.length}
                       </span>
                     )}
@@ -2294,7 +2298,7 @@ const MemoTypeManager: React.FC = () => {
               >
                 {({ open }) => (
                   <div className="relative min-w-[400px] max-sm:min-w-full max-sm:w-full">
-                    <Listbox.Button className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#183e33] bg-white flex items-center justify-between">
+                    <Listbox.Button className="w-full px-3 py-2 h-10 border border-gray-200 rounded-xl text-sm outline-none hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 bg-white flex items-center justify-between">
                       <span className={dynamicDeptFilterIds.length > 0 ? "text-gray-900" : "text-gray-500"}>
                         {dynamicDeptFilterIds.length > 0
                           ? `${dynamicDeptFilterIds.length} ${t("filter.selected", "selected")}`
@@ -2533,32 +2537,16 @@ const MemoTypeManager: React.FC = () => {
               </Listbox>
             </div>
 
-            {/* create button */}
-            <button
-              onClick={() => ready && openModal("create")}
-              disabled={!ready}
-              className="bg-[#183e33] text-white px-4 py-2 rounded-lg hover:bg-[#141716] disabled:opacity-50 text-sm font-medium"
-            >
-              {t("btnCreate")}
-            </button>
-
-            {/* view log button */}
-            <button
-              onClick={() => setShowLogModal(true)}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium"
-            >
-              {t("viewLog")}
-            </button>
           </div>
         </div>
       </div>
       {/* Responsive Card/Table Layout */}
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+      <div className="ui-panel overflow-hidden">
         {/* Desktop Table View */}
         <div className="hidden lg:block">
           <div className="overflow-x-auto">
-            <table className="w-full table-fixed divide-y divide-gray-200 text-sm">
-              <thead className="bg-gray-50">
+            <table className="ui-table w-full table-fixed text-sm">
+              <thead>
                 <tr>
                   {/* # Column */}
                   <th className="w-12 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -2571,7 +2559,7 @@ const MemoTypeManager: React.FC = () => {
                       <span className="flex items-center gap-1">
                         {t("col.name")}
                         {(columnFilters.name || sortColumn === "name") && (
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                         )}
                       </span>
                       <button
@@ -2655,7 +2643,7 @@ const MemoTypeManager: React.FC = () => {
                       <span className="flex items-center gap-1">
                         {t("col.bu")}
                         {(dynamicBUFilterIds.length > 0 || sortColumn === "businessUnit") && (
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                         )}
                       </span>
                       <button
@@ -2758,7 +2746,7 @@ const MemoTypeManager: React.FC = () => {
                       <span className="flex items-center gap-1">
                         {t("col.dept")}
                         {(dynamicDeptFilterIds.length > 0 || sortColumn === "department") && (
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                         )}
                       </span>
                       <button
@@ -2895,7 +2883,7 @@ const MemoTypeManager: React.FC = () => {
                       <span className="flex items-center gap-1">
                         {t("col.status")}
                         {(columnFilters.status || sortColumn === "status") && (
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                         )}
                       </span>
                       <button
@@ -2982,7 +2970,7 @@ const MemoTypeManager: React.FC = () => {
                       <span className="flex items-center gap-1">
                         {t("col.approvers")}
                         {(columnFilters.approvers || sortColumn === "approvers") && (
-                          <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                         )}
                       </span>
                       <div className="flex items-center gap-2">
@@ -3184,7 +3172,7 @@ const MemoTypeManager: React.FC = () => {
                                       {/* Level Header with Approval Requirement */}
                                       <div className="flex items-center justify-between mb-2 pb-1 border-b border-gray-100">
                                         <div className="flex items-center gap-2">
-                                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white">
+                                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-brand-700 text-white">
                                             {t("approval.level")} {level.level + 1}
                                           </span>
                                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${approvalReq === "ANY"
@@ -3261,7 +3249,7 @@ const MemoTypeManager: React.FC = () => {
                                           {/* Level Header with Approval Requirement */}
                                           <div className="flex items-center justify-between mb-2 pb-1 border-b border-gray-100">
                                             <div className="flex items-center gap-2">
-                                              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white">
+                                              <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-brand-700 text-white">
                                                 {t("approval.level")} {parseInt(level) + 1}
                                               </span>
                                               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${approvalReq === "ANY"
@@ -3432,7 +3420,7 @@ const MemoTypeManager: React.FC = () => {
                                   >
                                     <div className="flex items-center justify-between mb-2 pb-1 border-b border-gray-100">
                                       <div className="flex items-center gap-2">
-                                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white">
+                                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-brand-700 text-white">
                                           {t("approval.level")} {level.level + 1}
                                         </span>
                                         <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${approvalReq === "ANY"

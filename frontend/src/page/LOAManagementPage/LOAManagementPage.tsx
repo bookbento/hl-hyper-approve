@@ -7,6 +7,9 @@ import { Listbox } from "@headlessui/react";
 import { ChevronDown, Check } from "lucide-react";
 import UnauthorizedAccess from "../../components/UnauthorizedAccess";
 import AdminLogModal from "../../components/AdminLogModal";
+import PageHeader from "../../components/ui/PageHeader";
+import { btn } from "../../components/ui/button";
+import { GitBranch, ScrollText } from "lucide-react";
 
 // Type for manageable business units
 interface ManageableBU {
@@ -1199,17 +1202,25 @@ const LoaManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="p-6">
-      {/* Page Header */}
+    <div className="w-full p-4 sm:p-6">
+      <PageHeader
+        icon={<GitBranch />}
+        title={t("title")}
+        description={t("subtitle", { defaultValue: "Who approves each document type, level by level" })}
+        actions={<button onClick={() => setShowLogModal(true)} className={btn("secondary")}>
+              <ScrollText className="h-4 w-4" />
+              {t("viewLog")}
+            </button>}
+      />
       <div className="flex flex-col gap-4 mb-6">
         {/* Filter Row - Single line layout (matching MemoTypeManager) */}
-        <div className="flex flex-wrap items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm">
+        <div className="ui-panel flex flex-wrap items-center gap-3 p-3">
           {/* Line Search */}
           <div className="relative flex-1 min-w-[200px] max-w-sm">
             <input
               type="text"
               placeholder="Search approval lines..."
-              className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#183e33]"
+              className="h-10 w-full rounded-xl border border-gray-200 bg-white pl-9 pr-3 text-sm outline-none transition-[border-color,box-shadow] placeholder:text-gray-400 hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -1217,7 +1228,7 @@ const LoaManagementPage: React.FC = () => {
               }}
             />
             <svg
-              className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
+              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -1242,7 +1253,7 @@ const LoaManagementPage: React.FC = () => {
                 <div className="relative min-w-[250px] max-sm:min-w-full max-sm:w-full" ref={buDropdownRef}>
                   <button
                     onClick={() => setIsBUDropdownOpen(!isBUDropdownOpen)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#183e33] bg-white min-w-[250px] max-sm:w-full flex items-center justify-between"
+                    className="px-3 py-2 h-10 border border-gray-200 rounded-xl text-sm outline-none hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 bg-white min-w-[250px] max-sm:w-full flex items-center justify-between"
                   >
                     <span className="truncate">
                       {dynamicBUFilterIds.length === 0
@@ -1312,7 +1323,7 @@ const LoaManagementPage: React.FC = () => {
                 <div className="relative min-w-[250px] max-sm:min-w-full max-sm:w-full" ref={deptDropdownRef}>
                   <button
                     onClick={() => setIsDeptDropdownOpen(!isDeptDropdownOpen)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#183e33] bg-white min-w-[250px] max-sm:w-full flex items-center justify-between"
+                    className="px-3 py-2 h-10 border border-gray-200 rounded-xl text-sm outline-none hover:border-gray-300 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/15 bg-white min-w-[250px] max-sm:w-full flex items-center justify-between"
                   >
                     <span className="truncate">
                       {dynamicDeptFilterIds.length === 0
@@ -1473,7 +1484,7 @@ const LoaManagementPage: React.FC = () => {
           <div className="flex items-center gap-2 flex-wrap">
             {selectedFromApprover && (
               <>
-                <div className="bg-orange-100 border border-orange-200 rounded-lg px-3 py-1.5">
+                <div className="rounded-lg bg-amber-50 px-3 py-1.5 ring-1 ring-inset ring-amber-200">
                   <span className="text-xs text-orange-600 font-medium">Filtering:</span>
                   <span className="text-sm text-orange-800 ml-1">{selectedFromApprover.name}</span>
                 </div>
@@ -1485,7 +1496,7 @@ const LoaManagementPage: React.FC = () => {
                 <button
                   onClick={openBulkUpdateModal}
                   disabled={selectedLineIds.size === 0}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-orange-600 rounded-lg hover:bg-orange-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className={btn("primary", "sm")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -1495,7 +1506,7 @@ const LoaManagementPage: React.FC = () => {
                 <button
                   onClick={openBulkSignatureModal}
                   disabled={selectedLineIds.size === 0}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className={btn("secondary", "sm")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -1505,7 +1516,7 @@ const LoaManagementPage: React.FC = () => {
                 <button
                   onClick={openBulkReorderModal}
                   disabled={selectedLineIds.size === 0}
-                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  className={btn("secondary", "sm")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
@@ -1545,23 +1556,16 @@ const LoaManagementPage: React.FC = () => {
               </Listbox>
             </div>
 
-            {/* View Log button */}
-            <button
-              onClick={() => setShowLogModal(true)}
-              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 text-sm font-medium"
-            >
-              {t("viewLog")}
-            </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+      <div className="ui-panel overflow-hidden">
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full table-fixed divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+          <table className="ui-table w-full table-fixed text-sm">
+            <thead>
               <tr>
                 {/* Checkbox Column - Only visible when filtering by approver */}
                 {selectedFromApprover && (
@@ -1584,7 +1588,7 @@ const LoaManagementPage: React.FC = () => {
                     <span className="flex items-center gap-1">
                       Line Name
                       {(columnFilters.lineName || sortColumn === "lineName") && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <button
@@ -1668,7 +1672,7 @@ const LoaManagementPage: React.FC = () => {
                     <span className="flex items-center gap-1">
                       Business Unit
                       {(dynamicBUFilterIds.length > 0 || sortColumn === "businessUnitName") && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <button
@@ -1779,7 +1783,7 @@ const LoaManagementPage: React.FC = () => {
                     <span className="flex items-center gap-1">
                       Department
                       {(dynamicDeptFilterIds.length > 0 || sortColumn === "departmentName") && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <button
@@ -1898,7 +1902,7 @@ const LoaManagementPage: React.FC = () => {
                     <span className="flex items-center gap-1">
                       Memo Type
                       {(dynamicMemoTypeFilterId !== "all" || sortColumn === "memoTypeName") && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <button
@@ -2002,7 +2006,7 @@ const LoaManagementPage: React.FC = () => {
                     <span className="flex items-center gap-1">
                       Approvers
                       {(columnFilters.approvers || sortColumn === "levelCount") && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="w-1.5 h-1.5 bg-brand-500 rounded-full"></span>
                       )}
                     </span>
                     <div className="flex items-center gap-2">
@@ -2225,7 +2229,7 @@ const LoaManagementPage: React.FC = () => {
                                       {/* Level Header with Approval Requirement */}
                                       <div className="flex items-center justify-between mb-2 pb-1 border-b border-gray-100">
                                         <div className="flex items-center gap-2">
-                                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-blue-600 text-white">
+                                          <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-semibold bg-brand-700 text-white">
                                             Level {parseInt(level) + 1}
                                           </span>
                                           <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
