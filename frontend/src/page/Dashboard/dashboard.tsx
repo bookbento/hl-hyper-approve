@@ -37,6 +37,8 @@ import type {
 import { subscribeMemoDashboardRefresh } from "../../lib/memoDashboardEvents";
 import { AnimatedContent, BlurText } from "../../components/motion";
 import StatCard from "./StatCard";
+import SpringCheck from "../../components/reactbits/SpringCheck/SpringCheck";
+import GlideSelect from "../../components/reactbits/GlideSelect/GlideSelect";
 
 const DASHBOARD_STAT_COUNTS_CACHE_KEY = "dashboard:statCounts:v1";
 
@@ -1365,20 +1367,22 @@ const ColumnVisibilityToggle: React.FC<{
             </div>
 
             {/* Content */}
-            <div className="p-4 space-y-2">
+            <div className="flex flex-col gap-1 p-3">
               {columns.map((col) => (
-                <label
-                  key={col.key}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
+                <div key={col.key} className="rounded-lg px-2 py-1.5 transition-colors hover:bg-brand-50/60">
+                  <SpringCheck
+                    label={col.label}
                     checked={visibleColumns[col.key]}
                     onChange={() => onToggle(col.key)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                    strike="none"
+                    doneOpacity={1}
+                    boxSize={18}
+                    fontSize={14}
+                    color="#374151"
+                    fillColor="#183e33"
+                    checkColor="#7ef0c2"
                   />
-                  <span className="text-sm text-gray-800">{col.label}</span>
-                </label>
+                </div>
               ))}
             </div>
 
@@ -1387,7 +1391,7 @@ const ColumnVisibilityToggle: React.FC<{
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                className="w-full rounded-lg bg-brand-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-600"
               >
                 {t("columnVisibility.close")}
               </button>
@@ -2973,22 +2977,22 @@ const Dashboard: React.FC = () => {
         >
           ‹
         </button>
-        <select
-          aria-label={t("pager.ariaPerPage")}
+        <GlideSelect
+          ariaLabel={t("pager.ariaPerPage")}
+          size="sm"
+          align="right"
+          menuWidth={120}
           value={value === "All" ? "All" : String(value)}
-          onChange={(e) =>
-            onChange(e.target.value === "All" ? "All" : Number(e.target.value))
-          }
-          className="rounded-md border border-gray-300 bg-white px-2 py-1 shadow-sm
-                   focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-center"
-        >
-          {options.map((n) => (
-            <option key={n} value={n}>
-              {n}
-            </option>
-          ))}
-          <option value="All">{t("pager.all")}</option>
-        </select>
+          options={[
+            ...options.map((n) => ({ value: String(n), label: String(n) })),
+            { value: "All", label: t("pager.all") },
+          ]}
+          onChange={(v) => onChange(v === "All" ? "All" : Number(v))}
+          accentColor="#183e33"
+          surfaceColor="#ffffff"
+          highlightColor="#eef7f3"
+          textColor="#1f2937"
+        />
 
         <button
           type="button"

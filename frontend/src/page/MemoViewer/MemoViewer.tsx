@@ -29,6 +29,7 @@ import ApproveWithConditionModal from "./ApproveWithConditionModal";
 import TerminateReasonModal from "./TerminateReasonModal";
 import { RejectReasonModal } from "./RejectReasonModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import RubberSegment from "../../components/reactbits/RubberSegment/RubberSegment";
 import {
   faCircleCheck,
   faCircleInfo,
@@ -2951,62 +2952,44 @@ export default function MemoViewer() {
               );
             })()}
 
-            {/* ===== Tabs ===== */}
-            <nav
-              className="shrink-0 flex justify-center gap-1 sm:gap-2 overflow-x-auto scrollbar-hide"
-              aria-label="Tabs"
-            >
-              {TABS.map((tab) => {
-                const active = activeTab === tab.key;
-
-                // เลือก count สำหรับแต่ละแท็บ
-                const count =
-                  tab.key === "comment"
-                    ? commentCount
-                    : tab.key === "attached"
-                      ? attachedCount
-                      : tab.key === "reference"
-                        ? referenceCount
-                        : null;
-
-                return (
-                  <button
-                    key={tab.key}
-                    onClick={() => handleTabChange(tab.key)}
-                    className={`relative flex items-center justify-center gap-2 px-3 py-2.5 text-xs sm:text-sm
-          font-medium rounded-lg transition-all duration-200 ${
-            active
-              ? "bg-green-100 text-green-800 border border-green-200 shadow-sm min-w-[7rem]"
-              : "text-gray-600 hover:text-gray-800 hover:bg-gray-100 min-w-[3rem]"
-          }`}
-                    aria-label={tab.label}
-                    title={tab.label}
-                  >
-                    {/* Icon */}
-                    <span className="flex-shrink-0">{tab.icon}</span>
-
-                    {/* Label - only show for active tab */}
-                    {active && (
-                      <span className="whitespace-nowrap font-semibold">
+            {/* ===== Tabs (React Bits RubberSegment) ===== */}
+            <div className="shrink-0 flex justify-center overflow-x-auto scrollbar-hide px-2">
+              <RubberSegment
+                aria-label="Tabs"
+                size="sm"
+                radius={12}
+                value={activeTab}
+                onChange={(v) => handleTabChange(v as typeof activeTab)}
+                trackColor="#f3f4f6"
+                thumbColor="#ffffff"
+                textColor="#6b7280"
+                activeTextColor="#183e33"
+                items={TABS.map((tab) => {
+                  const count =
+                    tab.key === "comment"
+                      ? commentCount
+                      : tab.key === "attached"
+                        ? attachedCount
+                        : tab.key === "reference"
+                          ? referenceCount
+                          : null;
+                  return {
+                    value: tab.key,
+                    icon: <span className="flex-shrink-0 [&_svg]:h-4 [&_svg]:w-4">{tab.icon}</span>,
+                    label: (
+                      <span className="inline-flex items-center gap-1.5 whitespace-nowrap" title={tab.label}>
                         {tab.label}
+                        {typeof count === "number" && count > 0 && (
+                          <span className="min-w-[18px] rounded-full bg-brand-700 px-1.5 text-center text-[10px] leading-[18px] text-white">
+                            {formatCount(count)}
+                          </span>
+                        )}
                       </span>
-                    )}
-
-                    {/* Count Badge */}
-                    {typeof count === "number" && count > 0 && (
-                      <span
-                        className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1
-      rounded-full text-[10px] leading-[18px] text-white text-center
-      border border-white shadow
-      ${active ? "bg-emerald-600" : "bg-orange-700"}`}
-                      >
-                        {formatCount(count)}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
+                    ),
+                  };
+                })}
+              />
+            </div>
 
             {/* ===== Body (ยืดเต็มสูง) ===== */}
             <div

@@ -22,6 +22,7 @@ import AsyncSelect from "react-select/async";
 import PDFViewer from "../../components/PDFViewer";
 import UnauthorizedAccess from "../../components/UnauthorizedAccess";
 import AdminLogModal from "../../components/AdminLogModal";
+import BrandSwitch from "../../components/ui/BrandSwitch";
 
 // Type for manageable business units
 interface ManageableBU {
@@ -3654,22 +3655,19 @@ const MemoTypeManager: React.FC = () => {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${form.forAllDepartmentUnderSelectedBu ? 'bg-blue-200 text-blue-800' : 'bg-gray-200 text-gray-600'}`}>
                       {form.forAllDepartmentUnderSelectedBu ? "ON" : "OFF"}
                     </span>
-                    <label className="toggle-switch-container">
-                      <input
-                        type="checkbox"
-                        checked={!!form.forAllDepartmentUnderSelectedBu}
-                        onChange={(e) => {
-                          setForm((prev) => ({
-                            ...prev,
-                            forAllDepartmentUnderSelectedBu: e.target.checked,
-                            // Clear other scope flags when this is enabled
-                            forEveryone: false,
-                            forEveryDepartmentAcrossBU: false,
-                          }));
-                        }}
-                      />
-                      <span className="toggle-switch-track"></span>
-                    </label>
+                    <BrandSwitch
+                      checked={!!form.forAllDepartmentUnderSelectedBu}
+                      ariaLabel={t("toggle.forAllDeptUnderBu", "For all departments under BU")}
+                      onChange={(on) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          forAllDepartmentUnderSelectedBu: on,
+                          // Clear other scope flags when this is enabled
+                          forEveryone: false,
+                          forEveryDepartmentAcrossBU: false,
+                        }));
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -3798,16 +3796,12 @@ const MemoTypeManager: React.FC = () => {
                       <span className={`toggle-status-badge ${form.isActive ? 'active' : 'inactive'}`}>
                         {form.isActive ? t("status.active") : t("status.inactive")}
                       </span>
-                      <label className="toggle-switch-container">
-                        <input
-                          type="checkbox"
-                          id="isActive"
-                          name="isActive"
-                          checked={form.isActive}
-                          onChange={handleChange}
-                        />
-                        <span className="toggle-switch-track"></span>
-                      </label>
+                      <BrandSwitch
+                        id="isActive"
+                        checked={form.isActive}
+                        ariaLabel={t("status.active")}
+                        onChange={(on) => setForm((p) => ({ ...p, isActive: on }))}
+                      />
                     </div>
                   </div>
                 </div>

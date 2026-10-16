@@ -8,6 +8,7 @@ import { api } from "../../lib/api";
 import { IoColorPaletteSharp } from "react-icons/io5";
 import { FaPaintbrush } from "react-icons/fa6";
 import { toSecureUploadUrl, getAvatarUrlFromUser } from "../../lib/files";
+import BrandSwitch from "../../components/ui/BrandSwitch";
 
 interface User {
   id: number;
@@ -1307,19 +1308,12 @@ const ProfilePage: React.FC = () => {
                             <span className={`text-sm font-medium ${pref.emailEnabled ? 'text-[#183E33]' : 'text-gray-500'}`}>
                               {pref.emailEnabled ? (t("Enabled") || "Enabled") : (t("Disabled") || "Disabled")}
                             </span>
-                            <button
-                              onClick={() => togglePreference(pref.notificationTypeId, !pref.emailEnabled)}
+                            <BrandSwitch
+                              checked={pref.emailEnabled}
+                              onChange={(on) => togglePreference(pref.notificationTypeId, on)}
                               disabled={preferencesSaving}
-                              className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#145c4a] focus:ring-offset-2 disabled:opacity-50 ${
-                                pref.emailEnabled ? 'bg-[#183E33]' : 'bg-gray-200 hover:bg-gray-300'
-                              }`}
-                            >
-                              <span
-                                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform duration-300 ease-in-out shadow-sm ${
-                                  pref.emailEnabled ? 'translate-x-[22px]' : 'translate-x-1'
-                                }`}
-                              />
-                            </button>
+                              ariaLabel={pref.notificationTypeName}
+                            />
                           </div>
                         </div>
                       ))}

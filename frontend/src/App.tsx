@@ -7,15 +7,17 @@ import {
   Outlet,
 } from "react-router-dom";
 import { lazy, Suspense } from "react";
-import Navigation from "./components/Navigation";
 import { Toaster } from "react-hot-toast";
 import "./App.css";
 import "./i18n";
 import RequireAuth from "./components/RequireAuth";
 import RequireAdmin from "./components/RequireAdmin";
+import LatticeLoader from "./components/reactbits/LatticeLoader/LatticeLoader";
 
 // Each page is its own chunk: opening the dashboard no longer downloads the
 // memo editor, the PDF viewer, admin pages, etc. (was one 2.7 MB bundle).
+// The navbar (bell, notification list, motion) is not needed on /login.
+const Navigation = lazy(() => import("./components/Navigation"));
 const Dashboard = lazy(() => import("./page/Dashboard/dashboard"));
 const CreateMemo = lazy(() => import("./page/CreateMemo/CreateMemo"));
 const ShowUsers = lazy(() => import("./page/CreateUser/ShowUser"));
@@ -40,7 +42,8 @@ const LoaManagementPage = lazy(() => import("./page/LOAManagementPage/LOAManagem
 function PageFallback() {
   return (
     <div className="flex h-full min-h-[50vh] items-center justify-center" aria-busy="true">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[#183e33]" />
+      {/* React Bits LatticeLoader while a page chunk downloads */}
+      <LatticeLoader label="Loading" showTimer={false} color="#23805f" glow glowColor="#7ef0c2" />
     </div>
   );
 }
@@ -51,7 +54,9 @@ function PrivateLayout() {
       <Toaster position="top-right" />
 
       {/* เอา Navigation ขึ้นมาบนสุด */}
-      <Navigation />
+      <Suspense fallback={<div className="fixed inset-x-0 top-0 z-50 h-16 bg-[#183e33]/95" />}>
+        <Navigation />
+      </Suspense>
 
       {/* เอา id ให้ main สำหรับฟัง scroll */}
       <main id="scroll-container" className="pt-16 flex-1 overflow-y-auto">
