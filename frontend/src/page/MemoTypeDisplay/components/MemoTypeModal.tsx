@@ -6,6 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import LoadingScreen from "../../../components/Mhan";
 import PDFViewer from "../../../components/PDFViewer";
+import { displayFileName } from "../../../lib/fileName";
 import {
   FiHome,
   FiUsers,
@@ -464,7 +465,7 @@ const MemoTypeModal: React.FC<MemoTypeModalProps> = ({
                       <FiFileText className="w-5 h-5 text-gray-500" />
                       <div>
                         <p className="font-medium text-gray-900">
-                          {file.fileName}
+                          {displayFileName(file.fileName)}
                         </p>
                         <p className="text-sm text-gray-500">
                           {formatFileSize(file.size)}

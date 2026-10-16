@@ -28,6 +28,7 @@ import type { ReferenceMemoSummary } from "../../components/ReferenceMemo";
 import "./CreateMemo.css";
 import StepHeader from "./StepHeader";
 import HoldToConfirm from "../../components/ui/HoldToConfirm";
+import { displayFileName } from "../../lib/fileName";
 
 const formatCC = (u: {
   name?: string;
@@ -3600,9 +3601,9 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4
                                     className="text-sm font-semibold text-gray-900 leading-5 line-clamp-2 break-all"
-                                    title={f.fileName}
+                                    title={displayFileName(f.fileName)}
                                   >
-                                    {f.fileName}
+                                    {displayFileName(f.fileName)}
                                   </h4>
                                 </div>
 
@@ -3888,7 +3889,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                                   rel="noopener noreferrer"
                                   className="truncate hover:text-blue-600"
                                 >
-                                  {f.fileName}
+                                  {displayFileName(f.fileName)}
                                 </a>
                               </div>
                               <button

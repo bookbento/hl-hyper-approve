@@ -24,6 +24,7 @@ import UnauthorizedAccess from "../../components/UnauthorizedAccess";
 import AdminLogModal from "../../components/AdminLogModal";
 import BrandSwitch from "../../components/ui/BrandSwitch";
 import HoldToConfirm from "../../components/ui/HoldToConfirm";
+import { displayFileName } from "../../lib/fileName";
 
 // Type for manageable business units
 interface ManageableBU {
@@ -4345,7 +4346,7 @@ const MemoTypeManager: React.FC = () => {
                               rel="noopener"
                               className="text-[#183e33] hover:underline break-words truncate"
                             >
-                              {f.fileName}
+                              {displayFileName(f.fileName)}
                             </a>
                           </div>
 
