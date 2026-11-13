@@ -1,6 +1,6 @@
 # apps/api/.env — read by `node --env-file=.env` (pm2: ecosystem.config.js).
-# For local dev: copy to .env, then `pnpm --filter apps/api start:dev`
-# (start:dev does not read .env by itself — export the vars or use `node --env-file`).
+# For local dev: copy to .env, then `pnpm dev` at the repo root (api + frontend;
+# the api's dev/start:dev scripts load this file with `nest start --env-file .env`).
 
 PORT=3001
 NODE_ENV=development

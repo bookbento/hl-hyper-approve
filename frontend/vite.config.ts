@@ -5,13 +5,23 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: '0.0.0.0', // 👈 This line allows network access
-    port: 5173,       // Optional: avoid port auto-switching
+    // LAN access for QA: open http://<this machine's IP>:5173 from another machine.
+    // Only this port needs to be reachable — /api goes through the proxy below.
+    host: '0.0.0.0',
+    port: 5173,
+    strictPort: true,
     proxy: {
       "/api": {
-target: "http://localhost:3001",
+        target: "http://localhost:3001",
         changeOrigin: true,
         secure: false,
+        // The API's dev CORS allow-list only knows localhost. A page opened as
+        // http://172.16.x.x:5173 is same-origin with this proxy, so present it as localhost.
+        configure: (proxy) => {
+          proxy.on("proxyReq", (proxyReq) => {
+            if (proxyReq.getHeader("origin")) proxyReq.setHeader("origin", "http://localhost:5173");
+          });
+        },
       },
     },
   },
