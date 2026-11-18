@@ -297,6 +297,8 @@ const makeOldToken = (id: number): OrderToken => ({
   kind: "old",
   oldId: id,
 });
+// Same name + size + last-modified ⇒ treat as the same file picked twice.
+const fileKey = (f: File) => `${f.name}|${f.size}|${f.lastModified}`;
 const makeNewToken = (idx: number): OrderToken => ({
   token: `new:${idx}`,
   kind: "new",
@@ -451,6 +453,15 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
   >([]);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [attachedFileUrls, setAttachedFileUrls] = useState<FileSource[]>([]);
+  // Mirrors of the file lists, updated synchronously when files are added so two
+  // uploads finishing before a re-render still see each other (dedupe + indexes).
+  const filesRef = useRef<File[]>(files);
+  filesRef.current = files;
+  const attachedFilesRef = useRef<File[]>(attachedFiles);
+  attachedFilesRef.current = attachedFiles;
+  // Keys of files still being read (pdf.js page count), so picking the same files
+  // again while a slow scan is loading doesn't add them twice.
+  const inFlightFileKeysRef = useRef<Set<string>>(new Set());
   const [existingAttachedFiles, setExistingAttachedFiles] = useState<
     ExistingFile[]
   >([]);
@@ -2228,6 +2239,32 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Drops files already in `current`, still loading, or repeated within the
+  // same pick, and tells the user which ones were skipped.
+  const skipDuplicateFiles = useCallback(
+    (added: File[], current: File[], pending: Iterable<string> = []): File[] => {
+      const seen = new Set([...current.map(fileKey), ...pending]);
+      const fresh: File[] = [];
+      const skipped: string[] = [];
+      for (const f of added) {
+        const k = fileKey(f);
+        if (seen.has(k)) {
+          skipped.push(f.name);
+          continue;
+        }
+        seen.add(k);
+        fresh.push(f);
+      }
+      if (skipped.length) {
+        toast(t("duplicateFilesSkipped", { files: skipped.join(", ") }), {
+          icon: "ℹ️",
+        });
+      }
+      return fresh;
+    },
+    [t]
+  );
+
   const processNewMainFiles = useCallback(async (added: File[]) => {
     const pdfs = added.filter(
       (f) =>
@@ -2245,46 +2282,63 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
       return;
     }
 
-    const addedPairs = pdfs.map((f) => ({
-      file: f,
-      url: URL.createObjectURL(f),
-    }));
-    // Collect page sizes per file for A3/A4 mixed-size support
-    const addedPageSizes: Record<string, number>[] = [];
-    const addedPageCounts = await Promise.all(
-      addedPairs.map(async ({ url }, i) => {
-        const doc = await pdfjs.getDocument(url).promise;
-        const sizes: Record<string, number> = {};
-        for (let p = 1; p <= doc.numPages; p++) {
-          const pg = await doc.getPage(p);
-          const vp = pg.getViewport({ scale: 1 });
-          // Use relative index i; we'll remap with correct fileIdx below
-          sizes[`${p}`] = vp.width;
-        }
-        addedPageSizes[i] = sizes;
-        return doc.numPages;
-      })
+    const fresh = skipDuplicateFiles(
+      pdfs,
+      filesRef.current,
+      inFlightFileKeysRef.current
     );
+    if (!fresh.length) return;
+    const keys = fresh.map(fileKey);
+    keys.forEach((k) => inFlightFileKeysRef.current.add(k));
 
-    setFiles((prev) => {
-      const startIdx = prev.length;
-      // Now we know the real fileIdx — remap page widths
+    try {
+      const addedPairs = fresh.map((f) => ({
+        file: f,
+        url: URL.createObjectURL(f),
+      }));
+      // Collect page sizes per file for A3/A4 mixed-size support
+      const addedPageSizes: Record<string, number>[] = [];
+      const addedPageCounts = await Promise.all(
+        addedPairs.map(async ({ url }, i) => {
+          const doc = await pdfjs.getDocument(url).promise;
+          const sizes: Record<string, number> = {};
+          for (let p = 1; p <= doc.numPages; p++) {
+            const pg = await doc.getPage(p);
+            const vp = pg.getViewport({ scale: 1 });
+            // Use relative index i; we'll remap with correct fileIdx below
+            sizes[`${p}`] = vp.width;
+          }
+          addedPageSizes[i] = sizes;
+          return doc.numPages;
+        })
+      );
+
+      // Compute the new indexes once, outside any state updater. Updaters must be
+      // pure: React may call them more than once, and the old code queued
+      // setOrderTokens inside setFiles' updater, so a re-run appended every token
+      // twice (6 files showed up as 12).
+      const startIdx = filesRef.current.length;
+      filesRef.current = [...filesRef.current, ...fresh];
+
       const remapped: Record<string, number> = {};
       addedPageSizes.forEach((sizes, i) => {
         Object.entries(sizes).forEach(([pageNum, w]) => {
           remapped[`${startIdx + i}-${pageNum}`] = w;
         });
       });
-      setPageWidthPtMap(prevMap => ({ ...prevMap, ...remapped }));
+
+      setFiles((prev) => [...prev, ...fresh]);
+      setPageWidthPtMap((prevMap) => ({ ...prevMap, ...remapped }));
       setOrderTokens((prevTok) => [
         ...prevTok,
-        ...pdfs.map((_, i) => makeNewToken(startIdx + i)),
+        ...fresh.map((_, i) => makeNewToken(startIdx + i)),
       ]);
-      return [...prev, ...pdfs];
-    });
-    setFileUrls((prev) => [...prev, ...addedPairs]);
-    setLoadedPageCounts((prev) => [...prev, ...addedPageCounts]);
-  }, []);
+      setFileUrls((prev) => [...prev, ...addedPairs]);
+      setLoadedPageCounts((prev) => [...prev, ...addedPageCounts]);
+    } finally {
+      keys.forEach((k) => inFlightFileKeysRef.current.delete(k));
+    }
+  }, [skipDuplicateFiles]);
 
   const processNewAttachedFiles = useCallback(async (added: File[]) => {
     // Allowed file extensions
@@ -2318,10 +2372,14 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
       return;
     }
 
-    const pairs = added.map((f) => ({ file: f, url: URL.createObjectURL(f) }));
-    setAttachedFiles((prev) => [...prev, ...added]);
+    const fresh = skipDuplicateFiles(added, attachedFilesRef.current);
+    if (!fresh.length) return;
+    attachedFilesRef.current = [...attachedFilesRef.current, ...fresh];
+
+    const pairs = fresh.map((f) => ({ file: f, url: URL.createObjectURL(f) }));
+    setAttachedFiles((prev) => [...prev, ...fresh]);
     setAttachedFileUrls((prev) => [...prev, ...pairs]);
-  }, [t]);
+  }, [t, skipDuplicateFiles]);
 
   // File change handler
   const handleMultiFileChange = async (

@@ -340,6 +340,9 @@ export class MemoLifecycleService {
 
       let tokens: string[] = [];
       try { tokens = JSON.parse(String(body['fileOrderTokens'] ?? '[]')) as string[]; } catch { tokens = []; }
+      // A repeated token would list one file twice and shift every later index
+      // (order + signature file mapping). Keep the first occurrence only.
+      tokens = [...new Set(tokens)];
 
       let finalOrder: number[];
       if (tokens.length) {
@@ -699,6 +702,8 @@ export class MemoLifecycleService {
 
     let fileOrderTokens: string[] = [];
     try { fileOrderTokens = JSON.parse(String(body['fileOrderTokens'] ?? '[]')) as string[]; } catch { fileOrderTokens = []; }
+    // See create(): a repeated token would list one file twice and shift indexes.
+    fileOrderTokens = [...new Set(fileOrderTokens)];
 
     const subject = body['subject'] as string | undefined;
     const deptIdNum = body['departmentId'] ? Number(body['departmentId']) : null;

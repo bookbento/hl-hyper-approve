@@ -89,6 +89,7 @@
   },
 
   "pendingNewFile": "ไฟล์ใหม่",
+  "duplicateFilesSkipped": "ไฟล์นี้เพิ่มไปแล้ว ข้ามให้: {{files}}",
   "loadingPdf": "กำลังโหลด PDF...",
 
   "errors": {
