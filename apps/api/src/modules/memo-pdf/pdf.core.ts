@@ -206,6 +206,40 @@ const getFontPtKey = (page: PDFPage): FontPtKey => {
 
 const getFontPt = (page: PDFPage, field: FontField): number => FONT_PT[getFontPtKey(page)][field];
 
+// Some PDFs (e.g. Excel exports) store MediaBox/CropBox upside down, like [0 792 612 0].
+// pdf-lib then reports a negative height, so getViewBox/getSize go wrong and signatures
+// are drawn at a negative y (off the page). Rewrite the boxes as [minX minY maxX maxY];
+// viewers render the page exactly as before.
+const normalizePageBoxes = (page: PDFPage): void => {
+  const fix = (
+    get: () => { x: number; y: number; width: number; height: number },
+    set: (x: number, y: number, w: number, h: number) => void,
+  ) => {
+    try {
+      const b = get();
+      if (b.width >= 0 && b.height >= 0) return;
+      set(
+        Math.min(b.x, b.x + b.width),
+        Math.min(b.y, b.y + b.height),
+        Math.abs(b.width),
+        Math.abs(b.height),
+      );
+    } catch {
+      /* box not present */
+    }
+  };
+  fix(
+    () => page.getMediaBox(),
+    (x, y, w, h) => page.setMediaBox(x, y, w, h),
+  );
+  if (page.node.get(PDFName.of('CropBox'))) {
+    fix(
+      () => page.getCropBox(),
+      (x, y, w, h) => page.setCropBox(x, y, w, h),
+    );
+  }
+};
+
 // "Bake in" /Rotate เป็น CTM ใน content stream แล้วตั้ง MediaBox ใหม่ให้ตรงกับ visual size
 // เรียกหลัง copyPages → หน้าที่ผ่านฟังก์ชันนี้จะเป็น rotation=0 พร้อม visual dimensions ที่ถูกต้อง
 // ข้อดี: visualToRaw กลายเป็น identity (rotation=0) — ไม่ต้อง counter-rotate signature แยก
@@ -480,6 +514,7 @@ export async function renderPdfWithSignatures(options: RenderOptions): Promise<P
     const pages = await merged.copyPages(srcDoc, srcDoc.getPageIndices());
     pages.forEach((p) => {
       merged.addPage(p);
+      normalizePageBoxes(p); // un-invert MediaBox/CropBox (negative height) before any geometry
       flattenPageRotation(p, merged); // normalize /Rotate → content CTM, ป้องกัน signature หมุน
     });
   }
