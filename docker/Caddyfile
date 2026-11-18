@@ -1,0 +1,49 @@
+# Serves the SPA from /srv and proxies /api to the NestJS container.
+#
+# SITE_ADDRESS
+#   dev  → ":80"  plain HTTP; the host's nginx (:8088) is in front
+#   prod → "e-approval.hylifeconnect.com"  Caddy gets a Let's Encrypt cert itself
+# API_UPSTREAM
+#   "api:3001" on the compose network, or "host.docker.internal:3011" when the api
+#   runs with network_mode: host (dev server, Postgres only listens on localhost there)
+
+{
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# Memo PDFs and attachments: the app allows 50MB per file; leave headroom for multipart.
+	request_body {
+		max_size 100MB
+	}
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	handle /api/* {
+		reverse_proxy {$API_UPSTREAM} {
+			# One proxy hop in front of the api (TRUST_PROXY_HOPS=1); overwrite the
+			# client-supplied chain so req.ip can't be spoofed.
+			header_up X-Forwarded-For {remote_host}
+		}
+	}
+
+	# index.html must never be cached, or users keep an old bundle after a deploy
+	@index path / /index.html
+	header @index Cache-Control "no-store"
+
+	# Hashed build assets can be cached forever
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

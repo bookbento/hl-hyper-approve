@@ -1,0 +1,7 @@
+# Files that run inside Linux containers must keep LF even on Windows checkouts
+# (core.autocrlf would turn them into CRLF and `sh` then fails with "\r: not found").
+*.sh            text eol=lf
+docker/**       text eol=lf
+docker-compose*.yml text eol=lf
+.github/**      text eol=lf
+docker/*.ttf    binary

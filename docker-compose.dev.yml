@@ -1,0 +1,58 @@
+# DEV server stack — 43.210.109.106 (shared with ~11 other sites)
+#
+#   cd ~/hyper-dev
+#   docker compose -f docker-compose.dev.yml pull
+#   docker compose -f docker-compose.dev.yml run --rm api sh /app/packages/database/scripts/migrate-deploy.sh
+#   docker compose -f docker-compose.dev.yml up -d
+#
+# Images/tag come from .env next to this file (written by CI): IMAGE_API, IMAGE_WEB, TAG,
+# plus the app's runtime env (DATABASE_URL, JWT_SECRET, …) read via env_file.
+#
+# Why it looks different from prod:
+# - api uses network_mode: host — Postgres on this box listens on localhost only and
+#   changing that needs a Postgres restart, which would hit the other tenants.
+# - nothing binds 80/443 (the host's nginx owns them); nginx :8088 → web 127.0.0.1:8089.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  api:
+    image: ${IMAGE_API:?set IMAGE_API in .env}:${TAG:-latest}
+    container_name: hyper-dev-api
+    restart: unless-stopped
+    logging: *logging
+    network_mode: host
+    mem_limit: 768m
+    env_file: .env
+    environment:
+      # HTTP via IP → secure cookies would never stick; see docs/DEV-SERVER.md
+      NODE_ENV: development
+      PORT: "3011"
+      UPLOADS_DIR: /data/uploads
+      # Caddy overwrites X-Forwarded-For with its peer (the host nginx), so on dev the
+      # logged IP is nginx's. Fine for 2 testers; prod has Caddy alone in front.
+      TRUST_PROXY_HOPS: "1"
+      # Copied data contains real users' emails — never send mail from dev
+      SMTP_HOST: ""
+    volumes:
+      - /var/www/hlememo-dev/uploads:/data/uploads
+
+  web:
+    image: ${IMAGE_WEB:?set IMAGE_WEB in .env}:${TAG:-latest}
+    container_name: hyper-dev-web
+    restart: unless-stopped
+    logging: *logging
+    mem_limit: 128m
+    environment:
+      SITE_ADDRESS: ":80"
+      API_UPSTREAM: host.docker.internal:3011
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - "127.0.0.1:8089:80"
+    depends_on:
+      - api

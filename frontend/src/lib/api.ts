@@ -4,13 +4,13 @@ import type { AxiosError, AxiosResponse } from "axios";
 import { broadcastMemoDashboardRefresh } from "./memoDashboardEvents";
 import { installHttpCache } from "./httpCache";
 
-// Dev: same origin as the page — the Vite dev server proxies /api to :3001 (vite.config.ts),
-// so the app also works when opened from another machine on the LAN (http://<ip>:5173).
+// Same origin as the page unless VITE_BACKEND_API_URL overrides it:
+// - dev: the Vite dev server proxies /api to :3001 (vite.config.ts), so the app also
+//   works from another machine on the LAN (http://<ip>:5173)
+// - deployed: Caddy/nginx in front serves the SPA and proxies /api on the same origin,
+//   so one Docker image works on any host/port (dev :8088, prod https) without a rebuild.
 export const BASE_URL =
-  import.meta.env.VITE_BACKEND_API_URL ||
-  (import.meta.env.DEV
-    ? window.location.origin
-    : `${window.location.origin.replace(/:\d+$/, ":3001")}`);
+  import.meta.env.VITE_BACKEND_API_URL || window.location.origin;
 
 export const api = axios.create({
   baseURL: BASE_URL,

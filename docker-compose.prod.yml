@@ -1,0 +1,64 @@
+# PROD stack — 43.208.169.222 (e-approval.hylifeconnect.com)
+#
+# ⚠️ NOT IN USE YET. Prod still runs the old Express app under pm2 + nginx and is live
+#    for the whole company. Switching needs an agreed maintenance window and the
+#    cutover/rollback steps in the deploy plan (agent: deployer).
+#
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml run --rm api sh /app/packages/database/scripts/migrate-deploy.sh
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Postgres stays on the host (not in compose). Prod Postgres already listens on all
+# interfaces; pg_hba must allow the docker bridge (172.16.0.0/12) before cutover.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  api:
+    image: ${IMAGE_API:?set IMAGE_API in .env}:${TAG:-latest}
+    container_name: hyper-api
+    restart: unless-stopped
+    logging: *logging
+    # t3.medium, 3.7GB, no swap: cap the api so a burst of uploads can't take
+    # Postgres down with it
+    mem_limit: 1g
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      UPLOADS_DIR: /data/uploads
+      # Caddy is the only proxy in front
+      TRUST_PROXY_HOPS: "1"
+    extra_hosts:
+      # DATABASE_URL must point at host.docker.internal:5432
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # 45GB of existing files — mounted in place, never copied
+      - /var/www/hlememo/uploads:/data/uploads
+
+  web:
+    image: ${IMAGE_WEB:?set IMAGE_WEB in .env}:${TAG:-latest}
+    container_name: hyper-web
+    restart: unless-stopped
+    logging: *logging
+    mem_limit: 256m
+    environment:
+      SITE_ADDRESS: ${DOMAIN:?set DOMAIN in .env}
+      API_UPSTREAM: api:3001
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # certificates + ACME account — losing this means re-issuing certs
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  caddy_data:
+  caddy_config:
