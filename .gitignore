@@ -8,7 +8,10 @@ frontend/dist/
 
 .kiro/
 .vscode/
-.claude/
+# .claude: share skills/agents with the team, keep personal/local state out
+.claude/*
+!.claude/skills/
+!.claude/agents/
 
 # Environment files
 **/.env
@@ -52,6 +55,13 @@ start-local.bat
 
 # @hl/database build output (built on install)
 packages/database/dist/
+
+# Docs that are source, despite the *.md / *.py rules above
+!/CLAUDE.md
+!/AGENTS.md
+!/docs/**/*.md
+!.claude/skills/**
+!.claude/agents/**
 
 # Prisma migrations are source, not dumps
 !packages/database/prisma/migrations/**/migration.sql
