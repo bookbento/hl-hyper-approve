@@ -2,7 +2,9 @@
 
 ## Docker deploy (ใหม่ — แทนที่ deploy-dev.sh / pm2)
 
-> สถานะ 2026-11-18: เตรียมไฟล์ใน repo เสร็จและทดสอบในเครื่องแล้ว **ยังไม่ได้ขึ้นเครื่อง dev**
+> สถานะ 2026-11-18: **ขึ้นเครื่อง dev แล้ว** (workflow ผ่าน, container healthy, ทดสอบบนเครื่อง login ได้)
+> เหลือเปิด inbound TCP 8088 ใน AWS Security Group ก่อน ถึงจะเข้า http://43.210.109.106:8088 จากข้างนอกได้
+> account ทดสอบ: `qa.admin@hyper-dev.local` (admin), `qa.user@hyper-dev.local` (user) — ขอรหัสจากทีม
 
 ใช้ image เดียวกับที่จะใช้บน prod: GitHub Actions build `ghcr.io/bookbento/hl-hyper-approve-{api,web}` → ssh เข้า dev → `compose pull` → migrate → `up -d`
 

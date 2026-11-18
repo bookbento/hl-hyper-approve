@@ -33,10 +33,17 @@
 - DB `hlememo_dev` (สำเนาจาก `test-myapp`, มีอีเมลจริง → ห้ามตั้ง SMTP จริง) · uploads `/var/www/hlememo-dev/uploads` ~33MB
 - nginx site `/etc/nginx/sites-available/hlememo-dev` ยังมีอยู่ แต่ unlink ไปเมื่อ 2026-11-13
 
+### เหตุการณ์บนเครื่อง dev
+- **deploy Docker ครั้งแรกผ่าน** (run 44280818440, commit `9d3e143`) → ใช้ api 76MB / web 13MB, เว็บอื่น 14 site และ foodreview ตอบเหมือนก่อน deploy ทุกตัว _(2026-11-18)_
+- **ทุกอย่างทำงานบนเครื่อง แต่ public `:8088` timeout** (แม้ยิงจากเครื่องเองผ่าน public IP) → **สาเหตุ:** AWS Security Group ไม่ได้เปิด 8088 (ufw ปิดอยู่) → **วิธีแก้:** ให้ผู้ใช้เพิ่ม inbound Custom TCP 8088 ใน SG _(2026-11-18)_
+- **ค่า id sequence ใน `hlememo_dev` ตามหลัง max(id)** (User 2→59, BusinessUnit, Department, Status) → **สาเหตุ:** ตอน copy DB มา sequence ไม่ได้ตามมาด้วย → INSERT ชน id เดิม → **วิธีแก้:** ใช้ DO-block ไล่ `setval(seq, max(id))` ทุกคอลัมน์ที่ใช้ `nextval` ⚠️ ถ้าจะ restore DB ลงที่ไหนก็ตาม ต้องเช็คเรื่องนี้ด้วย _(2026-11-18)_
+- account ทดสอบใน `hlememo_dev`: `qa.admin@hyper-dev.local`, `qa.user@hyper-dev.local` (รหัสไม่ได้จดไว้ที่นี่) · login ผ่าน `POST /api/auth/login` _(2026-11-18)_
+
 ## Migration
 
 - ฐานเก่าสร้างด้วย `prisma db push` → ครั้งแรกต้อง baseline: เทียบ diff กับ schema ก่อน ถ้าต่างกันแค่ index ของ migration ถัดมา ให้รัน `migrate resolve --applied 0_init` แล้วค่อย `migrate deploy` (logic เดิมอยู่ที่ `deploy-production.sh:169-187`) _(2026-11-18)_
 
 ## คำสั่ง & สิทธิ์
 
-- (ยังไม่มี — จดเพิ่มเมื่อเจอ)
+- **รัน `docker compose run ... /app/...` จาก Git Bash บน Windows แล้วได้ path แบบ `C:/.../Git/app/...`** → **สาเหตุ:** MSYS แปลง path ที่ขึ้นต้นด้วย `/` ให้เอง → **วิธีแก้:** ใส่ `MSYS_NO_PATHCONV=1` นำหน้า และใช้ `cygpath -m` กับ path ของไฟล์ compose _(2026-11-18)_
+- **puttygen บน Windows แปลง `.ppk` เป็น OpenSSH ทาง CLI ไม่ได้** (เงียบ ไม่ได้ไฟล์) → ใช้ `plink -batch -hostkey <SHA256:…> -i key.ppk` แทน ส่วน GitHub secret ต้อง export ผ่าน GUI _(2026-11-18)_
