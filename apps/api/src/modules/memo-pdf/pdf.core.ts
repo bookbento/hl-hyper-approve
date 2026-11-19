@@ -164,7 +164,8 @@ const getViewBox = (page: PDFPage): ViewBox => {
 // ดึงค่า rotation (0/90/180/270) จาก PDF page
 const getPageRotation = (page: PDFPage): number => {
   try {
-    return page.getRotation().angle;
+    // -90 / 450 are legal in PDFs; fold them into 0/90/180/270
+    return ((page.getRotation().angle % 360) + 360) % 360;
   } catch {
     return 0;
   }
@@ -243,13 +244,15 @@ const normalizePageBoxes = (page: PDFPage): void => {
 // "Bake in" /Rotate เป็น CTM ใน content stream แล้วตั้ง MediaBox ใหม่ให้ตรงกับ visual size
 // เรียกหลัง copyPages → หน้าที่ผ่านฟังก์ชันนี้จะเป็น rotation=0 พร้อม visual dimensions ที่ถูกต้อง
 // ข้อดี: visualToRaw กลายเป็น identity (rotation=0) — ไม่ต้อง counter-rotate signature แยก
-const flattenPageRotation = (page: PDFPage, pdfDoc: PDFDocument): void => {
+export const flattenPageRotation = (page: PDFPage, pdfDoc: PDFDocument): void => {
   const rotation = getPageRotation(page);
   if (rotation === 0) return;
 
   const mb = page.getMediaBox();
   const W = mb.width,
     H = mb.height;
+  // a box like [20 20 …] or [0 -792 …]: move its corner to 0,0 before rotating
+  const originShift = mb.x !== 0 || mb.y !== 0 ? `1 0 0 1 ${-mb.x} ${-mb.y} cm\n` : '';
   let a: number, b: number, c: number, d: number, e: number, f: number;
   let newW = W,
     newH = H;
@@ -268,17 +271,21 @@ const flattenPageRotation = (page: PDFPage, pdfDoc: PDFDocument): void => {
     return;
   }
 
-  const ctmStr = `q ${a} ${b} ${c} ${d} ${e} ${f} cm\n`;
-  const ctmRef = pdfDoc.context.register(pdfDoc.context.stream(ctmStr, { Length: ctmStr.length }));
-  const endStr = `Q\n`;
-  const endRef = pdfDoc.context.register(pdfDoc.context.stream(endStr, { Length: endStr.length }));
-
   const existing = page.node.get(PDFName.of('Contents'));
-  if (!existing) return;
+  if (existing) {
+    const ctmStr = `q ${a} ${b} ${c} ${d} ${e} ${f} cm\n${originShift}`;
+    const ctmRef = pdfDoc.context.register(pdfDoc.context.stream(ctmStr, { Length: ctmStr.length }));
+    const endStr = `Q\n`;
+    const endRef = pdfDoc.context.register(pdfDoc.context.stream(endStr, { Length: endStr.length }));
 
-  const existingItems = existing instanceof PDFArray ? existing.asArray() : [existing];
-  const newContents = pdfDoc.context.obj([ctmRef, ...existingItems, endRef]);
-  page.node.set(PDFName.of('Contents'), newContents);
+    // /Contents may be a stream, an array, or a *reference to* an array (WPS does this).
+    // Splicing an unresolved array ref in nests an array inside /Contents, which is
+    // invalid, so viewers drew those rotated pages blank.
+    const resolved = pdfDoc.context.lookup(existing);
+    const existingItems = resolved instanceof PDFArray ? resolved.asArray() : [existing];
+    const newContents = pdfDoc.context.obj([ctmRef, ...existingItems, endRef]);
+    page.node.set(PDFName.of('Contents'), newContents);
+  }
 
   page.setMediaBox(0, 0, newW, newH);
   try {
