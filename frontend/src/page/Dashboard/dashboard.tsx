@@ -39,10 +39,17 @@ import { BlurText } from "../../components/motion";
 import StatCard from "./StatCard";
 import { useJellyGroup } from "./useJellyGroup";
 import SpringCheck from "../../components/reactbits/SpringCheck/SpringCheck";
-import GlideSelect from "../../components/reactbits/GlideSelect/GlideSelect";
-import StatusMark from "../../components/reactbits/StatusMark/StatusMark";
+import {
+  MiniStatus,
+  StatusBadge,
+  StatusWithProgress,
+  type ApproverCode,
+} from "./memoStatusParts";
+import { useTimeAgo } from "./timeAgo";
+import PageSizePicker, { type PageSize } from "./PageSizePicker";
 
 const DASHBOARD_STAT_COUNTS_CACHE_KEY = "dashboard:statCounts:v1";
+const NO_CODES: ApproverCode[] = [];
 
 axios.defaults.baseURL = (import.meta.env.VITE_BACKEND_API_URL || "").replace(
   /\/+$/,
@@ -67,15 +74,19 @@ type ApproverStatus = {
   since: string; // ISO
 };
 // --- utils for responsive ---
+// matchMedia fires only when the breakpoint is crossed, not on every resize pixel.
 const useIsMobile = (bp = 768) => {
+  const query = `(max-width: ${bp - 0.02}px)`;
   const [isMobile, setIsMobile] = React.useState(
-    typeof window !== "undefined" ? window.innerWidth < bp : false
+    () => typeof window !== "undefined" && window.matchMedia(query).matches
   );
   React.useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < bp);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, [bp]);
+    const mql = window.matchMedia(query);
+    const onChange = () => setIsMobile(mql.matches);
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [query]);
   return isMobile;
 };
 
@@ -1488,6 +1499,7 @@ const saveStatCountsToStorage = (counts: ServerStatCounts) => {
 const Dashboard: React.FC = () => {
   const { t } = useTranslation("dashboard");
   const timeAgo = useTimeAgo();
+  const isMobile = useIsMobile(); // < md (768px): cards, otherwise the table
   const [memos, setMemos] = useState<Memo[]>([]);
 
   // Server-side search authoritative data (populated by the adapter useEffect).
@@ -1659,68 +1671,6 @@ const Dashboard: React.FC = () => {
     (u?.nickname ? ` (${u.nickname})` : "");
 
 
-  const ApprovalProgress: React.FC<{
-    memoId: number;
-    status?: Status | string;
-    className?: string;
-    style?: React.CSSProperties;
-  }> = ({ memoId, status, className, style }) => {
-    const rows = approverMap[memoId] || [];
-    const total = rows.length;
-    const acted = rows.filter((r) => r.statusCode !== "waiting").length;
-    const pct = total ? Math.round((acted / total) * 100) : 0;
-
-    // เลือกสีของ "แถบที่ไหล" ตามสถานะ (fallback เป็น default)
-    const key = (status && STATUS_ORDER.includes(status as Status)) ? (status as string) : "default";
-    const { fill } = PROGRESS_COLORS[key] ?? PROGRESS_COLORS.default;
-
-    return (
-      <div className={`${className || ""}`} style={style}>
-        {/* ราง: สีเทาคงที่ */}
-        <div className="relative h-3 w-full overflow-hidden rounded-full bg-gray-200">
-          {/* แถบที่เลื่อน: สีตามสถานะ */}
-          <div
-            className={`absolute left-0 top-0 h-full transition-[width] duration-300 ease-out ${fill}`}
-            style={{ width: `${pct}%` }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center text-[10px] font-semibold text-white drop-shadow-sm">
-            {acted}/{total}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const StatusWithProgress: React.FC<{ status?: Status | string; memoId: number }> = ({ status, memoId }) => {
-    const badgeRef = React.useRef<HTMLSpanElement>(null);
-    const [w, setW] = React.useState<number>(0);
-
-    React.useLayoutEffect(() => {
-      const el = badgeRef.current;
-      if (!el) return;
-      const update = () => setW(el.offsetWidth);
-      update();
-      const ro = new ResizeObserver(update);
-      ro.observe(el);
-      return () => ro.disconnect();
-    }, [status]);
-
-    return (
-      <div className="inline-flex flex-col items-center gap-1">
-        {/* ให้ badge เป็นตัวกำหนดความกว้าง */}
-        <span ref={badgeRef} className="inline-block">
-          <StatusBadge status={status as Status} />
-        </span>
-
-        {/* Progress จะกว้างเท่ากับ badge เป๊ะ */}
-        <ApprovalProgress
-          memoId={memoId}
-          status={status}
-          style={{ width: w ? `${w}px` : undefined }}
-        />
-      </div>
-    );
-  };
 
   // รายชื่อ Current Approver ทั้งหมด (จาก approverMap; ถ้าไม่มีให้ fallback จาก memo.currentApprover.names)
   const currentApproverOptions = useMemo(() => {
@@ -2363,10 +2313,13 @@ const Dashboard: React.FC = () => {
   // with the pager (e.g. 2 rows on "page 1/389").
   const visibleMemos = memos;
   // --- Pagination states & helpers (place BEFORE any early return) ---
-  type PageSize = number | "All";
-
   const [pageSize, setPageSize] = useState<PageSize>(10);
   const [page, setPage] = useState(1);
+  // Same update for both, so no request goes out for the new size on the old page.
+  const changePageSize = useCallback((size: PageSize) => {
+    setPageSize(size);
+    setPage(1);
+  }, []);
 
   // ─── Server-side search hook (Phase 2) ────────────────────────────
   // A single /api/memos/search call per page (replaced /api/memos + per-row/bulk calls).
@@ -2589,10 +2542,9 @@ const Dashboard: React.FC = () => {
   const pageSizeNum = pageSize === "All" ? totalRows || 1 : pageSize;
   const totalPages = serverTotalPages;
 
-  // reset to page 1 when filter inputs change
+  // reset to page 1 when filter inputs change (page size does it in changePageSize)
   useEffect(() => {
     setPage(1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     searchTerm,
     statusFilter,
@@ -2601,10 +2553,19 @@ const Dashboard: React.FC = () => {
     view,
     sortState,
     colFilters,
-    pageSize,
     approverFilter,
     sortByLatestAction,
   ]);
+
+  // Stable per-memo code arrays so the memoized StatusWithProgress skips re-renders.
+  const approverCodes = useMemo(() => {
+    const out: Record<number, ApproverCode[]> = {};
+    for (const [id, rows] of Object.entries(approverMap)) {
+      out[Number(id)] = rows.map((r) => r.statusCode);
+    }
+    return out;
+  }, [approverMap]);
+  const approverCodesOf = (memoId: number): ApproverCode[] => approverCodes[memoId] ?? NO_CODES;
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages || 1);
@@ -2621,127 +2582,6 @@ const Dashboard: React.FC = () => {
   const tableSkeletonRowCount =
     pageSize === "All" ? 8 : Math.min(Math.max(pageSizeNum, 1), 8);
 
-  const PageSizePicker: React.FC<{
-    total: number;
-    value: PageSize; // number | "All"
-    onChange: (v: PageSize) => void;
-  }> = ({ total, value, onChange }) => {
-    // แสดงตัวเลือกคงที่ 10 → 100 ทีละ 10 + "ทั้งหมด"
-    const options = React.useMemo(() => {
-      const arr: number[] = [];
-      for (let n = 10; n <= 100; n += 10) arr.push(n);
-      return arr;
-    }, []);
-
-    // div, not label: a <label> forwards clicks to its first button (the disabled ‹),
-    // which fought with the GlideSelect trigger.
-    return (
-      <div className="inline-flex items-center gap-2 text-sm text-gray-700">
-        {pageSize !== "All" && (
-          <>
-            <span className="text-sm text-gray-600">
-              <span>{t("pager.pageOf", { page, totalPages })}</span>
-            </span>
-            <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden"></div>
-          </>
-        )}
-        <button
-          type="button"
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
-          disabled={page <= 1}
-          className="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 text-sm text-gray-600 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50 disabled:opacity-40 disabled:hover:bg-transparent"
-          title={t("pager.titlePrev")}
-          aria-label={t("pager.prev")}
-        >
-          ‹
-        </button>
-        <GlideSelect
-          ariaLabel={t("pager.ariaPerPage")}
-          size="sm"
-          align="right"
-          menuWidth={120}
-          value={value === "All" ? "All" : String(value)}
-          options={[
-            ...options.map((n) => ({ value: String(n), label: String(n) })),
-            { value: "All", label: t("pager.all") },
-          ]}
-          onChange={(v) => onChange(v === "All" ? "All" : Number(v))}
-          accentColor="#183e33"
-          surfaceColor="#ffffff"
-          highlightColor="#eef7f3"
-          textColor="#1f2937"
-        />
-
-        <button
-          type="button"
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-          disabled={page >= totalPages}
-          className="grid h-8 w-8 place-items-center rounded-lg border border-gray-200 text-sm text-gray-600 shadow-sm transition-colors hover:border-brand-200 hover:bg-brand-50 disabled:opacity-40 disabled:hover:bg-transparent"
-          title={t("pager.titleNext")}
-          aria-label={t("pager.next")}
-        >
-          ›
-        </button>
-      </div>
-    );
-  };
-
-  function useTimeAgo() {
-    const { t, i18n } = useTranslation("dashboard");
-
-    return function timeAgo(fromISO?: string | null) {
-      if (!fromISO) return "-";
-      const then = new Date(fromISO).getTime();
-      if (isNaN(then)) return "-";
-
-      const now = Date.now();
-      const diff = now - then; // >0 = อดีต, <0 = อนาคต
-      const abs = Math.abs(diff);
-
-      const MIN = 60 * 1000;
-      const H = 60 * MIN;
-      const D = 24 * H;
-      const W = 7 * D;
-      const M = 30 * D; // ≈ เดือน
-      const Y = 365 * D; // ≈ ปี
-
-      if (abs < 45 * 1000) {
-        return diff >= 0 ? t("timeago.nowPast") : t("timeago.nowFuture");
-      }
-
-      const table: Array<[number, keyof UnitsKey]> = [
-        [Y, "year"],
-        [M, "month"],
-        [W, "week"],
-        [D, "day"],
-        [H, "hour"],
-        [MIN, "minute"],
-      ];
-
-      type UnitsKey = {
-        year: string;
-        month: string;
-        week: string;
-        day: string;
-        hour: string;
-        minute: string;
-        second: string;
-      };
-
-      for (const [ms, key] of table) {
-        if (abs >= ms) {
-          const n = Math.floor(abs / ms);
-          const unit = t(`timeago.units.${key}`);
-          return compose(n, unit, diff >= 0, t, i18n.language);
-        }
-      }
-
-      // วินาที
-      const n = Math.floor(abs / 1000);
-      const unit = t("timeago.units.second");
-      return compose(n, unit, diff >= 0, t, i18n.language);
-    };
-  }
   // ⬅️ ADD: หาค่า current level ของไลน์หลักจาก approverMap
   function getCurrentMainLevel(memo: Memo): number {
     const rows = approverMap[memo.id] || [];
@@ -2876,31 +2716,6 @@ const Dashboard: React.FC = () => {
     return { text: "", tooltip: "", isAuto: false };
   }
 
-  // ช่วยประกอบประโยคโดยไม่ใช้ตัวแปรใน JSON
-  function compose(
-    n: number,
-    unit: string,
-    isPast: boolean,
-    t: any,
-    lang: string
-  ) {
-    // อังกฤษใส่ s แบบง่าย ๆ (ถ้าอยากทำกฎพหูพจน์ละเอียดค่อยเพิ่ม)
-    const unitStr = lang.startsWith("en") && n !== 1 ? `${unit}s` : unit;
-
-    if (lang.startsWith("en")) {
-      // en: "X units ago" หรือ "in X units"
-      return isPast
-        ? `${n} ${unitStr} ago`
-        : `${t("timeago.futurePrefix")}${n} ${unitStr}`;
-    } else {
-      // th: "ผ่านมาแล้ว X หน่วย" หรือ "อีก X หน่วย"
-      const prefix = isPast
-        ? t("timeago.pastPrefix")
-        : t("timeago.futurePrefix");
-      return `${prefix}${n} ${unitStr}`;
-    }
-  }
-
   async function toggleApproverList(memoId: number) {
     setExpanded((prev) => ({ ...prev, [memoId]: !prev[memoId] }));
     if (!approverMap[memoId]) {
@@ -2919,106 +2734,6 @@ const Dashboard: React.FC = () => {
       }
     }
   }
-
-  const MiniStatus: React.FC<{
-    code: "waiting" | "approved" | "rejected" | "terminated" | "not_required";
-  }> = ({ code }) => {
-    let cls = "";
-    let label = "";
-    if (code === "approved") {
-      cls = "bg-green-100 text-green-700 border-green-200";
-      label = "Approved";
-    } else if (code === "not_required") {
-      cls = "bg-green-50 text-green-700 border-green-200";
-      label = t("statusByUser.not_required", "Level approved");
-    } else if (code === "rejected") {
-      cls = "bg-orange-100 text-orange-700 border-orange-200";
-      label = "Rejected";
-    } else if (code === "terminated") {
-      cls = "bg-red-100 text-red-700 border-red-200";
-      label = "Terminated";
-    } else {
-      cls = "bg-gray-200 text-gray-700 border-gray-200";
-      label = "Waiting";
-    }
-    // React Bits StatusMark: dashed ring while waiting, the tick draws in on approval,
-    // a cross for rejected / terminated.
-    const mark =
-      code === "approved" || code === "not_required"
-        ? "done"
-        : code === "rejected"
-          ? "failed"
-          : code === "terminated"
-            ? "cancelled"
-            : "pending";
-    return (
-      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 ${cls}`}>
-        <StatusMark
-          status={mark}
-          label={label}
-          size={13}
-          strokeWidth={2}
-          fontSize={12}
-          color="currentColor"
-          doneColor="#15803d"
-          errorColor={code === "rejected" ? "#c2410c" : "#b91c1c"}
-          strike={false}
-        />
-      </span>
-    );
-  };
-
-  // แคชผลเรียก API ต่อ memoId
-
-  const StatusBadge: React.FC<{ status: Status }> = ({ status }) => {
-    // soft pill + dot (brand UI); same colour family per status as before
-    const styles: Record<Status, { pill: string; dot: string }> = {
-      Draft: { pill: "bg-gray-100 text-gray-700 ring-gray-200", dot: "bg-gray-400" },
-      Published: { pill: "bg-yellow-50 text-yellow-800 ring-yellow-200", dot: "bg-yellow-500" },
-      Approved: { pill: "bg-green-50 text-green-700 ring-green-200", dot: "bg-green-500" },
-      Rejected: { pill: "bg-orange-50 text-orange-700 ring-orange-200", dot: "bg-orange-500" },
-      Terminated: { pill: "bg-red-50 text-red-700 ring-red-200", dot: "bg-red-600" },
-      Processing: { pill: "bg-amber-50 text-amber-700 ring-amber-200", dot: "bg-amber-500 animate-pulse" },
-      Recalled: { pill: "bg-sky-50 text-sky-700 ring-sky-200", dot: "bg-sky-500" },
-      Expired: { pill: "bg-purple-50 text-purple-700 ring-purple-200", dot: "bg-purple-500" },
-    };
-    const st = styles[status] ?? styles.Draft;
-    return (
-      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${st.pill}`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} aria-hidden="true" />
-        {status}
-      </span>
-    );
-  };
-
-
-
-  const STATUS_ORDER: Status[] = [
-    "Draft",
-    "Processing",
-    "Approved",
-    "Rejected",
-    "Terminated",
-    "Recalled",
-    "Published",
-    "Expired",
-  ];
-  const PROGRESS_COLORS: Record<string, { fill: string }> = {
-    Draft: { fill: "bg-gray-500" },
-    Processing: { fill: "bg-yellow-500" },
-    Approved: { fill: "bg-green-600" },
-    Rejected: { fill: "bg-orange-400" },
-    Terminated: { fill: "bg-red-900" },
-    Recalled: { fill: "bg-sky-600" },
-    Published: { fill: "bg-indigo-600" },
-    Expired: { fill: "bg-purple-600" },
-    // ค่านี้จะถูกใช้เมื่อไม่มี/ไม่ตรงกับสถานะ: น้ำเงินล้วนตามที่ขอ
-    default: { fill: "bg-blue-600" },
-
-  };
-
-
-
 
   if (loading) {
     return (
@@ -3244,15 +2959,19 @@ const Dashboard: React.FC = () => {
           {/* Right side: Pagination */}
           <div className="flex items-center justify-end">
             <PageSizePicker
-              total={visibleMemos.length}
-              value={pageSize}
-              onChange={setPageSize}
+              page={page}
+              totalPages={totalPages}
+              pageSize={pageSize}
+              onPageChange={setPage}
+              onPageSizeChange={changePageSize}
             />
           </div>
         </div>
 
         {/* 📱 Card layout for mobile/tablet */}
-        <div className="space-y-4 md:hidden">
+        {/* Only one layout is mounted: both used to render every row, one hidden by CSS. */}
+        {isMobile && (
+        <div className="space-y-4">
           {pagedMemos.length > 0 ? (
             pagedMemos.map((memo, index) => (
               <div
@@ -3465,11 +3184,13 @@ const Dashboard: React.FC = () => {
             </div>
           )}
         </div>
+        )}
 
 
 
         {/* 💻 Table layout for desktop */}
-        <div className="hidden md:block bg-white rounded-card shadow-card border border-gray-100 overflow-visible">
+        {!isMobile && (
+        <div className="bg-white rounded-card shadow-card border border-gray-100 overflow-visible">
           {/* NEW: top-right page size control */}
 
           <div className="overflow-x-auto">
@@ -3872,7 +3593,7 @@ const Dashboard: React.FC = () => {
                       {visibleColumns.status && (
                         <td className="px-2 py-3 text-center !align-middle">
                           <div className="flex justify-center">
-                            <StatusWithProgress status={memo.status} memoId={memo.id} />
+                            <StatusWithProgress status={memo.status} codes={approverCodesOf(memo.id)} />
                           </div>
                         </td>
                       )}
@@ -4530,6 +4251,7 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
