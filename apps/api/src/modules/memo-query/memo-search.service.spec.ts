@@ -204,6 +204,11 @@ describe('MemoSearchNestService', () => {
       expect(whereOf().AND).toContainEqual({ id: { in: [12] } });
     });
 
+    it('filters by author ids, dropping invalid ones', async () => {
+      await service.searchMemos({ authorIds: [4, 0, 2.5], includeStatCounts: false }, 1, 'http://h');
+      expect(JSON.stringify(whereOf().AND)).toContain('{"userId":{"in":[4]}}');
+    });
+
     it('currentApproverContains with no matching user matches nothing', async () => {
       await service.searchMemos({ currentApproverContains: 'zzz', includeStatCounts: false }, 1, 'http://h');
       expect(whereOf().AND).toContainEqual({ id: -1 });
@@ -381,6 +386,7 @@ describe('MemoSearchNestService', () => {
         businessUnits: [],
         departments: [],
         ccUsers: [],
+        authors: [],
       });
     });
 
@@ -404,6 +410,18 @@ describe('MemoSearchNestService', () => {
         { id: 2, name: 'Zed' },
       ]);
       expect(facets.businessUnits).toEqual([{ id: 1, name: 'BU' }]);
+    });
+
+    it('lists the authors of every visible memo', async () => {
+      mockPrisma.masterMemo.findMany.mockResolvedValue([{ id: 1 }, { id: 2 }]);
+      mockPrisma.businessUnit.findMany.mockResolvedValue([]);
+      mockPrisma.department.findMany.mockResolvedValue([]);
+      rawRoutes = [
+        { match: 'JOIN "User" u ON u."id" = m."userId"', rows: [{ id: 3, name: 'Owner', lastname: 'B', nickname: null }] },
+      ];
+
+      const facets = await service.getFacets(1);
+      expect(facets.authors).toEqual([{ id: 3, name: 'Owner B' }]);
     });
   });
 });

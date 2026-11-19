@@ -138,11 +138,12 @@ export async function computeFacets(db: PrismaService, userId: number): Promise<
       businessUnits: [],
       departments: [],
       ccUsers: [],
+      authors: [],
     };
   }
 
   // 2. Compute facets in parallel
-  const [currentApproverRows, extraApproverRows, businessUnits, departments, ccUserRows] =
+  const [currentApproverRows, extraApproverRows, businessUnits, departments, ccUserRows, authorRows] =
     await Promise.all([
       // currentApprovers: distinct users who are CURRENTLY waiting at the
       // lowest waiting level of the latest version
@@ -233,6 +234,19 @@ export async function computeFacets(db: PrismaService, userId: number): Promise<
         WHERE cc."memoId" = ANY(${visibleIds})
           AND u."deletedAt" IS NULL
       `,
+
+      // authors: distinct owners of visible memos (the author column filter used to
+      // list only the authors on the current page)
+      db.$queryRaw<FacetUserRow[]>`
+        SELECT DISTINCT
+          u."id"        AS "id",
+          u."name"      AS "name",
+          u."lastname"  AS "lastname",
+          u."nickname"  AS "nickname"
+        FROM "MasterMemo" m
+        JOIN "User" u ON u."id" = m."userId"
+        WHERE m."id" = ANY(${visibleIds})
+      `,
     ]);
 
   const toFacetUser = (rows: FacetUserRow[]): FacetUser[] =>
@@ -252,5 +266,6 @@ export async function computeFacets(db: PrismaService, userId: number): Promise<
     businessUnits: toFacetEntity(businessUnits),
     departments: toFacetEntity(departments),
     ccUsers: toFacetUser(ccUserRows),
+    authors: toFacetUser(authorRows),
   };
 }

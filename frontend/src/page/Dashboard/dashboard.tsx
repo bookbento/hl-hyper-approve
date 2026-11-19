@@ -26,11 +26,11 @@ import { useMemoSearch } from "../../hooks/useMemoSearch";
 import {
   colFiltersToSearchRequest,
   isAbortError,
+  isSearchTimeout,
   searchMemoStats,
   type ColKey as SearchColKey,
 } from "../../lib/api/memoSearch.api";
 import type {
-  MemoListItem,
   StatCounts as ServerStatCounts,
   Facets as ServerFacets,
 } from "../../lib/api/memoSearch.types";
@@ -39,6 +39,7 @@ import { BlurText } from "../../components/motion";
 import StatCard from "./StatCard";
 import { useJellyGroup } from "./useJellyGroup";
 import VirtualRows from "./VirtualRows";
+import BackToTop from "./BackToTop";
 import SpringCheck from "../../components/reactbits/SpringCheck/SpringCheck";
 import {
   MiniStatus,
@@ -51,6 +52,8 @@ import PageSizePicker, { type PageSize } from "./PageSizePicker";
 
 const DASHBOARD_STAT_COUNTS_CACHE_KEY = "dashboard:statCounts:v1";
 const NO_CODES: ApproverCode[] = [];
+// every status the server can filter by (memo-search statuses[]), not just those on the page
+const STATUS_FILTER_OPTIONS = ["Draft", "Processing", "Approved", "Rejected", "Terminated", "Recalled", "Published"];
 
 axios.defaults.baseURL = (import.meta.env.VITE_BACKEND_API_URL || "").replace(
   /\/+$/,
@@ -247,7 +250,6 @@ export const FilterMenu: React.FC<{
   currentApprovers: CurrentApprover[];
   businessUnits: BusinessUnit[];
   departments: Department[];
-  memos: Memo[]; // ✅ เพิ่ม
   onClear: (opts?: { keepMyApproval?: boolean }) => void;
 }> = ({
   open,
@@ -264,7 +266,6 @@ export const FilterMenu: React.FC<{
   currentApprovers,
   businessUnits,
   departments,
-  memos, // ✅ เพิ่ม
   onClear,
 }) => {
     const { t } = useTranslation("dashboard");
@@ -314,28 +315,8 @@ export const FilterMenu: React.FC<{
     const availableDepts = useMemo(() => {
       if (buFilter === "All") return [];
 
-      // ดึง departments จาก memos ที่มี BU ตรงกัน
-      const deptMap = new Map<number, { id: number; name: string }>();
-
-      memos.forEach((memo) => {
-        if (memo.businessUnit?.id === buFilter && memo.department?.id && memo.department?.name) {
-          deptMap.set(memo.department.id, {
-            id: memo.department.id,
-            name: memo.department.name
-          });
-        }
-      });
-
-      const deptsFromMemos = Array.from(deptMap.values());
-
-      // ถ้ามี departments จาก memos ให้ใช้อันนั้น ไม่งั้นใช้จาก API
-      if (deptsFromMemos.length > 0) {
-        return deptsFromMemos.filter((d) =>
-          d.name.toLowerCase().includes(searchDept.toLowerCase())
-        );
-      }
-
-      // Fallback: ใช้จาก businessUnits หรือ departments API
+      // Every department of the BU (from the API). This used to prefer the departments
+      // found on the current page of memos, so most were missing from the list.
       const selectedBU = businessUnits.find((b) => b.id === buFilter);
       const poolFromBU = selectedBU?.departments ?? [];
 
@@ -349,7 +330,7 @@ export const FilterMenu: React.FC<{
       return pool.filter((d) =>
         d.name.toLowerCase().includes(searchDept.toLowerCase())
       );
-    }, [buFilter, businessUnits, departments, searchDept, memos]);
+    }, [buFilter, businessUnits, departments, searchDept]);
 
     const filteredApprovers = useMemo(() => {
       const q = searchApprover.trim().toLowerCase();
@@ -1422,6 +1403,19 @@ const DASHBOARD_FILTERS_KEY = "dashboard_filters";
 const DASHBOARD_COL_FILTERS_KEY = "dashboard_col_filters";
 const DASHBOARD_SORT_STATE_KEY = "dashboard_sort_state";
 
+const DASHBOARD_PAGE_SIZE_KEY = "dashboard:pageSize:v1";
+
+function loadPageSize(): PageSize {
+  try {
+    const v = localStorage.getItem(DASHBOARD_PAGE_SIZE_KEY);
+    if (v === "All") return "All";
+    const n = Number(v);
+    return Number.isInteger(n) && n >= 10 && n <= 100 && n % 10 === 0 ? n : 10;
+  } catch {
+    return 10;
+  }
+}
+
 // Helper to load filters from localStorage
 const loadFiltersFromStorage = () => {
   try {
@@ -1720,21 +1714,18 @@ const Dashboard: React.FC = () => {
     );
   }, [currentApprovers, serverFacets, thCollator]);
 
-  const authorOptions = useMemo(
-    () =>
-      Array.from(new Set(memos.map((m) => authorLabel(m.user))))
-        .filter(Boolean)
-        .sort((a, b) => thCollator.compare(a, b)), // ✅
-    [memos, thCollator]
-  );
+  // Options for the author/status column filters come from all visible memos (server
+  // facet / fixed list), not from the rows of the current page.
+  const authorOptions = useMemo(() => {
+    if (serverFacets?.authors) {
+      return serverFacets.authors.map((u) => ({ value: String(u.id), label: u.name }));
+    }
+    return Array.from(new Set(memos.map((m) => authorLabel(m.user))))
+      .filter(Boolean)
+      .sort((a, b) => thCollator.compare(a, b));
+  }, [serverFacets, memos, thCollator]);
 
-  const statusOptions = useMemo(
-    () =>
-      Array.from(new Set(memos.map((m) => m.status || "")))
-        .filter(Boolean)
-        .sort((a, b) => thCollator.compare(a, b)), // ✅
-    [memos, thCollator]
-  );
+  const statusOptions = STATUS_FILTER_OPTIONS;
 
   const getExpiryMeta = (iso?: string | null, status?: string | null) => {
     const base = {
@@ -1926,11 +1917,6 @@ const Dashboard: React.FC = () => {
   }, [extraMap, thCollator, serverFacets]);
 
   // ---- helper แปลงชื่อ-สถานะ ----
-  const displayName = (u: any) => {
-    const full = [u?.name, u?.lastname].filter(Boolean).join(" ").trim();
-    return u?.nickname ? `${full} (${u.nickname})` : full || u?.name || "-";
-  };
-
   // Helper สำหรับ CC users (ไม่มี department) - แสดงชื่อแบบ unique
   const ccUserLabel = (u: { id: number, name: string, lastname?: string, nickname?: string }) => {
     const full = [u?.name, u?.lastname].filter(Boolean).join(" ").trim();
@@ -1948,14 +1934,6 @@ const Dashboard: React.FC = () => {
 
     // fallback ใช้ name เดิม
     return u?.name || `User-${u.id}`;
-  };
-  const normalizeStatusCode = (name?: string | null): ExtraStatusCode => {
-    const s = String(name || "").toLowerCase();
-    if (/(terminat|cancel|withdraw|recall|stop|abort)/.test(s))
-      return "terminated";
-    if (/reject|declin|den(y|ied|ies|ying)/.test(s)) return "rejected";
-    if (/approv/.test(s)) return "approved";
-    return "waiting";
   };
   const fmtExpiry = (iso?: string | null) => {
     if (!iso) return "";
@@ -2093,9 +2071,9 @@ const Dashboard: React.FC = () => {
       .then((res) => setBusinessUnits(res.data))
       .catch((err) => console.error("Failed to fetch BUs:", err));
   }, []);
-  useEffect(() => {
-    setDeptFilter("All");
-  }, [buFilter]);
+  // (A useEffect here reset the department whenever buFilter changed, including on
+  // mount, which wiped the department restored from localStorage. Every place that
+  // changes the BU already clears the department itself.)
   useEffect(() => {
     axios
       .get<Department[]>("/api/departments", { withCredentials: true })
@@ -2129,7 +2107,8 @@ const Dashboard: React.FC = () => {
       : myApprovalMemos.length;
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) =>
-    setSearchTerm(e.target.value.toLowerCase());
+    // keep what the user typed (lowercasing made uppercase impossible); the server is case-insensitive
+    setSearchTerm(e.target.value);
 
   const resetFilters = (opts: { keepMyApproval?: boolean } = {}) => {
     const { keepMyApproval = true } = opts;
@@ -2213,9 +2192,6 @@ const Dashboard: React.FC = () => {
 
     return counts;
   }, [memos, serverStatCounts]);
-
-  // คำนวณจำนวน memos ที่ user เป็น CC (ไม่รวม Deleted)
-  const myCCMemosCount = serverStatCounts?.myCC ?? 0;
 
   // คำนวณจำนวน memos ที่ user สร้างเอง
   const myCreatedMemosCount = useMemo(() => {
@@ -2314,7 +2290,14 @@ const Dashboard: React.FC = () => {
   // with the pager (e.g. 2 rows on "page 1/389").
   const visibleMemos = memos;
   // --- Pagination states & helpers (place BEFORE any early return) ---
-  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const [pageSize, setPageSize] = useState<PageSize>(loadPageSize);
+  useEffect(() => {
+    try {
+      localStorage.setItem(DASHBOARD_PAGE_SIZE_KEY, String(pageSize));
+    } catch {
+      // private mode / blocked storage: the choice just isn't remembered
+    }
+  }, [pageSize]);
   const [page, setPage] = useState(1);
   // Same update for both, so no request goes out for the new size on the old page.
   const changePageSize = useCallback((size: PageSize) => {
@@ -2451,6 +2434,12 @@ const Dashboard: React.FC = () => {
   }, [reloadServerStatCounts]);
 
   const searchResultsLoading = !newSearch.error && newSearch.isFetching;
+
+  // A failed first request used to leave the full-page spinner up forever
+  // (loading only turned false when data arrived). Show the page and the error.
+  useEffect(() => {
+    if (newSearch.error) setLoading(false);
+  }, [newSearch.error]);
   const statCardsLoading =
     !newSearch.error &&
     !serverStatCounts &&
@@ -2573,8 +2562,6 @@ const Dashboard: React.FC = () => {
   }, [totalPages, page]);
 
   // ⬇️ Define the missing pagedMemos
-  const start = pageSize === "All" ? 0 : (page - 1) * pageSizeNum;
-  const end = pageSize === "All" ? totalRows : start + pageSizeNum;
   // Server already paginated — the current items are the page.
   const pagedMemos = visibleMemos;
 
@@ -2925,7 +2912,6 @@ const Dashboard: React.FC = () => {
               currentApprovers={filterMenuApprovers}
               businessUnits={businessUnits}
               departments={departments}
-              memos={memos}
               onClear={resetFilters}
             />
 
@@ -2967,6 +2953,7 @@ const Dashboard: React.FC = () => {
           <div className="flex items-center justify-end">
             <PageSizePicker
               page={page}
+              total={totalRows}
               totalPages={totalPages}
               pageSize={pageSize}
               onPageChange={setPage}
@@ -2974,6 +2961,27 @@ const Dashboard: React.FC = () => {
             />
           </div>
         </div>
+
+        <BackToTop anchorRef={rowListRef} />
+
+        {newSearch.error && (
+          <div
+            role="alert"
+            className="mb-4 flex flex-wrap items-center gap-3 rounded-card border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
+          >
+            <span className="font-semibold">{t("loadError.title")}</span>
+            <span className="text-red-700">
+              {isSearchTimeout(newSearch.error) ? t("loadError.timeout") : t("loadError.generic")}
+            </span>
+            <button
+              type="button"
+              onClick={() => newSearch.refetch()}
+              className="ml-auto rounded-lg border border-red-300 bg-white px-3 py-1.5 font-medium text-red-700 transition-colors hover:bg-red-100"
+            >
+              {t("loadError.retry")}
+            </button>
+          </div>
+        )}
 
         {/* 📱 Card layout for mobile/tablet */}
         {/* Only one layout is mounted: both used to render every row, one hidden by CSS. */}
@@ -3201,7 +3209,18 @@ const Dashboard: React.FC = () => {
             />
           ) : (
             <div className="text-center text-gray-500 py-6">
-              {searchTerm ? t("empty.noMatch") : t("empty.none")}
+              {searchTerm || hasActiveFilters ? t("empty.noMatch") : t("empty.none")}
+              {hasActiveFilters && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => resetFilters({ keepMyApproval: false })}
+                    className="mt-3 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700"
+                  >
+                    {t("clearFilters")}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -3494,6 +3513,24 @@ const Dashboard: React.FC = () => {
                             <span className="block h-full w-1/3 animate-pulse rounded-full bg-emerald-500" />
                           </span>
                         </div>
+                      </td>
+                    </tr>
+                  )}
+                  {!showTableSkeleton && !searchResultsLoading && pagedMemos.length === 0 && (
+                    <tr>
+                      <td colSpan={tableColumnCount} className="px-4 py-12 !text-center">
+                        <div className="text-sm text-gray-500">
+                          {searchTerm || hasActiveFilters ? t("empty.noMatch") : t("empty.none")}
+                        </div>
+                        {hasActiveFilters && (
+                          <button
+                            type="button"
+                            onClick={() => resetFilters({ keepMyApproval: false })}
+                            className="mt-3 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-brand-200 hover:bg-brand-50"
+                          >
+                            {t("clearFilters")}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )}
@@ -4033,7 +4070,6 @@ const Dashboard: React.FC = () => {
                                 >
                                   <ol className="space-y-1">
                                     {list.map((ap, idx) => {
-                                      const idxInAll = rows.indexOf(ap);
 
                                       const liKey = `${ap.name}-${ap.level ?? "x"
                                         }-${ap.order ?? idx}-${ap.since ?? ap.actedAt ?? ""

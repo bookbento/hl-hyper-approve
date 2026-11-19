@@ -76,6 +76,10 @@ export function buildFilterClause(req: SearchMemosRequest): Prisma.MasterMemoWhe
   if (req.subjectContains?.trim()) {
     and.push({ subject: { contains: req.subjectContains.trim(), mode: insensitive } });
   }
+  const authorIds = (req.authorIds ?? []).filter((id) => Number.isInteger(id) && id > 0);
+  if (authorIds.length) {
+    and.push({ userId: { in: authorIds } });
+  }
   if (req.authorContains?.trim()) {
     and.push({ user: { OR: nameContains(req.authorContains.trim()) } });
   }

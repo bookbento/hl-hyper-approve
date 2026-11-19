@@ -96,7 +96,6 @@
     "autoImages": "sent photos",
     "autoFiles": "sent files"
   },
-
   "confirmDelete": "Delete memo #{{id}}?",
   "show": "Show",
   "hide": "Hide",
@@ -132,7 +131,6 @@
       "apply": "Apply"
     }
   },
-
   "pager": {
     "ariaPerPage": "Items per page",
     "all": "All",
@@ -141,11 +139,21 @@
     "pageOf": "Page {{page}} / {{totalPages}}",
     "titlePrev": "Previous",
     "titleNext": "Next",
-    "total": "Total {{total}} items"
+    "total": "Total {{total}} items",
+    "allWithCount": "All ({{count}})",
+    "range": "Showing {{from}}–{{to}} of {{total}}",
+    "countAll": "{{total}} items",
+    "backToTop": "Back to top"
   },
   "columnVisibility": {
     "toggle": "Show/Hide Columns",
     "title": "Manage Columns",
     "close": "Close"
+  },
+  "loadError": {
+    "title": "Couldn't load memos",
+    "timeout": "The server took too long. Please try again.",
+    "generic": "Check your connection and try again.",
+    "retry": "Retry"
   }
 }

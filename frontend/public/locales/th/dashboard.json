@@ -144,11 +144,21 @@
     "pageOf": "หน้า {{page}} / {{totalPages}}",
     "titlePrev": "ก่อนหน้า",
     "titleNext": "ถัดไป",
-    "total": "รวม {{total}} รายการ"
+    "total": "รวม {{total}} รายการ",
+    "allWithCount": "ทั้งหมด ({{count}})",
+    "range": "แสดง {{from}}–{{to}} จาก {{total}}",
+    "countAll": "{{total}} รายการ",
+    "backToTop": "กลับขึ้นบนสุด"
   },
   "columnVisibility": {
     "toggle": "แสดง/ซ่อนคอลัมน์",
     "title": "จัดการคอลัมน์",
     "close": "ปิด"
+  },
+  "loadError": {
+    "title": "โหลดรายการไม่สำเร็จ",
+    "timeout": "เซิร์ฟเวอร์ตอบช้าเกินไป ลองใหม่อีกครั้ง",
+    "generic": "ตรวจสอบการเชื่อมต่อแล้วลองใหม่",
+    "retry": "ลองใหม่"
   }
 }

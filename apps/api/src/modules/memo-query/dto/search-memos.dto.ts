@@ -95,6 +95,12 @@ export class SearchMemosDto {
   currentApproverContains?: string;
 
   @IsOptional()
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @Type(() => Number)
+  authorIds?: number[];
+
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Type(() => Number)

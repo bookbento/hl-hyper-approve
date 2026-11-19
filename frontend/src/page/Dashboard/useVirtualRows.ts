@@ -33,7 +33,7 @@ const FAST_PX_PER_MS = 1.5;
 const STAGGER_MS = 28;
 const STAGGER_MAX = 12;
 
-function scrollParentOf(el: HTMLElement): HTMLElement {
+export function scrollParentOf(el: HTMLElement): HTMLElement {
   for (let p = el.parentElement; p; p = p.parentElement) {
     const oy = getComputedStyle(p).overflowY;
     // must really overflow: overflow-x:auto wrappers compute overflow-y:auto too but

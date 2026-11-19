@@ -55,6 +55,8 @@ export interface SearchMemosRequest {
   currentApproverNames?: string[];
   /** memo has this user anywhere in its main or extra approval line, any status */
   inLineApproverId?: number;
+  /** author column multi-select */
+  authorIds?: number[];
   extraApproverIds?: number[];
   extraApproverNames?: string[];
   ccUserIds?: number[];
@@ -205,6 +207,7 @@ export interface Facets {
   businessUnits: FacetEntity[];
   departments: FacetEntity[];
   ccUsers: FacetUser[];
+  authors?: FacetUser[];
 }
 
 export interface SearchMemosResponse {

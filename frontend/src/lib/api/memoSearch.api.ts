@@ -17,9 +17,19 @@ export async function searchMemos(
   const res = await api.post<SearchMemosResponse>(
     "/api/memos/search",
     body,
-    { signal }
+    // no axios timeout existed: a stuck request spun forever. "All" is legitimately slower.
+    { signal, timeout: body.pageSize === "all" ? SEARCH_TIMEOUT_ALL_MS : SEARCH_TIMEOUT_MS }
   );
   return res.data;
+}
+
+export const SEARCH_TIMEOUT_MS = 20_000;
+export const SEARCH_TIMEOUT_ALL_MS = 60_000;
+
+/** axios reports its own timeout as ECONNABORTED / ETIMEDOUT */
+export function isSearchTimeout(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  return code === "ECONNABORTED" || code === "ETIMEDOUT";
 }
 
 export async function searchMemoStats(
@@ -129,6 +139,15 @@ export function colFiltersToSearchRequest(input: MapInput): SearchMemosRequest {
       extraApproverNames.push(v);
     }
   }
+  // author list: ids from the server facet; a plain name (page fallback) becomes a text match
+  const authorValues = colFilters.author.values ?? [];
+  const authorIds: number[] = [];
+  const authorNames: string[] = [];
+  for (const v of authorValues) {
+    const asNum = Number(v);
+    if (Number.isInteger(asNum) && asNum > 0) authorIds.push(asNum);
+    else if (v.trim()) authorNames.push(v.trim());
+  }
   const ccValues = colFilters.ccStatus.values ?? [];
   const ccUserIds: number[] = [];
   const ccUserNames: string[] = [];
@@ -171,7 +190,8 @@ export function colFiltersToSearchRequest(input: MapInput): SearchMemosRequest {
     // text filters (column header)
     memonumberContains: trim(colFilters.memonumber.search),
     subjectContains: trim(colFilters.subject.search),
-    authorContains: trim(colFilters.author.search),
+    authorContains: trim(colFilters.author.search) ?? (authorNames.length === 1 ? authorNames[0] : undefined),
+    authorIds: authorIds.length ? authorIds : undefined,
     latestCommentContains: trim(colFilters.latest.search),
     extraApproverContains: trim(colFilters.extra.search),
     currentApproverContains: trim(colFilters.current.search),
