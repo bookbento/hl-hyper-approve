@@ -35,6 +35,7 @@
   },
   "clearFilters": "ล้างตัวกรอง",
   "activeFilters": "ตัวกรองที่ใช้งาน",
+  "noActiveFilters": "ไม่มี",
   "btnUpload": "อัปโหลด",
   "btnCreate": "สร้างใหม่",
   "stats": {

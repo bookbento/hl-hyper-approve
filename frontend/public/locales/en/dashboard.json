@@ -30,6 +30,7 @@
   },
   "clearFilters": "Clear Filters",
   "activeFilters": "Active Filters",
+  "noActiveFilters": "None",
   "btnUpload": "Upload",
   "btnCreate": "Create",
   "stats": {

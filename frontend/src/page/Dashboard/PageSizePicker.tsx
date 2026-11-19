@@ -34,20 +34,26 @@ function PageSizePicker({ page, total, totalPages, pageSize, onPageChange, onPag
   // which fought with the GlideSelect trigger.
   return (
     <div className="inline-flex items-center gap-2 text-sm text-gray-700">
-      <span className="hidden text-sm tabular-nums text-gray-500 lg:inline" aria-live="polite">
+      {/* fixed widths + hidden-not-removed controls: nothing beside them shifts when totals change or "All" is picked */}
+      <span className="hidden min-w-[13.5rem] text-right text-sm tabular-nums text-gray-500 lg:inline" aria-live="polite">
         {isAll
           ? t("pager.countAll", { total: fmt(total) })
           : t("pager.range", { from: fmt(from), to: fmt(to), total: fmt(total) })}
       </span>
-      {!isAll && (
-        <span className="text-sm text-gray-600">{t("pager.pageOf", { page, totalPages })}</span>
-      )}
-      {!isAll && (
+      <span
+        className={`min-w-[5.5rem] text-right text-sm tabular-nums text-gray-600 ${isAll ? "invisible" : ""}`}
+        aria-hidden={isAll}
+      >
+        {t("pager.pageOf", { page, totalPages })}
+      </span>
+      {(
         <button
           type="button"
           onClick={() => onPageChange(Math.max(1, page - 1))}
-          disabled={page <= 1}
-          className={navBtn}
+          disabled={page <= 1 || isAll}
+          tabIndex={isAll ? -1 : undefined}
+          aria-hidden={isAll}
+          className={`${navBtn} ${isAll ? "invisible" : ""}`}
           title={t("pager.titlePrev")}
           aria-label={t("pager.prev")}
         >
@@ -71,12 +77,14 @@ function PageSizePicker({ page, total, totalPages, pageSize, onPageChange, onPag
         highlightColor="#eef7f3"
         textColor="#1f2937"
       />
-      {!isAll && (
+      {(
         <button
           type="button"
           onClick={() => onPageChange(Math.min(totalPages, page + 1))}
-          disabled={page >= totalPages}
-          className={navBtn}
+          disabled={page >= totalPages || isAll}
+          tabIndex={isAll ? -1 : undefined}
+          aria-hidden={isAll}
+          className={`${navBtn} ${isAll ? "invisible" : ""}`}
           title={t("pager.titleNext")}
           aria-label={t("pager.next")}
         >

@@ -660,14 +660,15 @@ export const FilterMenu: React.FC<{
 
           <span className="min-w-[60px] text-left">{t("filters.toggle")}</span>
 
-          {activeFilterCount > 0 && (
-            <span
-              className={`ml-1 rounded-full px-2 py-1 text-xs font-semibold min-w-[20px] flex items-center justify-center
-              ${open ? "bg-white text-gray-600" : "bg-gray-500 text-white"}`}
-            >
-              {activeFilterCount}
-            </span>
-          )}
+          {/* always rendered (invisible at 0) so the button never changes width */}
+          <span
+            aria-hidden={activeFilterCount === 0}
+            className={`ml-1 rounded-full h-6 w-6 text-xs font-semibold flex shrink-0 items-center justify-center
+            ${activeFilterCount === 0 ? "invisible" : ""}
+            ${open ? "bg-white text-gray-600" : "bg-gray-500 text-white"}`}
+          >
+            {activeFilterCount || 0}
+          </span>
 
           {/* ไอคอนลูกศร */}
           <svg
@@ -2812,12 +2813,16 @@ const Dashboard: React.FC = () => {
         </div>
 
         {/* Active Filters Indicator */}
-        {hasActiveFilters && (
-          <div className="-mx-4 sm:mx-0 mb-4 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-            <div className="px-4 sm:px-0 inline-flex items-center gap-2">
+        {/* fixed-height slot that is always there: chips appearing/disappearing never push the toolbar and table */}
+        {(
+          <div className="-mx-4 sm:mx-0 mb-4 h-7 overflow-x-auto overflow-y-hidden whitespace-nowrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div className="px-4 sm:px-0 inline-flex h-7 items-center gap-2">
               <span className="text-sm text-gray-600 font-medium">
                 {t("activeFilters")}:
               </span>
+              {!hasActiveFilters && (
+                <span className="text-sm text-gray-400">{t("noActiveFilters", "None")}</span>
+              )}
               {statusFilter !== "All" && (
                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
                   {t("stats." + statusFilter.toLowerCase())}
@@ -3232,26 +3237,29 @@ const Dashboard: React.FC = () => {
 
         {/* 💻 Table layout for desktop */}
         {!isMobile && (
-        <div className="bg-white rounded-card shadow-card border border-gray-100 overflow-visible">
+        <div className="relative bg-white rounded-card shadow-card border border-gray-100 overflow-visible">
+          {/* loading = overlay on top of the table (thin bar + pill), never a row in the layout,
+              so the table doesn't jump down and back on every search */}
+          <div
+            className={`pointer-events-none absolute inset-x-0 top-0 z-20 transition-opacity duration-200 ${
+              searchResultsLoading && pagedMemos.length > 0 ? "opacity-100" : "opacity-0"
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="h-0.5 overflow-hidden rounded-t-card bg-emerald-100/60">
+              <div className="h-full w-1/3 animate-[dashboard-progress_1.1s_ease-in-out_infinite] bg-emerald-400" />
+            </div>
+            <div className="absolute right-3 top-2 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-xs font-medium text-emerald-700 shadow-sm ring-1 ring-emerald-100">
+              <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+              {searchResultsLoading && pagedMemos.length > 0 ? t("loading") : ""}
+            </div>
+          </div>
           {/* NEW: top-right page size control */}
 
           <div className="overflow-x-auto">
             {" "}
             <div className="overflow-x-auto">
-              {/* outside the virtualized tbody, so its height never shifts the row offsets */}
-              {searchResultsLoading && pagedMemos.length > 0 && (
-                <div
-                  className="flex items-center gap-2 bg-emerald-50/80 px-3 py-2 text-xs font-medium text-emerald-700"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
-                  <span>{t("loading")}</span>
-                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-emerald-100">
-                    <span className="block h-full w-1/3 animate-pulse rounded-full bg-emerald-500" />
-                  </span>
-                </div>
-              )}
               <table aria-rowcount={pagedMemos.length + 1} className="min-w-[900px] w-full text-sm [&_thead_th:first-child]:rounded-tl-card [&_thead_th:last-child]:rounded-tr-card">
                 <thead>
                   <tr className="text-gray-700 bg-brand-700">

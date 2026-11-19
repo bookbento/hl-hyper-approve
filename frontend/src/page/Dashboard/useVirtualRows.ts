@@ -18,7 +18,7 @@ type Options = {
   getKey: (index: number) => number | string;
   /** rough row height before it is measured */
   estimateSize: number;
-  /** changes when the row set is replaced (new page / filter): first rows stagger in again */
+  /** changes when the row set is replaced (new page / filter): decided again, and swapped in without animation */
   resetKey: unknown;
   /** the element that holds the rows (tbody / card list) */
   listRef: RefObject<HTMLElement | null>;
@@ -30,8 +30,6 @@ export type Enter = { className: string; style: CSSProperties | undefined };
 
 const NO_ENTER: Enter = { className: "", style: undefined };
 const FAST_PX_PER_MS = 1.5;
-const STAGGER_MS = 28;
-const STAGGER_MAX = 12;
 
 export function scrollParentOf(el: HTMLElement): HTMLElement {
   for (let p = el.parentElement; p; p = p.parentElement) {
@@ -105,7 +103,6 @@ export function useVirtualRows({ count, getKey, estimateSize, resetKey, listRef:
   }
 
   const items: VirtualItem[] = virtualizer.getVirtualItems();
-  const firstIndex = items[0]?.index ?? 0;
 
   // forget rows that are no longer mounted
   const mounted = new Set(items.map((it) => it.key));
@@ -114,27 +111,25 @@ export function useVirtualRows({ count, getKey, estimateSize, resetKey, listRef:
   }
 
   const enterFor = useCallback(
-    (key: RowKey, index: number): Enter => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    (key: RowKey, _index: number): Enter => {
       const known = decided.current.get(key);
       if (known) return known;
       const s = scroll.current;
       const recentlyScrolled = performance.now() - s.t < 150;
       if (recentlyScrolled) scrolledSinceReset.current = true;
       let enter: Enter;
-      if (recentlyScrolled && s.speed > FAST_PX_PER_MS) {
+      if (!scrolledSinceReset.current || (recentlyScrolled && s.speed > FAST_PX_PER_MS)) {
+        // A new row set (filter, page, view) swaps in instantly: staggering it in from
+        // transparent blanked the table on every click. Only rows scrolled into view slide in.
         enter = NO_ENTER;
       } else {
-        // stagger only the first paint of a row set; rows scrolled into view come in at once
-        const delay = scrolledSinceReset.current ? 0 : Math.min(index - firstIndex, STAGGER_MAX) * STAGGER_MS;
-        enter = {
-          className: "animate-rb-row-in-lite",
-          style: delay ? { animationDelay: `${delay}ms` } : undefined,
-        };
+        enter = { className: "animate-rb-row-in-lite", style: undefined };
       }
       decided.current.set(key, enter);
       return enter;
     },
-    [firstIndex]
+    []
   );
 
   const last = items[items.length - 1];
