@@ -230,6 +230,7 @@ B1 ทำแล้ว (migration `20261015000000_memo_status_pivot_latest_idx`) 
 - [x] tie-breaker `id desc` + index B1
 - [x] ถอด `GatewayModule` + `backend/` ออก, ปรับ `package.json` root
 - [x] เขียน `deploy-production.sh` ใหม่สำหรับ monorepo (หนี้ข้อ 3) + `serversetup.sh`
+- [x] **แก้ PDF จาก WPS ที่ลายเซ็นไม่ขึ้น** (MediaBox กลับหัว) ใน `memo-pdf/pdf.core.ts` — normalize page box ก่อนวาง (`5281f0b`), ดู `docs/WPS-PDF-INVERTED-MEDIABOX.md`
 - [ ] **deploy ขึ้น production** (`sudo ./deploy-production.sh` บน branch `production`) แล้วทดสอบ login / approve / อีเมล / PDF
 - [ ] รอเจ้าของระบบตัดสินใจ: endpoint ที่ frontend ไม่เรียก — positions (`/memos/signature`, `/date`, `/note`), `/recall`, `/recall-preserve`, `/actions`, `/status` 3/6 — และ `/status` 3/4 ที่เช็กแค่ `canViewMemo` (ดูหมายเหตุ 8b)
 - [ ] B3 หลังวัดผลบน production (ดู Performance)
