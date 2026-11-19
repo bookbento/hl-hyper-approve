@@ -1408,7 +1408,6 @@ const DASHBOARD_PAGE_SIZE_KEY = "dashboard:pageSize:v1";
 function loadPageSize(): PageSize {
   try {
     const v = localStorage.getItem(DASHBOARD_PAGE_SIZE_KEY);
-    if (v === "All") return "All";
     const n = Number(v);
     return Number.isInteger(n) && n >= 10 && n <= 100 && n % 10 === 0 ? n : 10;
   } catch {
@@ -2293,7 +2292,8 @@ const Dashboard: React.FC = () => {
   const [pageSize, setPageSize] = useState<PageSize>(loadPageSize);
   useEffect(() => {
     try {
-      localStorage.setItem(DASHBOARD_PAGE_SIZE_KEY, String(pageSize));
+      // "All" is not remembered: it would load every memo on each visit
+      if (pageSize !== "All") localStorage.setItem(DASHBOARD_PAGE_SIZE_KEY, String(pageSize));
     } catch {
       // private mode / blocked storage: the choice just isn't remembered
     }
@@ -2569,7 +2569,8 @@ const Dashboard: React.FC = () => {
   // whatever the page size ("All" = thousands). A new request (page/filter/sort)
   // replaces the rows and re-staggers them; background refreshes do not.
   const rowListRef = useRef<HTMLElement | null>(null);
-  const memoKeyAt = (i: number) => pagedMemos[i]?.id ?? i;
+  // string fallback can never collide with a numeric memo id
+  const memoKeyAt = (i: number): number | string => pagedMemos[i]?.id ?? `missing-${i}`;
   const showTableSkeleton = searchResultsLoading && pagedMemos.length === 0;
   const tableColumnCount =
     1 + Object.values(visibleColumns).filter(Boolean).length;
@@ -2997,10 +2998,11 @@ const Dashboard: React.FC = () => {
             renderSpacer={(h) => <div aria-hidden="true" style={{ height: h }} />}
             renderRow={(vr, enter, measureRef) => {
             const memo = pagedMemos[vr.index];
+            if (!memo) return null;
             const index = vr.index;
             return (
               // padding, not margin, between cards: measureElement ignores margins
-              <div key={memo.id} data-index={vr.index} ref={measureRef} className="pb-4">
+              <div key={memo.id} data-index={vr.index} ref={measureRef} className="pb-4" aria-setsize={pagedMemos.length} aria-posinset={vr.index + 1}>
               <div
                 onClick={() => navigate(`/memo/${memo.id}`)}
                 className={`${enter.className} bg-white rounded-card shadow-card border border-gray-100 p-4 cursor-pointer hover:shadow-card-hover transition-shadow`}
@@ -3236,7 +3238,21 @@ const Dashboard: React.FC = () => {
           <div className="overflow-x-auto">
             {" "}
             <div className="overflow-x-auto">
-              <table className="min-w-[900px] w-full text-sm [&_thead_th:first-child]:rounded-tl-card [&_thead_th:last-child]:rounded-tr-card">
+              {/* outside the virtualized tbody, so its height never shifts the row offsets */}
+              {searchResultsLoading && pagedMemos.length > 0 && (
+                <div
+                  className="flex items-center gap-2 bg-emerald-50/80 px-3 py-2 text-xs font-medium text-emerald-700"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+                  <span>{t("loading")}</span>
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-emerald-100">
+                    <span className="block h-full w-1/3 animate-pulse rounded-full bg-emerald-500" />
+                  </span>
+                </div>
+              )}
+              <table aria-rowcount={pagedMemos.length + 1} className="min-w-[900px] w-full text-sm [&_thead_th:first-child]:rounded-tl-card [&_thead_th:last-child]:rounded-tr-card">
                 <thead>
                   <tr className="text-gray-700 bg-brand-700">
                     {/* Order Number Column */}
@@ -3496,26 +3512,6 @@ const Dashboard: React.FC = () => {
   [&>tr>td]:!text-left
 "
                 >
-                  {searchResultsLoading && pagedMemos.length > 0 && (
-                    <tr className="bg-emerald-50/80">
-                      <td
-                        colSpan={tableColumnCount}
-                        className="px-3 py-2 !align-middle !text-left"
-                      >
-                        <div
-                          className="flex items-center gap-2 text-xs font-medium text-emerald-700"
-                          role="status"
-                          aria-live="polite"
-                        >
-                          <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
-                          <span>{t("loading")}</span>
-                          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-emerald-100">
-                            <span className="block h-full w-1/3 animate-pulse rounded-full bg-emerald-500" />
-                          </span>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
                   {!showTableSkeleton && !searchResultsLoading && pagedMemos.length === 0 && (
                     <tr>
                       <td colSpan={tableColumnCount} className="px-4 py-12 !text-center">
@@ -3617,11 +3613,14 @@ const Dashboard: React.FC = () => {
                     )}
                     renderRow={(vr, enter, measureRef) => {
                     const memo = pagedMemos[vr.index];
+                    // the virtual range can lag one render behind a shrinking list (All -> 10)
+                    if (!memo) return null;
                     const index = vr.index;
                     return (
                     <tr
                       key={memo.id}
                       data-index={vr.index}
+                      aria-rowindex={vr.index + 2}
                       ref={measureRef}
                       className={`${enter.className} transition-colors hover:bg-brand-50/60`}
                       style={enter.style}

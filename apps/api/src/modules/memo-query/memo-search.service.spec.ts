@@ -204,6 +204,24 @@ describe('MemoSearchNestService', () => {
       expect(whereOf().AND).toContainEqual({ id: { in: [12] } });
     });
 
+    it('ORs author ids with author names (page fallback)', async () => {
+      await service.searchMemos(
+        { authorIds: [4], authorNames: ['som', 'nok'], includeStatCounts: false },
+        1,
+        'http://h',
+      );
+      const json = JSON.stringify(whereOf().AND);
+      expect(json).toContain('{"userId":{"in":[4]}}');
+      expect(json).toContain('"contains":"som"');
+      expect(json).toContain('"contains":"nok"');
+    });
+
+    it('ignores inherited keys as raw sorts', async () => {
+      await service.searchMemos({ sortBy: 'toString' as never, includeStatCounts: false }, 1, 'http://h');
+      // normal path: count + paged findMany, no candidate-id lookup
+      expect(mockPrisma.masterMemo.count).toHaveBeenCalled();
+    });
+
     it('filters by author ids, dropping invalid ones', async () => {
       await service.searchMemos({ authorIds: [4, 0, 2.5], includeStatCounts: false }, 1, 'http://h');
       expect(JSON.stringify(whereOf().AND)).toContain('{"userId":{"in":[4]}}');

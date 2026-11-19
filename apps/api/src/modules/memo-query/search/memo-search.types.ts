@@ -4,6 +4,20 @@
 
 export type SortDir = 'asc' | 'desc';
 
+export const SORT_KEYS = [
+  'memonumber',
+  'subject',
+  'author',
+  'status',
+  'current',
+  'extra',
+  'latest',
+  'expires',
+  'createdAt',
+  'ccStatus',
+  'latestAction',
+] as const;
+
 export type SortKey =
   | 'memonumber'
   | 'subject'
@@ -53,6 +67,8 @@ export interface SearchMemosRequest {
   inLineApproverId?: number;
   /** author column multi-select */
   authorIds?: number[];
+  /** author names (page fallback when the facet has no ids); any of them, by name fragment */
+  authorNames?: string[];
   extraApproverIds?: number[];
   extraApproverNames?: string[];
   ccUserIds?: number[];

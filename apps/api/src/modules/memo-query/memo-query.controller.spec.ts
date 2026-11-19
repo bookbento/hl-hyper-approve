@@ -5,6 +5,26 @@ import type { MemoQueryService } from './memo-query.service';
 import type { MemoSearchNestService } from './memo-search.service';
 import type { MemoReferenceNestService } from './memo-reference.service';
 
+describe('SearchMemosDto sort validation', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { validate } = require('class-validator');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { plainToInstance } = require('class-transformer');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { SearchMemosDto } = require('./dto/search-memos.dto');
+  const errorsFor = async (body: object) =>
+    (await validate(plainToInstance(SearchMemosDto, body))).map((e: { property: string }) => e.property);
+
+  it('rejects unknown sort keys and directions', async () => {
+    expect(await errorsFor({ sortBy: 'toString' })).toContain('sortBy');
+    expect(await errorsFor({ sortDir: 'sideways' })).toContain('sortDir');
+  });
+
+  it('accepts known ones', async () => {
+    expect(await errorsFor({ sortBy: 'status', sortDir: 'asc' })).toEqual([]);
+  });
+});
+
 describe('MemoQueryController.searchMemos pageSize', () => {
   const search = { searchMemos: jest.fn().mockResolvedValue({ items: [] }) };
   const controller = new MemoQueryController(

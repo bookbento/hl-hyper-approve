@@ -139,7 +139,7 @@ export function colFiltersToSearchRequest(input: MapInput): SearchMemosRequest {
       extraApproverNames.push(v);
     }
   }
-  // author list: ids from the server facet; a plain name (page fallback) becomes a text match
+  // author list: ids from the server facet; plain names (page fallback, before facets load)
   const authorValues = colFilters.author.values ?? [];
   const authorIds: number[] = [];
   const authorNames: string[] = [];
@@ -190,8 +190,9 @@ export function colFiltersToSearchRequest(input: MapInput): SearchMemosRequest {
     // text filters (column header)
     memonumberContains: trim(colFilters.memonumber.search),
     subjectContains: trim(colFilters.subject.search),
-    authorContains: trim(colFilters.author.search) ?? (authorNames.length === 1 ? authorNames[0] : undefined),
+    authorContains: trim(colFilters.author.search),
     authorIds: authorIds.length ? authorIds : undefined,
+    authorNames: authorNames.length ? authorNames : undefined,
     latestCommentContains: trim(colFilters.latest.search),
     extraApproverContains: trim(colFilters.extra.search),
     currentApproverContains: trim(colFilters.current.search),

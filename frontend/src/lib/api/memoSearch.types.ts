@@ -57,6 +57,8 @@ export interface SearchMemosRequest {
   inLineApproverId?: number;
   /** author column multi-select */
   authorIds?: number[];
+  /** author names (page fallback when the facet has no ids) */
+  authorNames?: string[];
   extraApproverIds?: number[];
   extraApproverNames?: string[];
   ccUserIds?: number[];

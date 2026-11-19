@@ -4,10 +4,12 @@ import {
   IsString,
   IsArray,
   IsBoolean,
+  IsIn,
   Min,
   Max,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
+import { SORT_KEYS } from '../search/memo-search.types';
 
 /**
  * DTO for POST /api/memos/search
@@ -101,6 +103,11 @@ export class SearchMemosDto {
   authorIds?: number[];
 
   @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  authorNames?: string[];
+
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Type(() => Number)
@@ -126,12 +133,13 @@ export class SearchMemosDto {
   @IsArray()
   expiryStates?: string[];
 
+  // a known key only: a free string reached RAW_SORTS[...] and Prisma orderBy
   @IsOptional()
-  @IsString()
+  @IsIn(SORT_KEYS)
   sortBy?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['asc', 'desc'])
   sortDir?: 'asc' | 'desc';
 
   @IsOptional()

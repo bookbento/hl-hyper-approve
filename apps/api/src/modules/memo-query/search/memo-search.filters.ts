@@ -77,8 +77,18 @@ export function buildFilterClause(req: SearchMemosRequest): Prisma.MasterMemoWhe
     and.push({ subject: { contains: req.subjectContains.trim(), mode: insensitive } });
   }
   const authorIds = (req.authorIds ?? []).filter((id) => Number.isInteger(id) && id > 0);
-  if (authorIds.length) {
-    and.push({ userId: { in: authorIds } });
+  const authorNameClauses = (req.authorNames ?? []).flatMap((n) => {
+    const trimmed = n.trim();
+    return trimmed ? nameContains(trimmed) : [];
+  });
+  if (authorIds.length || authorNameClauses.length) {
+    // ids and names are alternatives within one column filter
+    and.push({
+      OR: [
+        ...(authorIds.length ? [{ userId: { in: authorIds } }] : []),
+        ...(authorNameClauses.length ? [{ user: { OR: authorNameClauses } }] : []),
+      ],
+    });
   }
   if (req.authorContains?.trim()) {
     and.push({ user: { OR: nameContains(req.authorContains.trim()) } });

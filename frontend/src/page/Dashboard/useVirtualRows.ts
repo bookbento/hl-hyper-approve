@@ -55,7 +55,14 @@ export function useVirtualRows({ count, getKey, estimateSize, resetKey, listRef:
   useLayoutEffect(() => {
     const el = listEl.current;
     if (!el) return;
-    const parent = scrollParentOf(el);
+    // Keep a real scroller once found (no flip back to the document when the list is
+    // momentarily short, no ancestor walk on every scroll render); only search while
+    // we are still on the document fallback.
+    const cached =
+      scrollEl && scrollEl !== document.documentElement && scrollEl !== document.scrollingElement && scrollEl.contains(el)
+        ? scrollEl
+        : null;
+    const parent = cached ?? scrollParentOf(el);
     if (parent !== scrollEl) setScrollEl(parent);
     const top = el.getBoundingClientRect().top - parent.getBoundingClientRect().top + parent.scrollTop;
     if (Math.abs(top - scrollMargin) > 1) setScrollMargin(top);

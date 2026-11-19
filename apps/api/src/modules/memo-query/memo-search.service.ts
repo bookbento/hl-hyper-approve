@@ -176,7 +176,9 @@ export class MemoSearchNestService {
     let items: MemoListItem[];
     let total: number;
 
-    const rawSort = req.sortBy ? RAW_SORTS[req.sortBy] : undefined;
+    // own keys only: RAW_SORTS["toString"] would otherwise be Object.prototype.toString
+    const rawSort =
+      req.sortBy && Object.prototype.hasOwnProperty.call(RAW_SORTS, req.sortBy) ? RAW_SORTS[req.sortBy] : undefined;
     if (rawSort) {
       // Sort keys that need raw SQL: resolve the full candidate set, order
       // + page it in SQL, then fetch just that page by id.
