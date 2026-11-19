@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { CSSProperties } from "react";
 import { CountUp, SpotlightCard } from "../../components/motion";
+import type { JellyMV } from "./useJellyGroup";
 
 type Props = {
   label: string;
@@ -14,6 +15,8 @@ type Props = {
   /** position in the grid, for the entrance stagger */
   index: number;
   loadingLabel: string;
+  /** jelly selection transforms from useJellyGroup (optional) */
+  jelly?: JellyMV;
 };
 
 /** Dashboard stat card: spotlight hover, counting number, accent when selected. */
@@ -27,10 +30,12 @@ export default function StatCard({
   disabled,
   index,
   loadingLabel,
+  jelly,
 }: Props) {
   const reduce = useReducedMotion();
 
   return (
+    <motion.div className="h-full" style={jelly}>
     <motion.div
       initial={reduce ? false : { opacity: 0, y: 12, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -88,6 +93,7 @@ export default function StatCard({
           style={{ backgroundColor: accent, transform: active ? "scaleX(1)" : "scaleX(0.18)" }}
         />
       </SpotlightCard>
+    </motion.div>
     </motion.div>
   );
 }

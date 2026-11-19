@@ -37,6 +37,7 @@ import type {
 import { subscribeMemoDashboardRefresh } from "../../lib/memoDashboardEvents";
 import { BlurText } from "../../components/motion";
 import StatCard from "./StatCard";
+import { useJellyGroup } from "./useJellyGroup";
 import SpringCheck from "../../components/reactbits/SpringCheck/SpringCheck";
 import GlideSelect from "../../components/reactbits/GlideSelect/GlideSelect";
 import StatusMark from "../../components/reactbits/StatusMark/StatusMark";
@@ -2404,6 +2405,22 @@ const Dashboard: React.FC = () => {
     [statCardConfigs]
   );
 
+  // Stat cards in DOM order, so the jelly physics knows which card is chosen.
+  const statViews = useMemo<View[]>(
+    () => [
+      ...(totalCfg ? (["ALL"] as View[]) : []),
+      "MY_APPROVAL",
+      "MY_CREATED",
+      ...otherCfgs.map((c) => `STATUS:${c.status}` as View),
+    ],
+    [totalCfg, otherCfgs]
+  );
+  const statJelly = useJellyGroup(statViews.length, statViews.indexOf(view));
+  const jellyFor = (v: View) => {
+    const i = statViews.indexOf(v);
+    return i >= 0 ? statJelly.mvFor(i) : undefined;
+  };
+
   const visibleMemos = useMemo(() => {
     let filtered = memos.filter((m) => {
       const subKey = getSubjectStatusKey(m); // ✅ ใช้คีย์ใหม่
@@ -3368,11 +3385,12 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats Bar - Optimized Responsive Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 mb-6">
+        {/* Stats Bar */}
+        <div ref={statJelly.groupRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4 mb-6">
           {totalCfg && (
             <StatCard
               index={0}
+              jelly={jellyFor("ALL")}
               label={t(totalCfg.labelKey)}
               value={statusCounts[totalCfg.key as keyof typeof statusCounts]}
               accent={totalCfg.accent}
@@ -3384,6 +3402,7 @@ const Dashboard: React.FC = () => {
           )}
           <StatCard
             index={1}
+            jelly={jellyFor("MY_APPROVAL")}
             label={t("stats.approvalRequest") || "Approval Request"}
             value={approvalRequestCount}
             accent="#6366f1"
@@ -3395,6 +3414,7 @@ const Dashboard: React.FC = () => {
           />
           <StatCard
             index={2}
+            jelly={jellyFor("MY_CREATED")}
             label={t("stats.myCreatedMemos") || "My Created Memos"}
             value={myCreatedMemosCount}
             accent="#a855f7"
@@ -3410,6 +3430,7 @@ const Dashboard: React.FC = () => {
               <StatCard
                 key={config.key}
                 index={3 + i}
+                jelly={jellyFor(targetView)}
                 label={t(config.labelKey)}
                 value={statusCounts[config.key as keyof typeof statusCounts]}
                 accent={config.accent}
