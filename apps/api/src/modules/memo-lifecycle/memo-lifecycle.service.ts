@@ -28,7 +28,14 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { ActionType, ExtraStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
-import { UPLOADS_DIR, decodeFilename, toPublicUploadPath } from '../../common/upload/upload.config';
+import {
+  UPLOADS_DIR,
+  coerceToRelative,
+  decodeFilename,
+  resolveSafeUploadPath,
+  toPublicUploadPath,
+} from '../../common/upload/upload.config';
+import { orderAttachedIds } from './attached-order';
 import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 // ── Type aliases ─────────────────────────────────────────────────────────────
@@ -368,8 +375,10 @@ export class MemoLifecycleService {
       const fileIdMap: Record<number, number> = {};
       finalOrder.forEach((mfId, displayIdx) => (fileIdMap[displayIdx] = mfId));
 
-      await Promise.all(
-        attachedFiles.map((f) =>
+      // One transaction, in the order the form appended them. Concurrent creates
+      // used to land in random id order, and nothing else recorded the order.
+      const createdAttached = await this.prisma.$transaction(
+        attachedFiles.map((f, idx) =>
           this.prisma.attachedFile.create({
             data: {
               memoId: memo!.id,
@@ -378,8 +387,20 @@ export class MemoLifecycleService {
               fileType: f.mimetype,
               size: f.size,
               isUrl: false,
+              orderNo: idx,
             },
+            select: { id: true },
           }),
+        ),
+      );
+      const attachedOrder = orderAttachedIds(
+        body['attachedOrderTokens'],
+        [],
+        createdAttached.map((a) => a.id),
+      );
+      await this.prisma.$transaction(
+        attachedOrder.map((fileId, orderNo) =>
+          this.prisma.attachedFile.update({ where: { id: fileId }, data: { orderNo } }),
         ),
       );
 
@@ -388,8 +409,8 @@ export class MemoLifecycleService {
       try { urlLinks = JSON.parse(String(body['urlLinks'] ?? '[]')) as Array<{ url: string; title: string }>; } catch { urlLinks = []; }
 
       if (urlLinks.length > 0) {
-        await Promise.all(
-          urlLinks.map((link) =>
+        await this.prisma.$transaction(
+          urlLinks.map((link, i) =>
             this.prisma.attachedFile.create({
               data: {
                 memoId: memo!.id,
@@ -399,6 +420,8 @@ export class MemoLifecycleService {
                 fileType: 'url/link',
                 size: 0,
                 filePath: null,
+                // links list after the files
+                orderNo: attachedOrder.length + i,
               },
             }),
           ),
@@ -1000,8 +1023,12 @@ export class MemoLifecycleService {
       await this.prisma.attachedFile.deleteMany({ where: { id: { in: removedAttachedFileIds } } });
       for (const file of removedAttached) {
         try {
-          if (!file.isUrl && file.filePath && fs.existsSync(file.filePath)) {
-            fs.unlinkSync(file.filePath);
+          if (!file.isUrl && file.filePath) {
+            // rows hold either an absolute path (old updates) or "/uploads/attached/…"
+            const abs = path.isAbsolute(file.filePath) && fs.existsSync(file.filePath)
+              ? file.filePath
+              : resolveSafeUploadPath(coerceToRelative(file.filePath)).abs;
+            if (fs.existsSync(abs)) fs.unlinkSync(abs);
           }
         } catch (err) {
           this.logger.error(`Failed to delete attached file: ${file.filePath}`, err);
@@ -1019,18 +1046,35 @@ export class MemoLifecycleService {
     const mainFiles = files?.['files'] ?? [];
     const attachedFiles = files?.['attachedFiles'] ?? [];
 
-    await Promise.all(
+    const keptAttached = await this.prisma.attachedFile.findMany({
+      where: { memoId: id, isUrl: false },
+      orderBy: [{ orderNo: 'asc' }, { id: 'asc' }],
+      select: { id: true },
+    });
+    const newAttached = await this.prisma.$transaction(
       attachedFiles.map((f) =>
         this.prisma.attachedFile.create({
           data: {
             memoId: id,
             fileName: decodeFilename(f.originalname),
-            filePath: f.path,
+            // same public form as createMemo (this stored the absolute path before)
+            filePath: toPublicUploadPath(f.path),
             fileType: f.mimetype,
             size: f.size,
             isUrl: false,
           },
+          select: { id: true },
         }),
+      ),
+    );
+    const attachedOrder = orderAttachedIds(
+      body['attachedOrderTokens'],
+      keptAttached.map((a) => a.id),
+      newAttached.map((a) => a.id),
+    );
+    await this.prisma.$transaction(
+      attachedOrder.map((fileId, orderNo) =>
+        this.prisma.attachedFile.update({ where: { id: fileId }, data: { orderNo } }),
       ),
     );
 
@@ -1040,8 +1084,8 @@ export class MemoLifecycleService {
 
     await this.prisma.attachedFile.deleteMany({ where: { memoId: id, isUrl: true } });
     if (urlLinks.length > 0) {
-      await Promise.all(
-        urlLinks.map((link) =>
+      await this.prisma.$transaction(
+        urlLinks.map((link, i) =>
           this.prisma.attachedFile.create({
             data: {
               memoId: id,
@@ -1051,6 +1095,7 @@ export class MemoLifecycleService {
               fileType: 'url/link',
               size: 0,
               filePath: null,
+              orderNo: attachedOrder.length + i,
             },
           }),
         ),

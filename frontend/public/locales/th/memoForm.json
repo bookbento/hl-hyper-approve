@@ -184,5 +184,11 @@
   "adjustingLayout": "กำลังปรับเลย์เอาต์...",
   "removeApprover": "ลบผู้อนุมัติ",
   "insertLevel": "แทรกระดับ",
-  "insertLevelHere": "แทรกระดับใหม่ที่นี่"
+  "insertLevelHere": "แทรกระดับใหม่ที่นี่",
+
+  "pageDrop": {
+    "title": "วางไฟล์ที่นี่",
+    "mainHint": "PDF ที่ต้องการให้อนุมัติและเซ็น",
+    "attachHint": "PDF, รูป, Word, Excel, PowerPoint"
+  }
 }

@@ -419,6 +419,7 @@ export class MemoQueryService {
           select: { id: true, filePath: true, fileName: true, orderNo: true },
         },
         attachedFiles: {
+          orderBy: [{ orderNo: 'asc' }, { id: 'asc' }],
           select: {
             id: true,
             fileName: true,

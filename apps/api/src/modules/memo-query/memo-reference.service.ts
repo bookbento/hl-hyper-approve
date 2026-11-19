@@ -126,6 +126,7 @@ export class MemoReferenceNestService {
               select: { id: true, fileName: true, filePath: true, size: true },
             },
             attachedFiles: {
+              orderBy: [{ orderNo: 'asc' }, { id: 'asc' }],
               select: {
                 id: true,
                 fileName: true,
@@ -281,6 +282,7 @@ export class MemoReferenceNestService {
           select: { id: true, fileName: true, filePath: true, size: true },
         },
         attachedFiles: {
+          orderBy: [{ orderNo: 'asc' }, { id: 'asc' }],
           select: {
             id: true,
             fileName: true,

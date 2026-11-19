@@ -183,5 +183,11 @@
   "adjustingLayout": "Adjusting layout...",
   "removeApprover": "Remove approver",
   "insertLevel": "Insert Level",
-  "insertLevelHere": "Insert new level here"
+  "insertLevelHere": "Insert new level here",
+
+  "pageDrop": {
+    "title": "Drop files here",
+    "mainHint": "PDFs to approve and sign",
+    "attachHint": "PDF, images, Word, Excel, PowerPoint"
+  }
 }

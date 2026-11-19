@@ -37,7 +37,7 @@ const mockPrisma = {
   memoType: { findUnique: jest.fn() },
   masterMemo: { create: jest.fn(), update: jest.fn(), findUnique: jest.fn(), findFirst: jest.fn(), delete: jest.fn() },
   mainFile: { create: jest.fn(), update: jest.fn(), findMany: jest.fn(), deleteMany: jest.fn() },
-  attachedFile: { create: jest.fn(), deleteMany: jest.fn(), findMany: jest.fn() },
+  attachedFile: { create: jest.fn(), deleteMany: jest.fn(), findMany: jest.fn(), update: jest.fn() },
   signaturePosition: { create: jest.fn(), deleteMany: jest.fn() },
   datePosition: { create: jest.fn(), deleteMany: jest.fn() },
   notePosition: { create: jest.fn(), deleteMany: jest.fn() },
@@ -266,6 +266,7 @@ describe('MemoLifecycleService', () => {
       mockPrisma.memoApproverAction.createMany.mockResolvedValue({ count: 0 });
       mockPrisma.memoStatusPivot.upsert.mockResolvedValue({});
       mockPrisma.mainFile.findMany.mockResolvedValue([]);
+      mockPrisma.attachedFile.findMany.mockResolvedValue([]);
       mockPrisma.$transaction.mockImplementation(async (ops) => {
         if (Array.isArray(ops)) return ops.map(() => ({}));
         if (typeof ops === 'function') return ops(mockPrisma);
@@ -292,6 +293,29 @@ describe('MemoLifecycleService', () => {
         files: { files: [], attachedFiles: [] },
       });
       expect(mockPrisma.masterMemo.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('stores attachment order from attachedOrderTokens across saved and new files', async () => {
+      mockPrisma.attachedFile.findMany.mockResolvedValue([{ id: 10 }, { id: 11 }]);
+      let nextId = 20;
+      mockPrisma.attachedFile.create.mockImplementation(async () => ({ id: nextId++ }));
+      mockPrisma.attachedFile.update.mockImplementation(async (a: unknown) => a);
+      mockPrisma.$transaction.mockImplementation(async (ops) => {
+        if (Array.isArray(ops)) return Promise.all(ops);
+        if (typeof ops === 'function') return ops(mockPrisma);
+        return [];
+      });
+
+      await service.updateMemo({
+        id: 10,
+        body: makeBody({ userId: '5', attachedOrderTokens: '["new:1","old:11","new:0","old:10"]' }),
+        files: { files: [], attachedFiles: [makeFile('a.pdf'), makeFile('b.pdf')] },
+      });
+
+      const order = mockPrisma.attachedFile.update.mock.calls.map(
+        ([a]: [{ where: { id: number }; data: { orderNo: number } }]) => [a.where.id, a.data.orderNo],
+      );
+      expect(order).toEqual([[21, 0], [11, 1], [20, 2], [10, 3]]);
     });
 
     it('processes approversOverride when provided', async () => {

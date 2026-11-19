@@ -191,6 +191,7 @@ model AttachedFile {
   createdAt DateTime   @default(now())
   url       String? // URL link for external attachments
   isUrl     Boolean    @default(false) // Flag to distinguish URL links from file uploads
+  orderNo   Int        @default(0) // display order (form order / drag)
   memo      MasterMemo @relation(fields: [memoId], references: [id])
 }
 

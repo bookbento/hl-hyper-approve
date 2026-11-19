@@ -6,6 +6,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import PageFileDrop from "./PageFileDrop";
 import axios, { type AxiosProgressEvent, type AxiosRequestConfig } from "axios";
 import { Document, Page, pdfjs } from "react-pdf";
 import "../../lib/pdfWorker";
@@ -472,6 +473,31 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
   const [urlTitleInput, setUrlTitleInput] = useState("");
   const [showUrlModal, setShowUrlModal] = useState(false);
   const [orderTokens, setOrderTokens] = useState<OrderToken[]>([]);
+  // Attachment order as keys ("old:<id>" / "new:<fileKey>"), set only by dragging.
+  // Anything not listed (newly added) follows in the order it was added.
+  const [attachOrder, setAttachOrder] = useState<string[]>([]);
+  const attachItems = useMemo(() => {
+    type Item =
+      | { key: string; kind: "old"; f: ExistingFile }
+      | { key: string; kind: "new"; p: FileSource };
+    const byKey = new Map<string, Item>();
+    for (const f of existingAttachedFiles) {
+      if (!removedAttachedFileIds.includes(f.id)) byKey.set(`old:${f.id}`, { key: `old:${f.id}`, kind: "old", f });
+    }
+    for (const p of attachedFileUrls) {
+      if (p.file) byKey.set(`new:${fileKey(p.file)}`, { key: `new:${fileKey(p.file)}`, kind: "new", p });
+    }
+    const out: Item[] = [];
+    for (const k of attachOrder) {
+      const it = byKey.get(k);
+      if (it) {
+        out.push(it);
+        byKey.delete(k);
+      }
+    }
+    out.push(...byKey.values());
+    return out;
+  }, [existingAttachedFiles, removedAttachedFileIds, attachedFileUrls, attachOrder]);
   const [originalApprovalLineId, setOriginalApprovalLineId] = useState<
     number | null
   >(null);
@@ -1220,6 +1246,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
       // Filter out URL links from existingAttachedFiles (they're shown separately)
       const fileAttachments = (d.attachedFiles ?? []).filter((f: any) => !f.isUrl);
       setExistingAttachedFiles(fileAttachments);
+      setAttachOrder([]);
 
       // ---------- NEW: set orderTokens เริ่มจากไฟล์เก่าตาม orderNo ----------
       setOrderTokens(existingMeta.map((f) => makeOldToken(f.id)));
@@ -3029,7 +3056,18 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
     // อัปโหลดไฟล์
     (files ?? []).forEach((f) => form.append("files", f));
-    (attachedFiles ?? []).forEach((f) => form.append("attachedFiles", f));
+    // attachments go in the order shown (drag order); the server stores it as orderNo
+    const attachTokens: string[] = [];
+    let newAttachIdx = 0;
+    for (const it of attachItems) {
+      if (it.kind === "old") {
+        attachTokens.push(it.key);
+      } else if (it.p.file) {
+        form.append("attachedFiles", it.p.file);
+        attachTokens.push(`new:${newAttachIdx++}`);
+      }
+    }
+    form.append("attachedOrderTokens", JSON.stringify(attachTokens));
 
     // Add URL links
     if (urlLinks.length > 0) {
@@ -3532,6 +3570,18 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
         >
           <div className="w-[340px] p-4 space-y-4">
             {/* ============== STEP 1 ============== */}
+            <PageFileDrop
+              enabled={step === 1}
+              onMainFiles={(f) => void processNewMainFiles(f)}
+              onAttachedFiles={(f) => void processNewAttachedFiles(f)}
+              labels={{
+                title: t("pageDrop.title", "วางไฟล์ที่นี่"),
+                main: t("mainFilesLabel"),
+                mainHint: t("pageDrop.mainHint", "PDF ที่จะเซ็น"),
+                attach: t("attachmentsLabel"),
+                attachHint: t("pageDrop.attachHint", "PDF, รูป, Word, Excel, PowerPoint"),
+              }}
+            />
             {step === 1 && (
               <>
                 <label className="inline-block text-sm font-semibold tracking-wide text-brand-700 mb-2 px-2.5 py-1 bg-brand-50 rounded-lg ring-1 ring-inset ring-brand-100">
@@ -3921,81 +3971,80 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                   </div>
 
                   {/* Combined Attachments List (Files + URLs) */}
-                  {(existingAttachedFiles.filter(
-                    (f) => !removedAttachedFileIds.includes(f.id)
-                  ).length > 0 ||
-                    attachedFileUrls.length > 0 ||
-                    urlLinks.length > 0) && (
+                  {(attachItems.length > 0 || urlLinks.length > 0) && (
                     <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white max-w-md">
-                      <ul className="space-y-2 text-sm text-gray-700">
-                        {/* Existing file attachments */}
-                        {existingAttachedFiles
-                          .filter((f) => !removedAttachedFileIds.includes(f.id))
-                          .map((f) => (
-                            <li
-                              key={`old-${f.id}`}
-                              className="flex justify-between items-center border-b py-2"
-                            >
-                              <div className="flex items-center gap-2 flex-1 min-w-0">
-                                <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                </svg>
-                                <a
-                                  href={f.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="truncate hover:text-blue-600"
-                                >
-                                  {displayFileName(f.fileName)}
-                                </a>
-                              </div>
-                              <button
-                                onClick={() =>
-                                  setRemovedAttachedFileIds((prev) =>
-                                    prev.includes(f.id) ? prev : [...prev, f.id]
-                                  )
-                                }
-                                className="text-red-500 hover:text-red-700 flex-shrink-0 ml-2"
-                                title={t("removeFile")}
-                                type="button"
-                              >
-                                ✕
-                              </button>
-                            </li>
-                          ))}
+                      {attachItems.length > 0 && (
+                        <DragDropContext
+                          onDragEnd={(r) => {
+                            if (!r.destination || r.destination.index === r.source.index) return;
+                            const keys = attachItems.map((it) => it.key);
+                            const [moved] = keys.splice(r.source.index, 1);
+                            keys.splice(r.destination.index, 0, moved);
+                            setAttachOrder(keys);
+                          }}
+                        >
+                          <Droppable droppableId="attach-order">
+                            {(dp) => (
+                              <ul ref={dp.innerRef} {...dp.droppableProps} className="space-y-2 text-sm text-gray-700">
+                                {attachItems.map((it, i) => (
+                                  <Draggable key={it.key} draggableId={it.key} index={i}>
+                                    {(dg, snap) => (
+                                      <li
+                                        ref={dg.innerRef}
+                                        {...dg.draggableProps}
+                                        {...dg.dragHandleProps}
+                                        className={`flex items-center justify-between gap-3 rounded-lg border bg-white px-3 py-2 transition-shadow ${
+                                          snap.isDragging ? "border-brand-300 shadow-lg ring-2 ring-brand-100" : "border-neutral-300"
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                                          <span className="text-gray-400 tabular-nums">{i + 1}.</span>
+                                          <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                        </svg>
+                                          {it.kind === "old" ? (
+                                            <a
+                                              href={it.f.url}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="truncate font-medium text-gray-800 hover:text-blue-600"
+                                            >
+                                              {displayFileName(it.f.fileName)}
+                                            </a>
+                                          ) : (
+                                            <span className="truncate font-medium text-gray-800">{it.p.file!.name}</span>
+                                          )}
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (it.kind === "old") {
+                                              const id = it.f.id;
+                                              setRemovedAttachedFileIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+                                            } else {
+                                              const target = it.p;
+                                              setAttachedFiles((a) => a.filter((f) => f !== target.file));
+                                              setAttachedFileUrls((a) => a.filter((x) => x !== target));
+                                            }
+                                          }}
+                                          className="rounded-md px-2 py-1 text-sm text-red-600 hover:bg-red-50 flex-shrink-0"
+                                          title={t("removeFile")}
+                                          aria-label={`${t("removeFile")} ${it.kind === "old" ? displayFileName(it.f.fileName) : it.p.file!.name}`}
+                                        >
+                                          ✕
+                                        </button>
+                                      </li>
+                                    )}
+                                  </Draggable>
+                                ))}
+                                {dp.placeholder}
+                              </ul>
+                            )}
+                          </Droppable>
+                        </DragDropContext>
+                      )}
 
-                        {/* New file attachments */}
-                        {attachedFileUrls.map((f, i) => (
-                          <li
-                            key={`new-file-${i}`}
-                            className="flex justify-between items-center border-b py-2"
-                          >
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                              </svg>
-                              <span className="truncate">
-                                {f.file!.name}
-                              </span>
-                            </div>
-                            <button
-                              onClick={() => {
-                                setAttachedFiles((a) =>
-                                  a.filter((_, idx) => idx !== i)
-                                );
-                                setAttachedFileUrls((a) =>
-                                  a.filter((_, idx) => idx !== i)
-                                );
-                              }}
-                              className="text-red-500 hover:text-red-700 flex-shrink-0 ml-2"
-                              title={t("removeFile")}
-                              type="button"
-                            >
-                              ✕
-                            </button>
-                          </li>
-                        ))}
-
+                      <ul className={`space-y-2 text-sm text-gray-700 ${attachItems.length > 0 && urlLinks.length > 0 ? "mt-3" : ""}`}>
                         {/* URL Links */}
                         {urlLinks.map((link, i) => (
                           <li
