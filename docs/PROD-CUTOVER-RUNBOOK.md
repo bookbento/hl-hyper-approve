@@ -30,7 +30,7 @@
   npx prisma migrate diff --from-url "postgresql://<user>:<pass>@localhost:55433/hlememo" \
     --to-schema-datamodel prisma/schema.prisma --script
   ```
-  ผลที่ควรได้มีแค่ `CREATE INDEX` 4 ตัว: `MemoStatusPivot_memoId_createdAt_id_idx`, `MemoHistory_memoId_idx`, `Comment_memoId_createdAt_idx`, `ExtraApprovalLine_memoId_idx` ถ้ามีอย่างอื่นปนมา **หยุดและคุยกันก่อน**
+  ผลที่ควรได้มีแค่ `CREATE INDEX` 4 ตัว (`MemoStatusPivot_memoId_createdAt_id_idx`, `MemoHistory_memoId_idx`, `Comment_memoId_createdAt_idx`, `ExtraApprovalLine_memoId_idx`) และ `ALTER TABLE "AttachedFile" ADD COLUMN "orderNo"` อีก 1 บรรทัด ถ้ามีอย่างอื่นปนมา **หยุดและคุยกันก่อน**
 - [ ] **(ทำวันศุกร์ได้, ต้องอนุมัติ) ลง Docker:** ไม่กระทบ Express/nginx ที่รันอยู่
   ```bash
   sudo apt-get update && sudo apt-get install -y docker.io docker-compose-v2
@@ -100,7 +100,7 @@ $C run --rm api sh /app/packages/database/scripts/migrate-deploy.sh
 ```
 ผลที่ควรได้:
 - `✅ Baselined 0_init`
-- migration ถัดมา 4 ตัวรันผ่าน เป็น `CREATE INDEX` ที่ใช้แค่ไม่กี่วินาที และไม่มีใครเขียน DB อยู่ตอนนั้น
+- migration ถัดมา 5 ตัวรันผ่าน: `CREATE INDEX` 4 ตัว และเพิ่ม column `AttachedFile.orderNo` (มีค่า default จึงเสร็จทันที) ทั้งหมดใช้แค่ไม่กี่วินาที และไม่มีใครเขียน DB อยู่ตอนนั้น
 
 ถ้าได้ `❌ Live DB differs…` ให้**หยุด** อ่าน SQL ที่สคริปต์พิมพ์ออกมา แล้วตัดสินใจว่าจะไปต่อหรือ rollback (ยังไม่มีอะไรถูกแก้)
 
@@ -121,11 +121,13 @@ curl -fsS https://e-approval.hylifeconnect.com/api/health
 curl -sI https://e-approval.hylifeconnect.com/ | head -3          # 200, Cache-Control no-store
 curl -sI https://e-approval.hylifeconnect.com/uploads/x | head -1   # ไม่ควรได้ไฟล์ (ไม่มี path สาธารณะแล้ว)
 $C ps; docker stats --no-stream; free -h
+$C exec api gs --version                                   # มี ghostscript ไว้บีบไฟล์ PDF ที่อัปโหลด
 ```
 ทดสอบใน browser ด้วย account ของ IT:
 - [ ] login แล้ว dashboard แสดงตัวเลข · เลือก "ทั้งหมด" ไม่ค้าง · จำนวนตรงกับ `MasterMemo` (ตามสิทธิ์)
 - [ ] เปิด memo **เก่า** แล้ว PDF และไฟล์แนบโหลดได้ (พิสูจน์ว่า mount 45GB ถูกต้อง)
 - [ ] สร้าง memo ทดสอบพร้อมไฟล์แนบ → approve → **อีเมลเข้าจริง** → กดลิงก์ approve ในอีเมลได้
+- [ ] ไฟล์แนบเรียงตามลำดับที่ลากไว้ · PDF สแกนที่อัปโหลดมีขนาดเล็กลง (`$C logs api | grep PdfCompress`) · ไฟล์ใน comment ดาวน์โหลดได้และชื่อไทยถูกต้อง
 - [ ] ลิงก์ approve ในอีเมลที่ส่งไป**ก่อน** cutover ยังใช้ได้ (ยืนยันว่า `EMAIL_TOKEN_SECRET` ตรง)
 - [ ] หน้า admin, CC, การแจ้งเตือน
 - [ ] `$C logs --tail 200 api` ไม่มี error ซ้ำๆ
@@ -158,5 +160,6 @@ sudo systemctl enable --now nginx
 pm2 start hlememo-backend && pm2 save
 curl -fsS https://e-approval.hylifeconnect.com/api/health || curl -sI https://e-approval.hylifeconnect.com/
 ```
-- index ที่ migrate เพิ่มเข้าไปไม่มีผลกับ Express จึงไม่ต้องลบ ตาราง `_prisma_migrations` ก็ปล่อยไว้ได้
+- index และ column `AttachedFile.orderNo` ที่ migrate เพิ่มเข้าไปไม่มีผลกับ Express (column มีค่า default) จึงไม่ต้องลบ ตาราง `_prisma_migrations` ก็ปล่อยไว้ได้
+- ไฟล์ PDF ที่ถูกบีบระหว่างนั้นยังเป็น PDF ปกติ Express เปิดได้เหมือนเดิม
 - ถ้าข้อมูลเสียหายจริง (ไม่น่าเกิด เพราะไม่มีการแก้ข้อมูล): `pg_restore --clean -d hlememo <pre-cutover dump>` ต้องปิดทั้งสองระบบก่อน
