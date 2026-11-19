@@ -185,6 +185,8 @@
   "insertLevel": "Insert Level",
   "insertLevelHere": "Insert new level here",
 
+  "resizePanel": "Resize panel",
+  "resizePanelHint": "Drag to resize · double-click to reset",
   "pageDrop": {
     "title": "Drop files here",
     "mainHint": "PDFs to approve and sign",

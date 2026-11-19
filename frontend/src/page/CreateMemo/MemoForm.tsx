@@ -292,6 +292,14 @@ type CcGroupLite = {
   memberIds?: number[]; // 👈 add
 };
 
+const SIDEBAR_WIDTH_KEY = "memoForm:sidebarWidth:v1";
+const SIDEBAR_DEFAULT_W = 340;
+const SIDEBAR_MIN_W = 300;
+const clampSidebarWidth = (w: number) => {
+  const max = typeof window === "undefined" ? 720 : Math.max(SIDEBAR_MIN_W, Math.min(720, window.innerWidth * 0.55));
+  return Math.round(Math.min(max, Math.max(SIDEBAR_MIN_W, w)));
+};
+
 const makeOldToken = (id: number): OrderToken => ({
   token: `old:${id}`,
   kind: "old",
@@ -429,6 +437,17 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
   const [fileUrls, setFileUrls] = useState<FileSource[]>([]);
   const [step, setStep] = useState(1);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Left panel width: drag its right edge (desktop). Remembered per browser.
+  const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
+    try {
+      const v = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY));
+      return Number.isFinite(v) && v > 0 ? clampSidebarWidth(v) : SIDEBAR_DEFAULT_W;
+    } catch {
+      return SIDEBAR_DEFAULT_W;
+    }
+  });
+  // while dragging, the PDF preview is not re-measured (re-rendering every page per pixel)
+  const panelResizingRef = useRef(false);
   const [userId, setUserId] = useState<number | "">("");
   const [subject, setSubject] = useState("");
   const [memoNumber, setMemoNumber] = useState<string>("");
@@ -2179,6 +2198,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
   useLayoutEffect(() => {
     if (!measureRef.current) return;
     const doMeasure = () => {
+      if (panelResizingRef.current) return; // measured once on release
       if (measureRef.current) {
         const w = measureRef.current.clientWidth;
         setContainerWidth((prev) => (prev !== w ? w : prev));
@@ -3566,9 +3586,9 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
         <div
           ref={leftPanelRef}
           className="relative flex-shrink-0 border-r border-gray-200 bg-[#fafbfc] transition-[width] duration-300 ease-in-out overflow-hidden lg:overflow-y-auto lg:overflow-x-hidden"
-          style={{ width: sidebarCollapsed ? 0 : 340, maxHeight: 'calc(100vh - 120px)' }}
+          style={{ width: sidebarCollapsed ? 0 : sidebarWidth, maxHeight: 'calc(100vh - 120px)' }}
         >
-          <div className="w-[340px] p-4 space-y-4">
+          <div className="p-4 space-y-4" style={{ width: sidebarWidth }}>
             {/* ============== STEP 1 ============== */}
             <PageFileDrop
               enabled={step === 1}
@@ -3972,7 +3992,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
 
                   {/* Combined Attachments List (Files + URLs) */}
                   {(attachItems.length > 0 || urlLinks.length > 0) && (
-                    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white max-w-md">
+                    <div className="mt-4 p-4 border border-gray-200 rounded-lg bg-white">
                       {attachItems.length > 0 && (
                         <DragDropContext
                           onDragEnd={(r) => {
@@ -5712,6 +5732,71 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
             )}
           </div>
         </div>
+
+        {/* Drag handle: resize the left panel (desktop only) */}
+        {!sidebarCollapsed && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label={t("resizePanel", "Resize panel")}
+            aria-valuemin={SIDEBAR_MIN_W}
+            aria-valuenow={sidebarWidth}
+            tabIndex={0}
+            title={t("resizePanelHint", "Drag to resize · double-click to reset")}
+            className="group relative z-10 -ml-1 hidden w-2 shrink-0 cursor-col-resize touch-none select-none outline-none lg:block"
+            onDoubleClick={() => {
+              setSidebarWidth(SIDEBAR_DEFAULT_W);
+              try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(SIDEBAR_DEFAULT_W)); } catch { /* ignore */ }
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+              e.preventDefault();
+              const next = clampSidebarWidth(sidebarWidth + (e.key === "ArrowRight" ? 24 : -24));
+              setSidebarWidth(next);
+              try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(next)); } catch { /* ignore */ }
+            }}
+            onPointerDown={(e) => {
+              const panel = leftPanelRef.current;
+              if (!panel || e.button !== 0) return;
+              e.preventDefault();
+              const handle = e.currentTarget;
+              handle.setPointerCapture(e.pointerId);
+              const inner = panel.firstElementChild as HTMLElement | null;
+              const startX = e.clientX;
+              const startW = sidebarWidth;
+              let w = startW;
+              panelResizingRef.current = true;
+              panel.style.transition = "none";
+              document.body.style.cursor = "col-resize";
+              document.body.style.userSelect = "none";
+              const move = (ev: PointerEvent) => {
+                w = clampSidebarWidth(startW + ev.clientX - startX);
+                panel.style.width = `${w}px`;
+                if (inner) inner.style.width = `${w}px`;
+              };
+              const up = () => {
+                handle.removeEventListener("pointermove", move);
+                handle.removeEventListener("pointerup", up);
+                handle.removeEventListener("pointercancel", up);
+                panelResizingRef.current = false;
+                panel.style.transition = "";
+                document.body.style.cursor = "";
+                document.body.style.userSelect = "";
+                setSidebarWidth(w);
+                try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(w)); } catch { /* ignore */ }
+                // let the preview pick up its new width once
+                requestAnimationFrame(() => window.dispatchEvent(new Event("resize")));
+              };
+              handle.addEventListener("pointermove", move);
+              handle.addEventListener("pointerup", up);
+              handle.addEventListener("pointercancel", up);
+            }}
+          >
+            {/* thin line that lights up on hover/drag, plus a grip */}
+            <span className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-transparent transition-colors group-hover:bg-brand-300 group-focus-visible:bg-brand-400 group-active:bg-brand-500" />
+            <span className="pointer-events-none absolute left-1/2 top-1/2 h-8 w-1.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gray-300 opacity-0 transition-opacity group-hover:opacity-100 group-active:bg-brand-500" />
+          </div>
+        )}
 
         {/* Right panel: PDF preview — fills remaining space */}
         <div className="flex-1 min-w-0 flex flex-col pdf-viewer-sticky-container" ref={rightPanelRef}>
