@@ -34,7 +34,7 @@ if [ "$HAS_BASELINE" = "0" ] && [ "$TABLES" != "0" ]; then
   echo "No baseline yet (DB was managed with db push) — checking drift against schema.prisma…"
   DRIFT_SQL="$($PRISMA migrate diff --from-url "$DATABASE_URL" --to-schema-datamodel prisma/schema.prisma --script)"
   UNEXPECTED="$(echo "$DRIFT_SQL" | grep -v '^--' | grep -v '^[[:space:]]*$' \
-    | grep -v -E 'MemoStatusPivot_memoId_createdAt_id_idx|MemoHistory_memoId_idx' || true)"
+    | grep -v -E 'MemoStatusPivot_memoId_createdAt_id_idx|MemoHistory_memoId_idx|Comment_memoId_createdAt_idx|ExtraApprovalLine_memoId_idx' || true)"
   if [ -n "$UNEXPECTED" ]; then
     echo "$DRIFT_SQL"
     echo "❌ Live DB differs from schema.prisma beyond the expected indexes. Review the SQL above, fix the DB, then re-run." >&2
