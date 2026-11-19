@@ -3,7 +3,7 @@ import "./Login.css";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from "framer-motion";
-import { AnimatedContent, Aurora, BlurText, ShinyText } from "../../components/motion";
+import { AnimatedContent } from "../../components/motion";
 
 const normalizeEmail = (s: string) =>
   (s ?? "").normalize("NFKC").trim().toLowerCase();
@@ -131,40 +131,12 @@ export default function LoginPage() {
 
   return (
     <div className="relative grid min-h-[100svh] bg-white lg:grid-cols-[1.05fr_1fr]">
-      {/* ── Brand panel (desktop) ───────────────────────────────────────── */}
-      <aside className="relative hidden overflow-hidden bg-brand-900 lg:flex lg:flex-col lg:justify-between lg:p-10 xl:p-14">
-        <Aurora />
-        <div className="relative z-10 flex items-center gap-2.5">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-white/10 ring-1 ring-white/15 backdrop-blur">
-            <img src={logo} alt="" className="h-5 w-5 object-contain" draggable={false} />
-          </span>
-          <span className="text-sm font-semibold tracking-[0.18em] text-white/90">HYLIFE E-APPROVAL</span>
-        </div>
-
-        <div className="relative z-10 max-w-lg">
-          <BlurText
-            as="h2"
-            text="Approvals, without the paper chase."
-            className="text-4xl font-semibold leading-[1.1] tracking-tight text-white xl:text-5xl"
-            delay={0.1}
-          />
-          <AnimatedContent delay={0.45} distance={8} className="mt-5">
-            <p className="text-base leading-relaxed text-white/60">
-              <ShinyText>Create, route and sign memos</ShinyText>{" "}
-              across every business unit — and always know whose turn it is.
-            </p>
-          </AnimatedContent>
-        </div>
-
-        <AnimatedContent delay={0.3} distance={20} className="relative z-10 -mb-6 flex justify-end">
-          <img
-            src={hero}
-            alt=""
-            aria-hidden="true"
-            draggable={false}
-            className="max-h-[38vh] w-auto select-none object-contain drop-shadow-[0_30px_60px_rgba(0,0,0,0.45)] animate-rb-float"
-          />
-        </AnimatedContent>
+      {/* ── Hero image (desktop) — same as the original login ─────────── */}
+      <aside className="hidden items-center px-8 lg:flex" aria-hidden="true">
+        <div
+          className="h-[78vh] w-full bg-contain bg-left bg-no-repeat"
+          style={{ backgroundImage: `url(${hero})` }}
+        />
       </aside>
 
       {/* ── Form ────────────────────────────────────────────────────────── */}
