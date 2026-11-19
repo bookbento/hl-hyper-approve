@@ -38,6 +38,7 @@ import { subscribeMemoDashboardRefresh } from "../../lib/memoDashboardEvents";
 import { BlurText } from "../../components/motion";
 import StatCard from "./StatCard";
 import { useJellyGroup } from "./useJellyGroup";
+import VirtualRows from "./VirtualRows";
 import SpringCheck from "../../components/reactbits/SpringCheck/SpringCheck";
 import {
   MiniStatus,
@@ -2576,6 +2577,12 @@ const Dashboard: React.FC = () => {
   const end = pageSize === "All" ? totalRows : start + pageSizeNum;
   // Server already paginated — the current items are the page.
   const pagedMemos = visibleMemos;
+
+  // Rows are virtualized (<VirtualRows>): only those near the viewport are mounted,
+  // whatever the page size ("All" = thousands). A new request (page/filter/sort)
+  // replaces the rows and re-staggers them; background refreshes do not.
+  const rowListRef = useRef<HTMLElement | null>(null);
+  const memoKeyAt = (i: number) => pagedMemos[i]?.id ?? i;
   const showTableSkeleton = searchResultsLoading && pagedMemos.length === 0;
   const tableColumnCount =
     1 + Object.values(visibleColumns).filter(Boolean).length;
@@ -2971,14 +2978,25 @@ const Dashboard: React.FC = () => {
         {/* 📱 Card layout for mobile/tablet */}
         {/* Only one layout is mounted: both used to render every row, one hidden by CSS. */}
         {isMobile && (
-        <div className="space-y-4">
+        <div ref={rowListRef as React.RefObject<HTMLDivElement>}>
           {pagedMemos.length > 0 ? (
-            pagedMemos.map((memo, index) => (
+            <VirtualRows
+            listRef={rowListRef}
+            count={pagedMemos.length}
+            getKey={memoKeyAt}
+            estimateSize={240}
+            resetKey={newSearchRequest}
+            renderSpacer={(h) => <div aria-hidden="true" style={{ height: h }} />}
+            renderRow={(vr, enter, measureRef) => {
+            const memo = pagedMemos[vr.index];
+            const index = vr.index;
+            return (
+              // padding, not margin, between cards: measureElement ignores margins
+              <div key={memo.id} data-index={vr.index} ref={measureRef} className="pb-4">
               <div
-                key={memo.id}
                 onClick={() => navigate(`/memo/${memo.id}`)}
-                className="animate-rb-row-in bg-white rounded-card shadow-card border border-gray-100 p-4 cursor-pointer hover:shadow-card-hover transition-shadow"
-                style={{ animationDelay: `${Math.min(index, 12) * 28}ms` }}
+                className={`${enter.className} bg-white rounded-card shadow-card border border-gray-100 p-4 cursor-pointer hover:shadow-card-hover transition-shadow`}
+                style={enter.style}
               >
                 {/* หัวการ์ด: เลขลำดับ + เลขเอกสาร + สถานะ */}
                 <div className="flex justify-between items-center mb-2">
@@ -3177,7 +3195,10 @@ const Dashboard: React.FC = () => {
                   </button>
                 </div> */}
               </div>
-            ))
+              </div>
+            );
+            }}
+            />
           ) : (
             <div className="text-center text-gray-500 py-6">
               {searchTerm ? t("empty.noMatch") : t("empty.none")}
@@ -3449,6 +3470,7 @@ const Dashboard: React.FC = () => {
                 </thead>
 
                 <tbody
+                  ref={rowListRef as React.RefObject<HTMLTableSectionElement>}
                   className="
   bg-white divide-y divide-gray-200
   [&>tr>td]:!align-top
@@ -3545,11 +3567,27 @@ const Dashboard: React.FC = () => {
                       </tr>
                     ))
                   ) : (
-                    pagedMemos.map((memo, index) => (
+                    <VirtualRows
+                    listRef={rowListRef}
+                    count={pagedMemos.length}
+                    getKey={memoKeyAt}
+                    estimateSize={100}
+                    resetKey={newSearchRequest}
+                    renderSpacer={(h) => (
+                      <tr aria-hidden="true">
+                        <td colSpan={tableColumnCount} style={{ height: h, padding: 0 }} />
+                      </tr>
+                    )}
+                    renderRow={(vr, enter, measureRef) => {
+                    const memo = pagedMemos[vr.index];
+                    const index = vr.index;
+                    return (
                     <tr
                       key={memo.id}
-                      className="animate-rb-row-in transition-colors hover:bg-brand-50/60"
-                      style={{ animationDelay: `${Math.min(index, 12) * 28}ms` }}
+                      data-index={vr.index}
+                      ref={measureRef}
+                      className={`${enter.className} transition-colors hover:bg-brand-50/60`}
+                      style={enter.style}
                     >
                       {/* Order Number Cell */}
                       <td className="px-2 py-3 text-center align-middle">
@@ -4244,7 +4282,9 @@ const Dashboard: React.FC = () => {
                       </button>
                     </td> */}
                     </tr>
-                    ))
+                    );
+                    }}
+                    />
                   )}
                 </tbody>
               </table>

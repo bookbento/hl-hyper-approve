@@ -29,6 +29,8 @@
   --shadow-card-hover: 0 2px 4px rgb(16 24 40 / 0.06), 0 12px 32px -8px rgb(24 62 51 / 0.25);
 
   --animate-rb-row-in: rb-row-in 0.42s var(--ease-out-expo) both;
+  /* virtualized rows: AnimatedList-style slide/fade, no blur (blur on hundreds of rows is costly) */
+  --animate-rb-row-in-lite: rb-row-in-lite 0.22s var(--ease-out-expo) both;
   --animate-rb-shine: rb-shine 3.2s linear infinite;
   --animate-rb-float: rb-float 7s ease-in-out infinite;
 }
@@ -75,6 +77,10 @@
 @keyframes rb-row-in {
   from { opacity: 0; transform: translateY(6px); filter: blur(4px); }
   to { opacity: 1; transform: none; filter: blur(0); }
+}
+@keyframes rb-row-in-lite {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
 }
 @keyframes rb-shine {
   from { background-position: 150% 0; }

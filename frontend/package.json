@@ -27,6 +27,7 @@
     "@hello-pangea/dnd": "^18.0.1",
     "@heroicons/react": "^2.2.0",
     "@tailwindcss/vite": "^4.1.5",
+    "@tanstack/react-virtual": "3.14.3",
     "antd": "^5.27.1",
     "axios": "^1.10.0",
     "date-fns": "^4.1.0",
