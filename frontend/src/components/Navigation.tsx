@@ -210,22 +210,13 @@ export default function Navigation() {
           to="/"
           className="flex items-center gap-1 group transition-all duration-500"
         >
-          <div className="flex items-center space-x-1 px-2 py-1 rounded-md group-hover:bg-[#00ffaa]/10 group-hover:shadow-[0_0_15px_rgba(0,255,170,0.3)]">
-            <span
-              className={`text-white ${textSizeClass} font-bold transition-all duration-300 group-hover:text-[#00ffaa]/80`}
-            >
-              HYLIFE
-            </span>
-            <span
-              className={`text-[#00ffaa] ${textSizeClass} font-bold transition-all duration-300 group-hover:text-white`}
-            >
-              e-Approval
-            </span>
-            {windowWidth > 320 && (
-              <span className="ml-2 px-1 text-[#00ffaa] text-[10px] font-semibold bg-[#00ffaa]/20 rounded-full group-hover:bg-[#00ffaa]/40 group-hover:scale-110 transition-all">
-                v1.0
-              </span>
-            )}
+          <div className="flex items-center px-2 py-1 rounded-md transition-all duration-300 group-hover:bg-[#00ffaa]/10 group-hover:shadow-[0_0_15px_rgba(0,255,170,0.3)]">
+            <img
+              src="/img/logo-ememo-v2.png"
+              alt="HyLife Ememo v2.0"
+              className="h-9 w-auto max-w-[45vw] object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+              draggable={false}
+            />
           </div>
         </Link>
 
