@@ -27,7 +27,6 @@ import { ReferenceMemoSelector } from "../../components/ReferenceMemo";
 import type { ReferenceMemoSummary } from "../../components/ReferenceMemo";
 import "./CreateMemo.css";
 import StepHeader from "./StepHeader";
-import HoldToConfirm from "../../components/ui/HoldToConfirm";
 import { displayFileName } from "../../lib/fileName";
 
 const formatCC = (u: {
@@ -5265,11 +5264,12 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                                       
                                       {/* Approver Management Controls - Remove Approver */}
                                       <div className="flex items-center gap-1">
-                                        <HoldToConfirm
-                                          compact
-                                          label={t("removeApprover", { defaultValue: "Remove approver" })}
-                                          tapHint={`${t("removeApprover", { defaultValue: "Remove approver" })} ${ap.displayName || displayName(ap)} — press and hold`}
-                                          onConfirm={() => {
+                                        <button
+                                          type="button"
+                                          title={t("removeApprover", { defaultValue: "Remove approver" })}
+                                          aria-label={`${t("removeApprover", { defaultValue: "Remove approver" })} ${ap.displayName || displayName(ap)}`}
+                                          className="rounded-md bg-red-50 px-2.5 py-1.5 text-red-600 transition-colors hover:bg-red-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-300"
+                                          onClick={() => {
                                             {
                                               // Build mapping from old index to new index
                                               const oldToNewIndexMap = new Map<number, number>();
@@ -5333,7 +5333,7 @@ const MemoForm: React.FC<MemoFormProps> = ({ mode, memoId }) => {
                                           }}
                                         >
                                           <X className="w-3.5 h-3.5" />
-                                        </HoldToConfirm>
+                                        </button>
                                       </div>
                                     </div>
 
