@@ -18,8 +18,7 @@ const mockPrisma = {
   }),
   masterMemo: { findMany: jest.fn(), count: jest.fn() },
   memoApproverAction: { groupBy: jest.fn(), findMany: jest.fn() },
-  comment: { findMany: jest.fn() },
-  memoHistory: { findMany: jest.fn() },
+  commentAttachment: { findMany: jest.fn() },
   user: { findMany: jest.fn() },
   businessUnit: { findMany: jest.fn() },
   department: { findMany: jest.fn() },
@@ -31,6 +30,9 @@ const BY_STATUS = `WHERE "statusName" = ANY(`;
 const CURRENT_APPROVER = `AND "userId" = ANY(`;
 const LATEST_ACTION = 'latest_main AS';
 const STATUS_COUNTS = `COUNT(*)::int AS count`;
+const SNAPSHOT_IDS = 'MAX("version") AS v';
+const LATEST_COMMENT = 'FROM "Comment" c';
+const LATEST_HISTORY = 'FROM "MemoHistory" h';
 
 function memo(id: number, over: Record<string, unknown> = {}) {
   return {
@@ -70,10 +72,8 @@ describe('MemoSearchNestService', () => {
 
     mockPrisma.masterMemo.findMany.mockResolvedValue([]);
     mockPrisma.masterMemo.count.mockResolvedValue(0);
-    mockPrisma.memoApproverAction.groupBy.mockResolvedValue([]);
     mockPrisma.memoApproverAction.findMany.mockResolvedValue([]);
-    mockPrisma.comment.findMany.mockResolvedValue([]);
-    mockPrisma.memoHistory.findMany.mockResolvedValue([]);
+    mockPrisma.commentAttachment.findMany.mockResolvedValue([]);
     mockPrisma.user.findMany.mockResolvedValue([]);
   });
 
@@ -177,7 +177,6 @@ describe('MemoSearchNestService', () => {
     it('formats rows with approver snapshot, current approver and comment link', async () => {
       mockPrisma.masterMemo.findMany.mockResolvedValue([memo(1)]);
       mockPrisma.masterMemo.count.mockResolvedValue(1);
-      mockPrisma.memoApproverAction.groupBy.mockResolvedValue([{ memoId: 1, _max: { version: 2 } }]);
       mockPrisma.memoApproverAction.findMany.mockResolvedValue([
         {
           memoId: 1,
@@ -193,16 +192,26 @@ describe('MemoSearchNestService', () => {
           },
         },
       ]);
-      mockPrisma.comment.findMany.mockResolvedValue([
+      rawRoutes = [
+        { match: SNAPSHOT_IDS, rows: [{ id: 501 }] },
         {
-          id: 100,
-          memoId: 1,
-          comment: 'hello   world',
-          createdAt: new Date('2026-01-04T00:00:00.000Z'),
-          userId: 5,
-          user: { name: 'Approver', lastname: 'X', nickname: null },
-          attachments: [{ url: 'uploads/comments/a b.png', filename: null, mimetype: 'image/png' }],
+          match: LATEST_COMMENT,
+          rows: [
+            {
+              id: 100,
+              memoId: 1,
+              comment: 'hello   world',
+              createdAt: new Date('2026-01-04T00:00:00.000Z'),
+              userId: 5,
+              name: 'Approver',
+              lastname: 'X',
+              nickname: null,
+            },
+          ],
         },
+      ];
+      mockPrisma.commentAttachment.findMany.mockResolvedValue([
+        { commentId: 100, url: 'uploads/comments/a b.png', filename: null, mimetype: 'image/png' },
       ]);
 
       const res = await service.searchMemos({ includeStatCounts: false }, 5, 'http://host/');
@@ -220,11 +229,58 @@ describe('MemoSearchNestService', () => {
         mimeType: 'image/png',
         isImage: true,
       });
+      // snapshot rows are loaded by the latest-version ids, attachments only for the picked comment
+      expect(mockPrisma.memoApproverAction.findMany.mock.calls[0][0].where).toEqual({ id: { in: [501] } });
+      expect(mockPrisma.commentAttachment.findMany.mock.calls[0][0].where).toEqual({ commentId: { in: [100] } });
+    });
+
+    it('picks one latest comment and history per memo in SQL', async () => {
+      mockPrisma.masterMemo.findMany.mockResolvedValue([memo(1)]);
+      rawRoutes = [
+        {
+          match: LATEST_HISTORY,
+          rows: [
+            {
+              memoId: 1,
+              action: 'Approved',
+              actiontype: 'APPROVE',
+              timestamp: new Date('2026-01-05T00:00:00.000Z'),
+              statusName: 'Approved',
+              userName: null,
+            },
+          ],
+        },
+      ];
+
+      const res = await service.searchMemos({ includeStatCounts: false }, 9, 'http://h');
+
+      const sqls = mockPrisma.$queryRaw.mock.calls.map((c) => sqlOf(c[0]));
+      expect(sqls.find((q) => q.includes(LATEST_COMMENT))).toContain('DISTINCT ON (c."memoId")');
+      expect(sqls.find((q) => q.includes(LATEST_HISTORY))).toContain('DISTINCT ON (h."memoId")');
+      expect(res.items[0].latestComment).toBeNull();
+      expect(mockPrisma.commentAttachment.findMany).not.toHaveBeenCalled();
+      expect(res.items[0].lastHistory).toEqual({
+        action: 'Approved',
+        actiontype: 'APPROVE',
+        timestamp: '2026-01-05T00:00:00.000Z',
+        userName: '-',
+        statusName: 'Approved',
+      });
+    });
+
+    it("only counts the viewer's own comment tags toward canSeeComments", async () => {
+      mockPrisma.masterMemo.findMany.mockResolvedValue([memo(1, { userId: 2 })]);
+
+      const res = await service.searchMemos({ includeStatCounts: false }, 9, 'http://h');
+
+      const include = mockPrisma.masterMemo.findMany.mock.calls[0][0].include;
+      expect(include.commentTags.where).toEqual({ userId: 9 });
+      expect(res.items[0].canSeeComments).toBe(false);
     });
 
     it('marks waiting rows of a satisfied ANY level as not_required', async () => {
       mockPrisma.masterMemo.findMany.mockResolvedValue([memo(1)]);
-      mockPrisma.memoApproverAction.groupBy.mockResolvedValue([{ memoId: 1, _max: { version: 1 } }]);
+      rawRoutes = [{ match: SNAPSHOT_IDS, rows: [{ id: 1 }, { id: 2 }] }];
       const loa = (userId: number) => ({
         level: 1,
         userId,

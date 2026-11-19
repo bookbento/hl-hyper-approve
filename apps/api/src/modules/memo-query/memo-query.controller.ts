@@ -22,6 +22,7 @@
  *  11. GET   /api/memos/:id/reference-content/:referenceId
  */
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -68,9 +69,10 @@ export class MemoQueryController {
     if (
       pageSize !== undefined &&
       pageSize !== 'all' &&
-      (typeof pageSize !== 'number' || pageSize < 1 || pageSize > 100)
+      (!Number.isInteger(pageSize) || (pageSize as number) < 1 || (pageSize as number) > 100)
     ) {
-      return { error: "pageSize must be 1-100 or 'all'" };
+      // was a 200 with { error }, which clients read as an empty result
+      throw new BadRequestException("pageSize must be 1-100 or 'all'");
     }
 
     const hostUrl = `${req.protocol}://${req.get('host') ?? ''}`;

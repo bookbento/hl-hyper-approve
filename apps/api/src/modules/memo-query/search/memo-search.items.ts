@@ -22,7 +22,7 @@ export async function fetchItemsForPage(
     orderBy: resolveOrderBy(req),
     skip,
     take: take ?? undefined,
-    include: includeShape(),
+    include: includeShape(userId),
   });
   return formatItems(db, items, userId, hostUrl);
 }
@@ -36,7 +36,7 @@ export async function fetchItemsByIds(
   if (!ids.length) return [];
   const items = await db.masterMemo.findMany({
     where: { id: { in: ids } },
-    include: includeShape(),
+    include: includeShape(userId),
   });
   // preserve order from `ids`
   const byId = new Map(items.map((m) => [m.id, m]));
@@ -46,7 +46,7 @@ export async function fetchItemsByIds(
   return formatItems(db, ordered, userId, hostUrl);
 }
 
-function includeShape() {
+function includeShape(userId: number) {
   return {
     user: {
       select: {
@@ -91,7 +91,8 @@ function includeShape() {
       orderBy: { id: 'desc' as const },
       take: 1,
     },
-    commentTags: { select: { id: true } },
+    // Only this user's tags: "tagged" means *you* were tagged, not that anyone was.
+    commentTags: { where: { userId }, select: { id: true }, take: 1 },
   } satisfies Prisma.MasterMemoInclude;
 }
 
@@ -187,17 +188,21 @@ async function fetchApproverSnapshots(db: PrismaService, memoIds: number[]) {
   const map = new Map<number, MemoListItem['approverStatus']>();
   if (!memoIds.length) return map;
 
-  const versions = await db.memoApproverAction.groupBy({
-    by: ['memoId'],
-    where: { memoId: { in: memoIds } },
-    _max: { version: true },
-  });
-  if (!versions.length) return map;
+  // Latest version per memo in one join (was groupBy + an OR with one term per memo).
+  const latestIds = await db.$queryRaw<{ id: number }[]>`
+    SELECT a."id"
+    FROM "MemoApproverAction" a
+    JOIN (
+      SELECT "memoId", MAX("version") AS v
+      FROM "MemoApproverAction"
+      WHERE "memoId" = ANY(${memoIds})
+      GROUP BY "memoId"
+    ) m ON m."memoId" = a."memoId" AND m.v = a."version"
+  `;
+  if (!latestIds.length) return map;
 
   const rows = await db.memoApproverAction.findMany({
-    where: {
-      OR: versions.map((v) => ({ memoId: v.memoId, version: v._max.version ?? 0 })),
-    },
+    where: { id: { in: latestIds.map((r) => r.id) } },
     select: {
       memoId: true,
       loaUserId: true,
@@ -300,29 +305,49 @@ export function toSecureUploadPath(rawPath: string): string {
   return p ? `/api/secure-uploads/${p}` : '';
 }
 
+type LatestCommentRow = {
+  id: number;
+  memoId: number;
+  comment: string;
+  createdAt: Date;
+  userId: number;
+  name: string | null;
+  lastname: string | null;
+  nickname: string | null;
+};
+
+/** Latest comment per memo. Used to load every comment of every memo and keep the first. */
 async function fetchLatestComments(db: PrismaService, memoIds: number[], hostUrl: string) {
   const map = new Map<number, MemoListItem['latestComment']>();
   if (!memoIds.length) return map;
 
-  const rows = await db.comment.findMany({
-    where: { memoId: { in: memoIds } },
-    orderBy: [{ memoId: 'asc' }, { createdAt: 'desc' }, { id: 'desc' }],
-    select: {
-      id: true,
-      memoId: true,
-      comment: true,
-      createdAt: true,
-      userId: true,
-      user: { select: { name: true, lastname: true, nickname: true } },
-      attachments: true,
-    },
+  const rows = await db.$queryRaw<LatestCommentRow[]>`
+    SELECT DISTINCT ON (c."memoId")
+      c."id", c."memoId", c."comment", c."createdAt", c."userId",
+      u."name", u."lastname", u."nickname"
+    FROM "Comment" c
+    LEFT JOIN "User" u ON u."id" = c."userId"
+    WHERE c."memoId" = ANY(${memoIds})
+    ORDER BY c."memoId", c."createdAt" DESC, c."id" DESC
+  `;
+  if (!rows.length) return map;
+
+  const attachments = await db.commentAttachment.findMany({
+    where: { commentId: { in: rows.map((r) => r.id) } },
+    orderBy: { id: 'asc' },
+    select: { commentId: true, url: true, filename: true, mimetype: true },
   });
+  const attsByComment = new Map<number, typeof attachments>();
+  for (const a of attachments) {
+    const arr = attsByComment.get(a.commentId);
+    if (arr) arr.push(a);
+    else attsByComment.set(a.commentId, [a]);
+  }
 
   const host = hostUrl.replace(/\/+$/, '');
 
   for (const c of rows) {
-    if (map.has(c.memoId)) continue;
-    const atts = (c.attachments ?? []).map((att) => {
+    const atts = (attsByComment.get(c.id) ?? []).map((att) => {
       const pathNormalized = toSecureUploadPath(att.url);
       const fullUrl = pathNormalized ? `${host}${encodeURI(pathNormalized)}` : '';
       const fileName =
@@ -334,8 +359,8 @@ async function fetchLatestComments(db: PrismaService, memoIds: number[], hostUrl
     map.set(c.memoId, {
       id: c.id,
       userId: c.userId,
-      userName: [c.user?.name, c.user?.lastname].filter(Boolean).join(' ') || '-',
-      nickname: c.user?.nickname ?? null,
+      userName: [c.name, c.lastname].filter(Boolean).join(' ') || '-',
+      nickname: c.nickname ?? null,
       comment: c.comment,
       snippet: (c.comment || '').replace(/\s+/g, ' ').slice(0, 120),
       createdAt: c.createdAt.toISOString(),
@@ -345,31 +370,38 @@ async function fetchLatestComments(db: PrismaService, memoIds: number[], hostUrl
   return map;
 }
 
+type LastHistoryRow = {
+  memoId: number;
+  action: string;
+  actiontype: string | null;
+  timestamp: Date;
+  statusName: string | null;
+  userName: string | null;
+};
+
+/** Latest history row per memo. Used to load the whole history of every memo and keep the first. */
 async function fetchLastHistories(db: PrismaService, memoIds: number[]) {
   const map = new Map<number, MemoListItem['lastHistory']>();
   if (!memoIds.length) return map;
 
-  const rows = await db.memoHistory.findMany({
-    where: { memoId: { in: memoIds } },
-    orderBy: [{ memoId: 'asc' }, { timestamp: 'desc' }, { id: 'desc' }],
-    select: {
-      memoId: true,
-      action: true,
-      actiontype: true,
-      timestamp: true,
-      status: { select: { name: true } },
-      user: { select: { name: true } },
-    },
-  });
+  const rows = await db.$queryRaw<LastHistoryRow[]>`
+    SELECT DISTINCT ON (h."memoId")
+      h."memoId", h."action", h."actiontype"::text AS "actiontype", h."timestamp",
+      s."name" AS "statusName", u."name" AS "userName"
+    FROM "MemoHistory" h
+    LEFT JOIN "Status" s ON s."id" = h."statusId"
+    LEFT JOIN "User" u ON u."id" = h."userId"
+    WHERE h."memoId" = ANY(${memoIds})
+    ORDER BY h."memoId", h."timestamp" DESC, h."id" DESC
+  `;
 
   for (const r of rows) {
-    if (map.has(r.memoId)) continue;
     map.set(r.memoId, {
       action: r.action,
-      actiontype: r.actiontype ? String(r.actiontype) : null,
+      actiontype: r.actiontype ?? null,
       timestamp: r.timestamp.toISOString(),
-      userName: r.user?.name ?? '-',
-      statusName: r.status?.name ?? null,
+      userName: r.userName ?? '-',
+      statusName: r.statusName ?? null,
     });
   }
   return map;

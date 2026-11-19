@@ -511,6 +511,8 @@ model Comment {
   tags CommentTag[] @relation("CommentToTags")
 
   @@index([extraApprovalLineId])
+  // latest-comment-per-memo lookups (dashboard search, memo detail)
+  @@index([memoId, createdAt(sort: Desc)])
 }
 
 model CommentAttachment {
