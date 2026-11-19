@@ -36,6 +36,7 @@ import {
   toPublicUploadPath,
 } from '../../common/upload/upload.config';
 import { orderAttachedIds } from './attached-order';
+import { compressUploadedPdfs } from '../../common/upload/pdf-compress';
 import { LATEST_STATUS_ORDER } from '../../common/latest-status-order';
 
 // ── Type aliases ─────────────────────────────────────────────────────────────
@@ -326,6 +327,8 @@ export class MemoLifecycleService {
       // 3. Files: main PDF + attachments + order
       const mainFiles = files?.['files'] ?? [];
       const attachedFiles = files?.['attachedFiles'] ?? [];
+      // shrink scans in place before the sizes are recorded (never throws)
+      await compressUploadedPdfs([...mainFiles, ...attachedFiles]);
 
       if (!mainFiles.length) {
         throw new BadRequestException('No PDF files uploaded');
@@ -1045,6 +1048,7 @@ export class MemoLifecycleService {
     // 3-C New uploads
     const mainFiles = files?.['files'] ?? [];
     const attachedFiles = files?.['attachedFiles'] ?? [];
+    await compressUploadedPdfs([...mainFiles, ...attachedFiles]);
 
     const keptAttached = await this.prisma.attachedFile.findMany({
       where: { memoId: id, isUrl: false },
@@ -1407,6 +1411,7 @@ export class MemoLifecycleService {
   // ── uploadMainPDF ─────────────────────────────────────────────────────────
 
   async uploadMainPDF(memoId: number, file: Express.Multer.File): Promise<unknown> {
+    await compressUploadedPdfs([file]);
     const newFile = await this.prisma.mainFile.create({
       data: {
         memoId,

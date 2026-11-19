@@ -5,8 +5,9 @@
 # and builder + runner share the same base so `prisma generate` picks the right engine.
 
 FROM node:22-bookworm-slim AS base
+# ghostscript: shrinks uploaded scan PDFs (apps/api/src/common/upload/pdf-compress.ts)
 RUN apt-get update \
- && apt-get install -y --no-install-recommends openssl ca-certificates \
+ && apt-get install -y --no-install-recommends openssl ca-certificates ghostscript \
  && rm -rf /var/lib/apt/lists/* \
  && corepack enable && corepack prepare pnpm@10.33.3 --activate
 WORKDIR /app
