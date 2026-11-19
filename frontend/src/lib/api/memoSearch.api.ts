@@ -87,6 +87,10 @@ export interface MapInput {
   businessUnitId?: number | "All";
   departmentId?: number | "All";
   status?: string;
+  /** "approver" filter in the filter menu: user anywhere in the line */
+  inLineApproverId?: number | "All";
+  /** "sort by latest action" toggle; a column sort wins over it */
+  sortByLatestAction?: boolean;
 
   // aggregates
   includeStatCounts?: boolean;
@@ -170,6 +174,9 @@ export function colFiltersToSearchRequest(input: MapInput): SearchMemosRequest {
     authorContains: trim(colFilters.author.search),
     latestCommentContains: trim(colFilters.latest.search),
     extraApproverContains: trim(colFilters.extra.search),
+    currentApproverContains: trim(colFilters.current.search),
+    inLineApproverId:
+      typeof input.inLineApproverId === "number" ? input.inLineApproverId : undefined,
 
     // list filters (multi-select)
     statuses: colFilters.status.values?.length
@@ -198,8 +205,12 @@ export function colFiltersToSearchRequest(input: MapInput): SearchMemosRequest {
       : undefined,
 
     // sort
-    sortBy: sortState ? sortKeyRemap[sortState.key] : undefined,
-    sortDir: sortState?.dir,
+    sortBy: sortState
+      ? sortKeyRemap[sortState.key]
+      : input.sortByLatestAction
+        ? "latestAction"
+        : undefined,
+    sortDir: sortState?.dir ?? (input.sortByLatestAction ? "desc" : undefined),
 
     // aggregates
     includeStatCounts: input.includeStatCounts,

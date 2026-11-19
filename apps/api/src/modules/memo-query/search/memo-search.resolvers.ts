@@ -308,3 +308,128 @@ export async function resolveLatestCommentOrder(
   `;
   return rows.map((r) => r.memoId);
 }
+
+// ── Column sorts that need raw SQL ─────────────────────────────────────────
+// Before these existed the dashboard re-sorted only the rows of the current
+// page in the browser, so "sort by status" on page 1 of 389 sorted 10 rows.
+// Rows with no value always go last, whatever the direction.
+
+/** Order by the memo's latest status name. */
+export async function resolveStatusOrder(
+  db: PrismaService,
+  candidateIds: number[],
+  dir: 'asc' | 'desc',
+  skip: number,
+  take: number | null,
+): Promise<number[]> {
+  if (!candidateIds.length) return [];
+  const orderSql = dir === 'asc' ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+  const limitSql = take === null ? Prisma.sql`` : Prisma.sql`LIMIT ${take} OFFSET ${skip}`;
+
+  const rows = await db.$queryRaw<{ memoId: number }[]>`
+    SELECT m."id" AS "memoId"
+    FROM "MasterMemo" m
+    LEFT JOIN LATERAL (
+      SELECT s."name" AS "name"
+      FROM "MemoStatusPivot" sp
+      JOIN "Status" s ON s."id" = sp."statusId"
+      WHERE sp."memoId" = m."id"
+      ORDER BY sp."createdAt" DESC, sp."id" DESC
+      LIMIT 1
+    ) ls ON true
+    WHERE m."id" = ANY(${candidateIds})
+    ORDER BY (ls."name" IS NULL) ASC, lower(ls."name") ${orderSql}, m."id" ${orderSql}
+    ${limitSql}
+  `;
+  return rows.map((r) => r.memoId);
+}
+
+/**
+ * Order by the name of the current approver: the alphabetically first user in
+ * the lowest still-waiting level of the latest version (same rule as
+ * resolveMemoIdsByCurrentApprover). Memos nobody is waiting on go last.
+ */
+export async function resolveCurrentApproverOrder(
+  db: PrismaService,
+  candidateIds: number[],
+  dir: 'asc' | 'desc',
+  skip: number,
+  take: number | null,
+): Promise<number[]> {
+  if (!candidateIds.length) return [];
+  const orderSql = dir === 'asc' ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+  const limitSql = take === null ? Prisma.sql`` : Prisma.sql`LIMIT ${take} OFFSET ${skip}`;
+
+  const rows = await db.$queryRaw<{ memoId: number }[]>`
+    WITH rows_all AS (
+      SELECT
+        a."memoId", a."version", lou."level", lou."userId",
+        lou."approvalRequirement", s."code",
+        MAX(a."version") OVER (PARTITION BY a."memoId") AS "latestVersion"
+      FROM "MemoApproverAction" a
+      JOIN "ApprovalActionStatus" s ON a."statusId" = s."id"
+      JOIN "LineOfApprovalUserPivotForUse" lou ON a."loaUserId" = lou."id"
+      WHERE a."memoId" = ANY(${candidateIds})
+    ),
+    level_rows AS (
+      SELECT
+        "memoId", "level", "userId", "code",
+        BOOL_OR("approvalRequirement" = 'ANY') OVER (PARTITION BY "memoId", "level") AS "isAny",
+        BOOL_OR("code" = 'approved') OVER (PARTITION BY "memoId", "level") AS "hasApproved"
+      FROM rows_all
+      WHERE "version" = "latestVersion"
+    ),
+    waiting_rows AS (
+      SELECT "memoId", "level", "userId",
+        MIN("level") OVER (PARTITION BY "memoId") AS "minLevel"
+      FROM level_rows
+      WHERE "code" = 'waiting' AND NOT ("isAny" AND "hasApproved")
+    ),
+    current_name AS (
+      SELECT w."memoId",
+        MIN(lower(concat_ws(' ', u."name", u."lastname"))) AS "name"
+      FROM waiting_rows w
+      JOIN "User" u ON u."id" = w."userId"
+      WHERE w."level" = w."minLevel"
+      GROUP BY w."memoId"
+    )
+    SELECT m."id" AS "memoId"
+    FROM "MasterMemo" m
+    LEFT JOIN current_name cn ON cn."memoId" = m."id"
+    WHERE m."id" = ANY(${candidateIds})
+    ORDER BY (cn."name" IS NULL) ASC, cn."name" ${orderSql}, m."id" ${orderSql}
+    ${limitSql}
+  `;
+  return rows.map((r) => r.memoId);
+}
+
+/** Order by the first approver of the memo's latest extra approval line. */
+export async function resolveExtraApproverOrder(
+  db: PrismaService,
+  candidateIds: number[],
+  dir: 'asc' | 'desc',
+  skip: number,
+  take: number | null,
+): Promise<number[]> {
+  if (!candidateIds.length) return [];
+  const orderSql = dir === 'asc' ? Prisma.sql`ASC` : Prisma.sql`DESC`;
+  const limitSql = take === null ? Prisma.sql`` : Prisma.sql`LIMIT ${take} OFFSET ${skip}`;
+
+  const rows = await db.$queryRaw<{ memoId: number }[]>`
+    SELECT m."id" AS "memoId"
+    FROM "MasterMemo" m
+    LEFT JOIN LATERAL (
+      SELECT lower(concat_ws(' ', u."name", u."lastname")) AS "name"
+      FROM "ExtraApprovalLine" eal
+      JOIN "ExtraApprover" ea ON ea."extraId" = eal."id"
+      JOIN "User" u ON u."id" = ea."userId"
+      WHERE eal."memoId" = m."id"
+      ORDER BY eal."id" DESC, ea."id" ASC
+      LIMIT 1
+    ) ex ON true
+    WHERE m."id" = ANY(${candidateIds})
+    ORDER BY (ex."name" IS NULL) ASC, ex."name" ${orderSql}, m."id" ${orderSql}
+    ${limitSql}
+  `;
+  return rows.map((r) => r.memoId);
+}

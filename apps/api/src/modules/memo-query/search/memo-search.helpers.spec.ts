@@ -39,6 +39,20 @@ describe('buildFilterClause', () => {
     expect(buildFilterClause({})).toEqual({});
   });
 
+  it('inLineApproverId matches the main or extra approval line', () => {
+    expect(buildFilterClause({ inLineApproverId: 7 })).toEqual({
+      AND: [
+        {
+          OR: [
+            { approverActions: { some: { loaUser: { userId: 7 } } } },
+            { extraApprovalLines: { some: { approvers: { some: { userId: 7 } } } } },
+          ],
+        },
+      ],
+    });
+    expect(buildFilterClause({ inLineApproverId: 0 })).toEqual({});
+  });
+
   it('matches MEMO-{id} directly by id', () => {
     expect(buildFilterClause({ search: ' memo-42 ' })).toEqual({ AND: [{ id: 42 }] });
   });
@@ -96,8 +110,16 @@ describe('resolveOrderBy', () => {
     ]);
   });
 
-  it('falls back to id for non-column sort keys', () => {
-    expect(resolveOrderBy({ sortBy: 'author' })).toEqual([{ id: 'desc' }]);
+  it('sorts author by name then lastname', () => {
+    expect(resolveOrderBy({ sortBy: 'author', sortDir: 'asc' })).toEqual([
+      { user: { name: 'asc' } },
+      { user: { lastname: 'asc' } },
+      { id: 'desc' },
+    ]);
+  });
+
+  it('falls back to id for keys without a natural order', () => {
+    expect(resolveOrderBy({ sortBy: 'ccStatus' })).toEqual([{ id: 'desc' }]);
   });
 });
 

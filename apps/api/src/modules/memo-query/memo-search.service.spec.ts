@@ -174,6 +174,41 @@ describe('MemoSearchNestService', () => {
       expect(mockPrisma.masterMemo.count).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['status', 'LEFT JOIN LATERAL (\n      SELECT s."name"'],
+      ['current', 'current_name AS'],
+      ['extra', 'FROM "ExtraApprovalLine" eal\n      JOIN "ExtraApprover" ea'],
+    ])('sorts by %s in SQL across all pages', async (sortBy, fingerprint) => {
+      mockPrisma.masterMemo.findMany
+        .mockResolvedValueOnce([{ id: 1 }, { id: 2 }]) // candidates
+        .mockResolvedValueOnce([memo(1), memo(2)]); // page rows, DB order
+      rawRoutes = [{ match: fingerprint, rows: [{ memoId: 2 }, { memoId: 1 }] }];
+
+      const res = await service.searchMemos(
+        { sortBy: sortBy as 'status', sortDir: 'asc', pageSize: 10, includeStatCounts: false },
+        1,
+        'http://h',
+      );
+
+      expect(res.items.map((i) => i.id)).toEqual([2, 1]);
+      expect(res.total).toBe(2);
+    });
+
+    it('currentApproverContains resolves users by name, then their waiting memos', async () => {
+      mockPrisma.user.findMany.mockResolvedValue([{ id: 4 }]);
+      rawRoutes = [{ match: CURRENT_APPROVER, rows: [{ memoId: 12 }] }];
+
+      await service.searchMemos({ currentApproverContains: ' som ', includeStatCounts: false }, 1, 'http://h');
+
+      expect(JSON.stringify(mockPrisma.user.findMany.mock.calls[0][0].where)).toContain('"contains":"som"');
+      expect(whereOf().AND).toContainEqual({ id: { in: [12] } });
+    });
+
+    it('currentApproverContains with no matching user matches nothing', async () => {
+      await service.searchMemos({ currentApproverContains: 'zzz', includeStatCounts: false }, 1, 'http://h');
+      expect(whereOf().AND).toContainEqual({ id: -1 });
+    });
+
     it('formats rows with approver snapshot, current approver and comment link', async () => {
       mockPrisma.masterMemo.findMany.mockResolvedValue([memo(1)]);
       mockPrisma.masterMemo.count.mockResolvedValue(1);

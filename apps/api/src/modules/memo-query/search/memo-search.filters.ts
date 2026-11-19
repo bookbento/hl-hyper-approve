@@ -80,6 +80,17 @@ export function buildFilterClause(req: SearchMemosRequest): Prisma.MasterMemoWhe
     and.push({ user: { OR: nameContains(req.authorContains.trim()) } });
   }
 
+  // ── Approver anywhere in the line (top-bar "approver" filter) ──────
+  const lineUser = req.inLineApproverId;
+  if (lineUser !== undefined && Number.isInteger(lineUser) && lineUser > 0) {
+    and.push({
+      OR: [
+        { approverActions: { some: { loaUser: { userId: lineUser } } } },
+        { extraApprovalLines: { some: { approvers: { some: { userId: lineUser } } } } },
+      ],
+    });
+  }
+
   // ── Top-bar filters ─────────────────────────────────────────────────
   if (req.businessUnitId !== undefined && req.businessUnitId !== 'All') {
     const buId = Number(req.businessUnitId);
@@ -191,9 +202,12 @@ export function resolveOrderBy(
       return [{ expiresAt: dir }, { id: 'desc' }];
     case 'createdAt':
       return [{ createdAt: dir }, { id: 'desc' }];
+    case 'author':
+      return [{ user: { name: dir } }, { user: { lastname: dir } }, { id: 'desc' }];
     default:
-      // status / current / extra / latest / ccStatus / author / latestAction
-      // are handled elsewhere or not directly mappable. Fall back to id.
+      // status / current / extra / latest / latestAction go through the raw-SQL
+      // order resolvers (RAW_SORTS in memo-search.service.ts). ccStatus has no
+      // natural order; fall back to id.
       return [{ id: dir }];
   }
 }

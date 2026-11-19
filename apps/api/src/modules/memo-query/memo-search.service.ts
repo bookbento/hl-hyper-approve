@@ -20,11 +20,15 @@ import {
   collectCurrentApproverIds,
   resolveAwaitingMemoIds,
   resolveHiddenMemoIds,
+  resolveCurrentApproverOrder,
+  resolveExtraApproverOrder,
   resolveLatestActionOrder,
   resolveLatestCommentOrder,
   resolveMemoIdsByCurrentApprover,
   resolveMemoIdsByLatestComment,
   resolveMemoIdsByStatus,
+  resolveStatusOrder,
+  resolveUserIdsByNames,
 } from './search/memo-search.resolvers';
 import { createMemoSearchTiming } from './search/memo-search.timing';
 import type {
@@ -32,8 +36,20 @@ import type {
   MemoListItem,
   SearchMemosRequest,
   SearchMemosResponse,
+  SortKey,
   StatCounts,
 } from './search/memo-search.types';
+
+type OrderResolver = typeof resolveLatestActionOrder;
+
+/** Sort keys Prisma's orderBy can't express: ordered + paged in SQL, then fetched by id. */
+const RAW_SORTS: Partial<Record<SortKey, OrderResolver>> = {
+  latestAction: resolveLatestActionOrder,
+  latest: resolveLatestCommentOrder,
+  status: resolveStatusOrder,
+  current: resolveCurrentApproverOrder,
+  extra: resolveExtraApproverOrder,
+};
 
 const DEFAULT_PAGE_SIZE = 20;
 const MAX_PAGE_SIZE = 100;
@@ -122,6 +138,16 @@ export class MemoSearchNestService {
       }
     }
 
+    // ── 5a. current approver text filter (ANDed with the list above) ──
+    const currentQuery = req.currentApproverContains?.trim();
+    if (currentQuery) {
+      const ids = await timing.measure('currentApproverTextIds', async () => {
+        const userIds = await resolveUserIdsByNames(db, [currentQuery]);
+        return userIds.length ? resolveMemoIdsByCurrentApprover(db, userIds) : [];
+      });
+      baseAnd.push(ids.length ? { id: { in: ids } } : { id: -1 });
+    }
+
     // ── 5b. latest comment filter ────────────────────────────────────
     const latestCommentQuery = req.latestCommentContains?.trim();
     if (latestCommentQuery) {
@@ -150,18 +176,17 @@ export class MemoSearchNestService {
     let items: MemoListItem[];
     let total: number;
 
-    if (req.sortBy === 'latestAction' || req.sortBy === 'latest') {
+    const rawSort = req.sortBy ? RAW_SORTS[req.sortBy] : undefined;
+    if (rawSort) {
       // Sort keys that need raw SQL: resolve the full candidate set, order
       // + page it in SQL, then fetch just that page by id.
-      const label = req.sortBy === 'latestAction' ? 'latestAction' : 'latestComment';
+      const label = String(req.sortBy);
       const matching = await timing.measure(`${label}Candidates`, () =>
         db.masterMemo.findMany({ where, select: { id: true } }),
       );
       total = matching.length;
-      const resolveOrder =
-        req.sortBy === 'latestAction' ? resolveLatestActionOrder : resolveLatestCommentOrder;
       const orderedIds = await timing.measure(`${label}Order`, () =>
-        resolveOrder(
+        rawSort(
           db,
           matching.map((m) => m.id),
           req.sortDir ?? 'desc',

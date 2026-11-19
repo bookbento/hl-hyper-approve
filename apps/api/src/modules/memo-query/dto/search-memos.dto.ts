@@ -92,6 +92,16 @@ export class SearchMemosDto {
 
   @IsOptional()
   @IsString()
+  currentApproverContains?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  @Type(() => Number)
+  inLineApproverId?: number;
+
+  @IsOptional()
+  @IsString()
   expiresFrom?: string;
 
   @IsOptional()

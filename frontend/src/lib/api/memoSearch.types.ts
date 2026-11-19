@@ -53,6 +53,8 @@ export interface SearchMemosRequest {
   statuses?: string[];
   currentApproverIds?: number[];
   currentApproverNames?: string[];
+  /** memo has this user anywhere in its main or extra approval line, any status */
+  inLineApproverId?: number;
   extraApproverIds?: number[];
   extraApproverNames?: string[];
   ccUserIds?: number[];
@@ -64,6 +66,8 @@ export interface SearchMemosRequest {
   authorContains?: string;
   latestCommentContains?: string;
   extraApproverContains?: string;
+  /** text match on the current approver's name */
+  currentApproverContains?: string;
 
   // date range
   expiresFrom?: string;

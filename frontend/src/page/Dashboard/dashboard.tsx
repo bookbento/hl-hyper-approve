@@ -1657,67 +1657,7 @@ const Dashboard: React.FC = () => {
   const authorLabel = (u: Memo["user"]) =>
     [u?.name, u?.lastname].filter(Boolean).join(" ") +
     (u?.nickname ? ` (${u.nickname})` : "");
-  const currentApproverText = (m: Memo) => {
-    if (!isProcessingMemo(m)) return "";
 
-    const rows = approverMap[m.id] ?? [];
-    if (rows.length > 0) {
-      // ✅ Use helper to show only ACTIVE approvers
-      const active = getActionableCurrentApprovers(m, rows);
-      if (active.length > 0) {
-        return active.map((r) => r.name).join(", ");
-      }
-      // If none are waiting (e.g. approved/rejected/terminated), show status or empty
-      // But typically "Current Approver" column usually shows nothing if process is done.
-      // Let's return empty if no one is waiting.
-      return "";
-    }
-
-    // Fallback if no approverMap yet (rarely happens if loaded)
-    const namesFromSummary = m.currentApprover?.names ?? [];
-    return namesFromSummary.join(", ");
-  };
-
-  const latestCommentText = (m: Memo) => {
-    // ดึงข้อความสรุปล่าสุด ถ้าไม่มีก็ใช้ comment/snippet ตรง ๆ
-    const { text } = buildLatestCommentSummary(m.latestComment, t);
-    return text || m.latestComment?.comment || m.latestComment?.snippet || "";
-  };
-  const getCellVal = (m: Memo, key: ColKey): string => {
-    switch (key) {
-      case "memonumber":
-        return m.memonumber || "";
-      case "subject":
-        return m.subject || "";
-      case "author":
-        return authorLabel(m.user) || "";
-      case "status":
-        return m.status || "";
-      case "current":
-        return currentApproverText(m); // ⬅️ ใหม่
-      case "extra":
-        return extraApproverText(m); // ⬅️ ใหม่
-      case "latest":
-        return latestCommentText(m); // ⬅️ ใหม่
-      case "expires":
-        return m.expiresAt || "";
-      case "createdAt":
-        return m.createdAt || "";
-      case "ccStatus":
-        // คืนรายชื่อคนที่เป็น CC ในเอกสารนี้ (ถ้า user มีสิทธิ์เห็น)
-        if (!me) return "";
-
-        const isCreator = m.user?.id === me.id;
-        const isCC = myCCMemoIds.has(m.id);
-
-        if (isCreator || isCC) {
-          const ccList = memosCCData[m.id] || [];
-          return ccList.map(ccUser => ccUserLabel(ccUser)).join(", ");
-        }
-
-        return "";
-    }
-  };
 
   const ApprovalProgress: React.FC<{
     memoId: number;
@@ -2021,9 +1961,6 @@ const Dashboard: React.FC = () => {
   );
 
   // แล้วค่อยตามด้วยฟังก์ชันที่ใช้ extraMap
-  const extraApproverText = (m: Memo) =>
-    extraMap[m.id]?.approvers?.map((a) => a.name).join(", ") ?? "";
-
   const extraApproverOptions = useMemo(() => {
     if (serverFacets) {
       return serverFacets.extraApprovers
@@ -2421,296 +2358,10 @@ const Dashboard: React.FC = () => {
     return i >= 0 ? statJelly.mvFor(i) : undefined;
   };
 
-  const visibleMemos = useMemo(() => {
-    let filtered = memos.filter((m) => {
-      const subKey = getSubjectStatusKey(m); // ✅ ใช้คีย์ใหม่
-      const expLabel = t(`expiry.status.${subKey}`);
-      const expKey = getExpiryStatusKey(m.expiresAt, m.status); // "none" | "expired" | "soon" | "active"
-
-      const values = [
-        m.subject,
-        m.documentCode,
-        m.memonumber,
-        m.user?.name,
-        m.department?.name,
-        m.businessUnit?.name,
-        m.team?.name,
-        m.memoType?.name,
-        expLabel, // ✅ ให้ค้นหาด้วยคำสถานะ (ภาษาปัจจุบัน)
-        expKey, // ✅ และคีย์ภาษาอังกฤษ (เผื่อพิมพ์ว่า expired/soon/active)
-        subKey,
-      ]
-        .join(" ")
-        .toLowerCase();
-      return values.includes(searchTerm);
-    });
-
-    // text filter: memonumber
-    if (colFilters.memonumber.search?.trim()) {
-      const q = colFilters.memonumber.search.trim().toLowerCase();
-      filtered = filtered.filter((m) =>
-        getCellVal(m, "memonumber").toLowerCase().includes(q)
-      );
-    }
-
-    // text filter: subject
-    if (colFilters.subject.search?.trim()) {
-      const q = colFilters.subject.search.trim().toLowerCase();
-      filtered = filtered.filter((m) =>
-        getCellVal(m, "subject").toLowerCase().includes(q)
-      );
-    }
-
-    // list filter: author
-    if (colFilters.author.values && colFilters.author.values.length > 0) {
-      const set = new Set(colFilters.author.values);
-      filtered = filtered.filter((m) => set.has(getCellVal(m, "author")));
-    }
-    if (colFilters.current.search?.trim()) {
-      const q = colFilters.current.search.trim().toLowerCase();
-      filtered = filtered.filter((m) =>
-        isProcessingMemo(m) && getCellVal(m, "current").toLowerCase().includes(q)
-      );
-    }
-    // ✅ แทนที่บล็อกนี้ทั้งก้อน
-    if (colFilters.current.values && colFilters.current.values.length > 0) {
-      // ตัวเลือกจาก HeaderFilter ของคอลัมน์ "Current Approver" เป็นชื่อ
-      // แต่เผื่ออนาคตมีค่าเป็น id (string ของตัวเลข) เลยรองรับทั้งสองแบบ
-      const selectedNames = new Set(
-        colFilters.current.values.filter((v) => Number.isNaN(Number(v)))
-      );
-      const selectedIds = new Set<number>(
-        colFilters.current.values
-          .map((v) => Number(v))
-          .filter((v) => !Number.isNaN(v))
-      );
-
-      filtered = filtered.filter((m) => {
-        if (!isProcessingMemo(m)) return false;
-
-        const rows = approverMap[m.id] ?? [];
-        if (rows.length) {
-          // ✅ Only match if the user is currently ACTIVE
-          const active = getActionableCurrentApprovers(m, rows);
-          // เช็คทั้งชื่อและ userId (ถ้ามี)
-          return active.some(
-            (r) => selectedNames.has(r.name) || selectedIds.has(r.userId)
-          );
-        }
-
-        // fallback: กรณียังไม่มี approverMap ให้ใช้ชื่อจาก currentApprover
-        const fallbackNames = m.currentApprover?.names ?? [];
-        return fallbackNames.some((n) => selectedNames.has(n));
-      });
-    }
-
-    // -- คอลัมน์ Extra Approver แบบลิสต์ --
-    if (colFilters.extra.values && colFilters.extra.values.length > 0) {
-      const selectedNames = new Set(
-        colFilters.extra.values.filter((v) => Number.isNaN(Number(v)))
-      );
-      const selectedIds = new Set<number>(
-        colFilters.extra.values
-          .map((v) => Number(v))
-          .filter((v) => !Number.isNaN(v))
-      );
-      filtered = filtered.filter((m) => {
-        const approvers = extraMap[m.id]?.approvers ?? [];
-        return approvers.some(
-          (a) =>
-            selectedNames.has(a.name) ||
-            (a.userId !== undefined && selectedIds.has(a.userId))
-        );
-      });
-    }
-    // text filter: extra approver
-    if (colFilters.extra.search?.trim()) {
-      const q = colFilters.extra.search.trim().toLowerCase();
-      filtered = filtered.filter((m) =>
-        getCellVal(m, "extra").toLowerCase().includes(q)
-      );
-    }
-
-    // text filter: latest comment
-    if (colFilters.latest.search?.trim()) {
-      const q = colFilters.latest.search.trim().toLowerCase();
-      filtered = filtered.filter((m) =>
-        getCellVal(m, "latest").toLowerCase().includes(q)
-      );
-    }
-    // list filter: status
-    if (colFilters.status.values && colFilters.status.values.length > 0) {
-      const set = new Set(colFilters.status.values);
-      filtered = filtered.filter((m) => set.has(getCellVal(m, "status")));
-    }
-
-    // list filter: ccStatus
-    if (colFilters.ccStatus.values && colFilters.ccStatus.values.length > 0) {
-      const selectedNames = new Set(
-        colFilters.ccStatus.values.filter((v) => Number.isNaN(Number(v)))
-      );
-      const selectedIds = new Set<number>(
-        colFilters.ccStatus.values
-          .map((v) => Number(v))
-          .filter((v) => !Number.isNaN(v))
-      );
-      filtered = filtered.filter((m) => {
-        const ccList = memosCCData[m.id] || [];
-        return ccList.some(
-          (ccUser) =>
-            selectedNames.has(ccUserLabel(ccUser)) || selectedIds.has(ccUser.id)
-        );
-      });
-    }
-
-    // กรองวันหมดอายุจากฟิลเตอร์ของ Expires (ย้ายมาจาก Subject)
-    if (colFilters.expires.expiry && colFilters.expires.expiry.length > 0) {
-      const setKeys = new Set(colFilters.expires.expiry);
-
-      filtered = filtered.filter((m) => {
-        // 1. เช็คสถานะวันหมดอายุจริงๆ (active/expired/soon/none)
-        const realExpiry = getExpiryStatusKey(m.expiresAt, m.status);
-        if (setKeys.has(realExpiry)) return true;
-
-        // 2. เช็คสถานะแบบที่แสดงใน Subject (ซึ่งรวม closed ด้วย)
-        const displayKey = getSubjectStatusKey(m);
-
-
-        if (setKeys.has(displayKey)) return true;
-
-        return false;
-      });
-    }
-
-    // date filter: expires
-    if (colFilters.expires.dateFrom || colFilters.expires.dateTo) {
-
-      filtered = filtered.filter((m) => {
-        if (!m.expiresAt) return false;
-        const mDate = new Date(m.expiresAt).setHours(0, 0, 0, 0);
-        const from = colFilters.expires.dateFrom
-          ? new Date(colFilters.expires.dateFrom).setHours(0, 0, 0, 0)
-          : -Infinity;
-        const to = colFilters.expires.dateTo
-          ? new Date(colFilters.expires.dateTo).setHours(23, 59, 59, 999)
-          : Infinity;
-        return mDate >= from && mDate <= to;
-      });
-    }
-
-    // date filter: createdAt
-    if (colFilters.createdAt.dateFrom || colFilters.createdAt.dateTo) {
-      filtered = filtered.filter((m) => {
-        if (!m.createdAt) return false;
-        const mDate = new Date(m.createdAt).setHours(0, 0, 0, 0);
-        const from = colFilters.createdAt.dateFrom
-          ? new Date(colFilters.createdAt.dateFrom).setHours(0, 0, 0, 0)
-          : -Infinity;
-        const to = colFilters.createdAt.dateTo
-          ? new Date(colFilters.createdAt.dateTo).setHours(23, 59, 59, 999)
-          : Infinity;
-        return mDate >= from && mDate <= to;
-      });
-    }
-
-    // sort by chosen column
-    if (sortState) {
-      const { key, dir } = sortState;
-      filtered = [...filtered].sort((a, b) => {
-        const av = getCellVal(a, key);
-        const bv = getCellVal(b, key);
-        // ✅ ใช้ลำดับไทยกับ Subject (หรือจะใช้กับทุกคอลัมน์ก็ได้)
-        const cmp = thCollator.compare(av, bv);
-        return dir === "asc" ? cmp : -cmp;
-      });
-    } else if (sortByLatestAction) {
-      // ⬅️ ADD: Sort by Latest Action
-      filtered = [...filtered].sort((a, b) => {
-        const getLatestActionTime = (memo: Memo) => {
-          let latestTime = 0;
-          
-          // Check Main Approvers
-          const mainRows = approverMap[memo.id] || [];
-          mainRows.forEach((r) => {
-            if (r.statusCode !== "waiting" && (r.actedAt || r.since)) {
-              const time = new Date(r.actedAt ?? r.since).getTime();
-              if (time > latestTime) latestTime = time;
-            }
-          });
-
-          // Check Extra Approvers
-          const extraRows = extraMap[memo.id]?.approvers ?? [];
-          extraRows.forEach((r) => {
-            if (r.statusCode !== "waiting" && (r.actedAt || r.since)) {
-              const time = new Date(r.actedAt ?? r.since ?? 0).getTime();
-              if (time > latestTime) latestTime = time;
-            }
-          });
-          
-          return latestTime;
-        };
-
-        const timeA = getLatestActionTime(a);
-        const timeB = getLatestActionTime(b);
-        return timeB - timeA; // Descending order (latest first)
-      });
-    }
-
-    // กรอง: memo ที่ approver คนนี้อยู่ในไลน์ (main หรือ extra) — ไม่จำกัด status
-    if (approverFilter !== "All") {
-      const selectedId = approverFilter as number;
-
-      filtered = filtered.filter((m) => {
-        const mainRows = approverMap[m.id];
-        if (mainRows?.some((r) => r.userId === selectedId)) return true;
-
-        const extraRows = extraMap[m.id]?.approvers;
-        if (extraRows?.some((r) => r.userId === selectedId)) return true;
-
-        return false;
-      });
-    }
-
-    // 🔽 ใหม่: กรอง BU
-    if (buFilter !== "All") {
-      filtered = filtered.filter((m) => m.businessUnit?.id === buFilter);
-    }
-    // 🔽 ใหม่: กรอง Department
-    if (deptFilter !== "All") {
-      filtered = filtered.filter((m) => m.department?.id === deptFilter);
-    }
-    if (view === "MY_APPROVAL" && me) {
-      filtered = filtered.filter(
-        (m) =>
-          m.status === "Processing" && (isMyTurnMain(m) || isMyTurnExtra(m))
-      );
-    } else if (view === "MY_CREATED" && me) {
-      filtered = filtered.filter((m) => m.user?.id === me.id);
-    } else if (statusFilter !== "All") {
-      filtered = filtered.filter((m) => m.status === statusFilter);
-    }
-    return filtered;
-  }, [
-    memos,
-    searchTerm,
-    statusFilter,
-    approverFilter,
-    currentApprovers,
-    buFilter,
-    deptFilter,
-    approverMap,
-    extraMap,
-    colFilters,
-    sortState,
-    onlyMyApproval,
-    onlyMyCreated,
-    view, // ✅ เพิ่ม view
-    me,
-    t, // ✅ เพิ่ม t
-    myCCMemoIds, // ✅ เพิ่ม myCCMemoIds สำหรับ CC Status column
-    memosCCData, // ✅ เพิ่ม memosCCData สำหรับ CC filter
-    sortByLatestAction, // ✅
-  ]);
+  // The server filters, sorts and pages (memo-search). The rows it returns are the
+  // rows we show: re-filtering/re-sorting one page here made the table disagree
+  // with the pager (e.g. 2 rows on "page 1/389").
+  const visibleMemos = memos;
   // --- Pagination states & helpers (place BEFORE any early return) ---
   type PageSize = number | "All";
 
@@ -2726,10 +2377,13 @@ const Dashboard: React.FC = () => {
       page,
       pageSize: pageSize === "All" ? "all" : pageSize,
       searchText: searchTerm,
-      view: view as "ALL" | "MY_APPROVAL" | "MY_CREATED",
+      // "STATUS:X" views travel as `status` (statusFilter); the server knows 3 views.
+      view: view === "MY_APPROVAL" || view === "MY_CREATED" ? view : "ALL",
       businessUnitId: buFilter,
       departmentId: deptFilter,
       status: statusFilter,
+      inLineApproverId: approverFilter,
+      sortByLatestAction,
       includeStatCounts: false,
       includeFacets: !searchMetaLoadedRef.current.facets,
     });
@@ -2743,6 +2397,8 @@ const Dashboard: React.FC = () => {
     buFilter,
     deptFilter,
     statusFilter,
+    approverFilter,
+    sortByLatestAction,
   ]);
 
   const newSearch = useMemoSearch({
@@ -2946,6 +2602,8 @@ const Dashboard: React.FC = () => {
     sortState,
     colFilters,
     pageSize,
+    approverFilter,
+    sortByLatestAction,
   ]);
 
   useEffect(() => {

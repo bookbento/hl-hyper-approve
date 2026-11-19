@@ -642,6 +642,9 @@ model ExtraApprovalLine {
 
   // ↔️ คู่กับ MasterMemo.extraApprovalLines / User.createdExtraApprovalLines
   memo      MasterMemo @relation("MemoToExtraApprovalLines", fields: [memoId], references: [id], onDelete: Cascade)
+
+  // search visibility/includes and the extra-approver sort look lines up by memo
+  @@index([memoId])
   createdBy User       @relation("UserToCreatedExtraApprovalLines", fields: [createdById], references: [id])
   comment   Comment[]  @relation("ExtraApprovalLineToComment")
 
