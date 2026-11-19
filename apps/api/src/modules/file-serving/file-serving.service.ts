@@ -48,6 +48,18 @@ export class FileServingService {
    * @param userId   Authenticated user ID (already validated by JwtAuthGuard)
    */
   async resolveFile(rawTail: string, userId: number): Promise<string> {
+    return (await this.resolveDownload(rawTail, userId)).abs;
+  }
+
+  /**
+   * resolveFile + the name the file was uploaded with (Thai etc.), when the path
+   * maps to a memo/comment file. The disk name is sanitized (non-ASCII → _),
+   * so it must not be used as the download name.
+   */
+  async resolveDownload(
+    rawTail: string,
+    userId: number,
+  ): Promise<{ abs: string; displayName?: string }> {
     const coerced = coerceToRelative(rawTail);
     if (!coerced) {
       const err = new Error('Missing path');
@@ -67,15 +79,17 @@ export class FileServingService {
     const specialOk = await this.specialFolderAllow(rel, userId);
     if (specialOk) {
       this.logger.debug(`Special folder allowed: ${rel} for user ${userId}`);
-      return abs;
+      return { abs };
     }
 
     // Generic memo-based access control
-    const memoId = await this.findMemoIdByPath(rel);
+    const match = await this.findMemoIdByPath(rel);
+    const memoId = match?.memoId ?? null;
+    const displayName = match?.name || undefined;
 
     if (memoId === -1) {
       // MemoType template — authenticated user is enough
-      return abs;
+      return { abs, displayName };
     }
 
     if (!memoId) {
@@ -91,7 +105,7 @@ export class FileServingService {
       throw err;
     }
 
-    return abs;
+    return { abs, displayName };
   }
 
   // ---------------------------------------------------------------------------
@@ -139,7 +153,9 @@ export class FileServingService {
    * CommentAttachment records.
    * Returns null if no match, -1 if the file is a MemoType template.
    */
-  private async findMemoIdByPath(relPath: string): Promise<number | null> {
+  private async findMemoIdByPath(
+    relPath: string,
+  ): Promise<{ memoId: number; name: string | null } | null> {
     const base = path.basename(relPath).toLowerCase();
     const relFwd = relPath.replace(/\\/g, '/');
     const relBack = relFwd.replace(/\//g, '\\');
@@ -159,10 +175,10 @@ export class FileServingService {
           { filePath: { equals: withUploadsBack, mode: 'insensitive' } },
         ],
       },
-      select: { memoId: true, memoTypeId: true },
+      select: { memoId: true, memoTypeId: true, fileName: true },
     });
-    if (mf?.memoId) return mf.memoId;
-    if (mf && !mf.memoId) return -1; // MemoType template
+    if (mf?.memoId) return { memoId: mf.memoId, name: mf.fileName };
+    if (mf && !mf.memoId) return { memoId: -1, name: mf.fileName }; // MemoType template
 
     // 2) AttachedFile
     const af = await this.prisma.attachedFile.findFirst({
@@ -177,9 +193,9 @@ export class FileServingService {
           { filePath: { equals: withUploadsBack, mode: 'insensitive' } },
         ],
       },
-      select: { memoId: true },
+      select: { memoId: true, fileName: true },
     });
-    if (af?.memoId) return af.memoId;
+    if (af?.memoId) return { memoId: af.memoId, name: af.fileName };
 
     // 3) CommentAttachment
     const ca = await this.prisma.commentAttachment.findFirst({
@@ -194,9 +210,9 @@ export class FileServingService {
           { url: { endsWith: withUploadsBack, mode: 'insensitive' } },
         ],
       },
-      select: { comment: { select: { memoId: true } } },
+      select: { filename: true, comment: { select: { memoId: true } } },
     });
-    if (ca?.comment?.memoId) return ca.comment.memoId;
+    if (ca?.comment?.memoId) return { memoId: ca.comment.memoId, name: ca.filename };
 
     return null;
   }

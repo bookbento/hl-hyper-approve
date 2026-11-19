@@ -14,6 +14,10 @@ export type PdfOverlayProps = {
   canTerminate?: boolean;
   /** กดแล้วเรียกฟังก์ชัน terminate ที่ส่งมาจากหน้าแม่ */
   onTerminate?: () => void;
+  /** show a Download button in the toolbar (comment files) */
+  showDownload?: boolean;
+  /** saved filename; wins over the server header (whose name is the sanitized disk name) */
+  fileName?: string;
 };
 
 const PdfOverlay: React.FC<PdfOverlayProps> = ({
@@ -22,6 +26,8 @@ const PdfOverlay: React.FC<PdfOverlayProps> = ({
   onClose,
   canTerminate,
   onTerminate,
+  showDownload = false,
+  fileName,
 }) => {
   const { t } = useTranslation("memoViewer");
   const [page, setPage] = useState(1);
@@ -145,6 +151,10 @@ const PdfOverlay: React.FC<PdfOverlayProps> = ({
     }
   };
 
+  const options = useMemo(() => ({
+    withCredentials: true,
+  }), []);
+
   if (!src) return null;
   const scale = baseScale * zoom;
 
@@ -157,9 +167,9 @@ const PdfOverlay: React.FC<PdfOverlayProps> = ({
 
       // หา filename จาก header ถ้ามี
       const dispo = res.headers["content-disposition"] as string | undefined;
-      let filename = "document.pdf";
-      
-      if (dispo) {
+      let filename = fileName || "document.pdf";
+
+      if (dispo && !fileName) {
         
         // Try different patterns to extract filename
         const patterns = [
@@ -196,17 +206,13 @@ const PdfOverlay: React.FC<PdfOverlayProps> = ({
       if (typeof src === "string") {
         const a = document.createElement("a");
         a.href = src;
-        a.download = "document.pdf";
+        a.download = fileName || "document.pdf";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
       }
     }
   };
- const options = useMemo(() => ({
-    withCredentials: true,
-  }), []);
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
@@ -245,6 +251,18 @@ const PdfOverlay: React.FC<PdfOverlayProps> = ({
               file={src}
               onLoadSuccess={({ numPages }) => setNumPages(numPages)}
               options={options}
+              error={
+                <div className="flex flex-col items-center justify-center gap-4 h-[50vh] text-gray-600">
+                  <p>{t("pdfOverlay.errorTitle", "Unable to display preview")}</p>
+                  <button
+                    type="button"
+                    onClick={handleDownload}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-sm text-sm font-medium"
+                  >
+                    {t("downloadPdf", "Download PDF")}
+                  </button>
+                </div>
+              }
               loading={
                 <div className="flex items-center justify-center h-[50vh] w-full">
                   <div className="w-10 h-10 border-4 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
@@ -406,6 +424,21 @@ const PdfOverlay: React.FC<PdfOverlayProps> = ({
                 <span className="hidden sm:inline">{t("gotoPage.btnText")}</span>
               </button>
             </div>
+          )}
+
+          {showDownload && (
+            <button
+              type="button"
+              onClick={handleDownload}
+              className="flex items-center gap-2 px-4 py-1.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow"
+              aria-label={t("downloadPdf", "Download PDF")}
+              title={t("downloadPdf", "Download PDF")}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              <span className="hidden sm:inline">{t("downloadPdf", "Download PDF")}</span>
+            </button>
           )}
         </div>
       </div>

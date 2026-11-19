@@ -64,8 +64,9 @@ export class FileServingController {
     const rawTail = req.path.replace(/^\/+/, '').replace(/^api\/secure-uploads\/?/i, '');
 
     let absPath: string;
+    let displayName: string | undefined;
     try {
-      absPath = await this.fileServingService.resolveFile(rawTail, user.id);
+      ({ abs: absPath, displayName } = await this.fileServingService.resolveDownload(rawTail, user.id));
     } catch (err: unknown) {
       const e = err as Error & { status?: number };
       const status = e.status ?? 500;
@@ -75,13 +76,14 @@ export class FileServingController {
       return;
     }
 
-    this.sendFile(absPath, res);
+    this.sendFile(absPath, res, displayName);
   }
 
-  private sendFile(absPath: string, res: Response): void {
+  private sendFile(absPath: string, res: Response, displayName?: string): void {
     const mime = String(mimeLookup(absPath) || 'application/octet-stream');
     const fileName = path.basename(absPath);
-    const originalFileName = stripStoragePrefix(fileName);
+    // the saved upload name (e.g. Thai) when known; the disk name is sanitized
+    const originalFileName = displayName?.trim() || stripStoragePrefix(fileName);
 
     res.setHeader('Content-Type', mime);
     res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');

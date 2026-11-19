@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 
 import { useTranslation } from "react-i18next";
 import toast from "react-hot-toast";
-import { PaperClipIcon } from "@heroicons/react/24/outline";
+import { ArrowDownTrayIcon, PaperClipIcon } from "@heroicons/react/24/outline";
 import { AiFillFilePdf, AiOutlineCloudUpload } from "react-icons/ai";
 import { AnimatePresence, motion } from "framer-motion";
 import { api } from "../../lib/api";
@@ -513,6 +513,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [previewPdf, setPreviewPdf] = useState<string | null>(null);
+  // saved name for the download; the server header only knows the sanitized disk name
+  const [previewPdfName, setPreviewPdfName] = useState<string | undefined>(undefined);
   const [pdfLoadError, setPdfLoadError] = useState(false);
   const [pdfReloadKey, setPdfReloadKey] = useState(0);
 
@@ -531,7 +533,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       const contentDisposition = response.headers.get('content-disposition');
       let filename = att.filename;
       
-      if (contentDisposition) {
+      // the saved name wins: the header carries the sanitized disk name (Thai → ___)
+      if (contentDisposition && !att.filename) {
         
         // Try different patterns to extract filename
         const patterns = [
@@ -1784,7 +1787,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                             ) : att.mimetype === "application/pdf" ? (
                               <div
                                 key={att.id}
-                                onClick={() => setPreviewPdf(att.url)}
+                                onClick={() => {
+                                  setPreviewPdfName(att.filename);
+                                  setPreviewPdf(att.url);
+                                }}
                                 className={`group flex items-center gap-2 rounded-xl px-4 py-2 shadow cursor-pointer transition-colors col-span-2
     ${
       isMe
@@ -1800,6 +1806,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                                 >
                                   {att.filename}
                                 </span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDownloadAttachment(att);
+                                  }}
+                                  className="shrink-0 rounded-md p-1.5 opacity-80 hover:opacity-100 hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                                  title={t("pdfModal.downloadFile", { defaultValue: "Download file" })}
+                                  aria-label={`${t("pdfModal.downloadFile", { defaultValue: "Download file" })} ${att.filename}`}
+                                >
+                                  <ArrowDownTrayIcon className="w-5 h-5" />
+                                </button>
                               </div>
                             ) : (
                               <div
@@ -3200,7 +3218,10 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                                     ) : att.mimetype === "application/pdf" ? (
                                       <div
                                         key={att.id}
-                                        onClick={() => setPreviewPdf(att.url)}
+                                        onClick={() => {
+                                  setPreviewPdfName(att.filename);
+                                  setPreviewPdf(att.url);
+                                }}
                                         className={`group flex items-center gap-2 rounded-xl px-4 py-2 shadow cursor-pointer transition-colors col-span-2
           ${
             isMe
@@ -3216,6 +3237,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                                         >
                                           {att.filename}
                                         </span>
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDownloadAttachment(att);
+                                          }}
+                                          className="shrink-0 rounded-md p-1.5 opacity-80 hover:opacity-100 hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+                                          title={t("pdfModal.downloadFile", { defaultValue: "Download file" })}
+                                          aria-label={`${t("pdfModal.downloadFile", { defaultValue: "Download file" })} ${att.filename}`}
+                                        >
+                                          <ArrowDownTrayIcon className="w-5 h-5" />
+                                        </button>
                                       </div>
                                     ) : (
                                       <div
@@ -4006,8 +4039,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         <PdfOverlay
           src={previewPdf}
           downloadUrl={previewPdf} // In this context, the src is the download URL
+          showDownload
+          fileName={previewPdfName}
           onClose={() => {
             setPreviewPdf(null);
+            setPreviewPdfName(undefined);
             setPdfLoadError(false);
             setPdfReloadKey(0);
           }}

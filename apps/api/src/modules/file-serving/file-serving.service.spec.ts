@@ -183,6 +183,49 @@ describe('FileServingService', () => {
   });
 
   // ── Memo-based access ──────────────────────────────────────────────────────
+  describe('download name', () => {
+    const allowOwner = () => {
+      mockPrisma.user.findUnique.mockResolvedValue({ role: 'user' });
+      mockPrisma.masterMemo.findUnique.mockResolvedValue({ userId: 42, approvalLineId: null });
+      mockPrisma.memoStatusPivot.findFirst.mockResolvedValue({ statusId: 2 });
+    };
+
+    it('returns the saved (Thai) name of a comment file, not the sanitized disk name', async () => {
+      setupSafeResolve('comments/1712-___.pdf');
+      setupFsFile();
+      mockPrisma.mainFile.findFirst.mockResolvedValue(null);
+      mockPrisma.attachedFile.findFirst.mockResolvedValue(null);
+      mockPrisma.commentAttachment.findFirst.mockResolvedValue({
+        filename: 'บิลเงินสด.pdf',
+        comment: { memoId: 10 },
+      });
+      allowOwner();
+
+      await expect(service.resolveDownload('comments/1712-___.pdf', 42)).resolves.toEqual({
+        abs: '/fake/uploads/comments/1712-___.pdf',
+        displayName: 'บิลเงินสด.pdf',
+      });
+    });
+
+    it('returns the attached file name', async () => {
+      setupSafeResolve('attached/1712-____.pdf');
+      setupFsFile();
+      mockPrisma.mainFile.findFirst.mockResolvedValue(null);
+      mockPrisma.attachedFile.findFirst.mockResolvedValue({ memoId: 10, fileName: 'กับข้าว.pdf' });
+      allowOwner();
+
+      const r = await service.resolveDownload('attached/1712-____.pdf', 42);
+      expect(r.displayName).toBe('กับข้าว.pdf');
+    });
+
+    it('has no name for special folders', async () => {
+      setupSafeResolve('profiles/avatar.png');
+      setupFsFile();
+      const r = await service.resolveDownload('profiles/avatar.png', 42);
+      expect(r).toEqual({ abs: '/fake/uploads/profiles/avatar.png' });
+    });
+  });
+
   describe('memo-based access control', () => {
     it('allows memo owner to access attached file', async () => {
       setupSafeResolve('attached/report.pdf');
